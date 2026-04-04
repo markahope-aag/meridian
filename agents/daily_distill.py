@@ -155,12 +155,8 @@ def main():
             print(f"Error: {path} not found", file=sys.stderr)
             sys.exit(1)
         raw_path = promote_to_raw(path, {"frontmatter": None})
-        mark_processed(path, {
-            "decision": "promoted",
-            "relevance": 10,
-            "quality": 10,
-        })
         results.append({"file": str(path), "action": "approved", "raw_path": str(raw_path)})
+        path.unlink()
 
     else:
         # Score and decide
@@ -212,11 +208,13 @@ def main():
                     raw_path = promote_to_raw(filepath, decision)
                     result["action"] = "auto_promoted"
                     result["raw_path"] = str(raw_path)
+                    filepath.unlink()
                 elif decision["decision"] == "promote":
                     # Needs approval — leave in capture/ with distill metadata
                     result["action"] = "pending_approval"
                 else:
                     result["action"] = "skipped"
+                    filepath.unlink()
 
             results.append(result)
 

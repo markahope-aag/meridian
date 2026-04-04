@@ -399,10 +399,9 @@ When reviewing `capture/` for promotion to `raw/`:
 4. During bootstrap: send proposal for human approval (via n8n email)
 5. During steady state (20+ wiki articles): auto-promote for scores >= 8, propose for 6-7
 6. During bootstrap (<20 wiki articles): auto-promote for scores >= 6 (more permissive to seed the wiki)
-7. Never delete from `capture/` — mark processed items by adding frontmatter:
-   `distill_status: promoted | skipped`
-   `distill_date: "2026-04-04"`
-   `distill_score: { relevance: 8, quality: 7 }`
+7. Delete from `capture/` after processing. Promoted files are copied to `raw/`
+   first, then the capture copy is deleted. Skipped files are deleted immediately.
+   Pending-approval files remain in `capture/` until approved or manually deleted.
 
 ## Linter Protocol
 
