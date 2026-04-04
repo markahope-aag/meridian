@@ -59,7 +59,11 @@ def fetch_meetings(headers, after=None, before=None, limit=None):
     cursor = None
 
     while True:
-        params = {}
+        params = {
+            "include_transcript": "true",
+            "include_summary": "true",
+            "include_action_items": "true",
+        }
         if cursor:
             params["cursor"] = cursor
         if after:
@@ -162,11 +166,8 @@ def main():
         print(f"  [{i}/{len(meetings)}] {date_str} — {title}...", end=" ", file=sys.stderr)
 
         try:
-            # Fetch full details with transcript
-            detail = fetch_meeting_detail(meeting_id, fathom_headers)
-            time.sleep(1)  # rate limit
-
-            result = send_to_receiver(detail, receiver_url, receiver_token)
+            # List endpoint already includes transcript/summary/action_items
+            result = send_to_receiver(meeting, receiver_url, receiver_token)
             print(f"✓ {result.get('filename', 'ok')}", file=sys.stderr)
             ingested += 1
             time.sleep(0.5)  # gentle on the receiver
