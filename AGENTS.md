@@ -140,6 +140,13 @@ All endpoints require `Authorization: Bearer <token>`.
 | `POST /capture/fathom` | Fathom-specific | Format `new-meeting-content-ready` webhook payload as `.md` |
 | `POST /capture/claude-session` | Claude Code | Convert JSONL session transcript to `.md` in `capture/` |
 
+### Pipeline endpoints
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `POST /distill` | Distill | Run Daily Distill — score capture docs, promote to raw |
+| `POST /compile` | Compile | Run Compiler — compile raw docs into wiki articles |
+
 ### Agent endpoints
 
 | Endpoint | Method | Purpose |
@@ -326,16 +333,27 @@ Every tool and agent script must:
 
 ## Compilation Protocol
 
-When compiling a raw document into wiki articles:
+The compiler uses a two-pass architecture for speed:
 
-1. Read `AGENTS.md` (this file)
-2. Read `wiki/_index.md` to understand current wiki state
-3. Read the raw document
-4. Decide: does this update an existing article, or warrant a new one?
-5. If **bootstrap mode** (fewer than 20 wiki articles): propose the filing decision
-   and wait for human approval before writing
-6. If **steady state**: file directly, following all rules above
-7. Update `wiki/_index.md` and `wiki/_backlinks.md`
+**Pass 1 — Planning (Haiku, fast):** Reads the raw document and `wiki/_index.md`,
+decides what files to create/update and where. Detects clients, infers status,
+identifies transferable learnings. Returns a filing plan as JSON.
+
+**Pass 2 — Writing (Sonnet, parallel):** Takes the plan and writes each wiki file
+concurrently (3 workers). Each worker gets the raw document and one plan entry.
+
+**After all files:** Index and backlinks are updated once in a batch.
+
+Multiple documents compile in parallel (3 concurrent). Target: 5 documents < 60 seconds.
+
+### Compilation steps
+
+1. Load `wiki/_index.md` once (read-only context for all workers)
+2. For each raw document, run Pass 1 (planning)
+3. For each plan entry, run Pass 2 (writing) in parallel
+4. Mark each raw document as compiled (`compiled_at` in frontmatter)
+5. Batch-update `wiki/_index.md` and `wiki/_backlinks.md` after all workers complete
+6. Append to `wiki/log.md`
 
 ### Source type routing
 

@@ -23,7 +23,7 @@ capture/ → (Daily Distill) → raw/ → (Compiler) → wiki/
 
 **Stage 2 — Daily Distill.** An LLM agent reviews `capture/` daily (6 AM via n8n), scores each document on relevance (0-10) and quality (0-10), and promotes worthy items to `raw/` with normalized frontmatter. During bootstrap (<20 wiki articles), the threshold is 6+. In steady state, it's 8+ for auto-promote, 6-7 for human approval.
 
-**Stage 3 — Compiler.** An LLM agent reads each uncompiled document in `raw/`, reads the current wiki state (`_index.md`), and decides whether to create a new article or update an existing one. It writes the wiki articles, updates the index, maintains backlinks, and logs the operation. Each source document may produce multiple wiki files.
+**Stage 3 — Compiler.** A two-pass LLM pipeline compiles raw documents into wiki articles. Pass 1 (Haiku) plans where to file — detecting clients, inferring status, identifying transferable learnings. Pass 2 (Sonnet) writes the actual content with 3 concurrent workers. Index and backlinks update once after all workers complete. A single meeting may produce client articles, knowledge extractions, and cross-links. Target: 5 documents in under 60 seconds.
 
 ## Architecture
 

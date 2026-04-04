@@ -15,6 +15,8 @@ This means updates to agents or prompts take effect immediately without rebuildi
 | `POST /capture` | Bearer | Write generic .md to `capture/` |
 | `POST /capture/fathom` | Bearer | Format Fathom meeting webhook → `capture/` |
 | `POST /capture/claude-session` | Bearer | Convert Claude Code JSONL transcript → `capture/` |
+| `POST /distill` | Bearer | Run Daily Distill agent (score and promote capture → raw) |
+| `POST /compile` | Bearer | Run Compiler agent (compile raw → wiki) |
 | `POST /ask` | Bearer | Q&A against the wiki |
 | `POST /debrief` | Bearer | Debrief a Claude Code session |
 | `POST /context` | Bearer | Search wiki, return context brief |
@@ -154,6 +156,18 @@ curl -X POST $URL/capture/claude-session \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"transcript_path": "/path/to/session.jsonl"}'
+
+# Distill (dry-run)
+curl -X POST $URL/distill \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"mode": "dry-run"}'
+
+# Compile all uncompiled raw docs
+curl -X POST $URL/compile \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{}'
 
 # Ask
 curl -X POST $URL/ask \
