@@ -87,3 +87,14 @@ If there are fewer than 20 articles in the wiki (check `_index.md` statistics):
 Once the wiki has 20+ articles:
 - File directly following all rules
 - The wiki shape is established — be consistent with existing patterns
+
+## Log Entry
+
+After completing compilation, include a `"log_entry"` field in your JSON output.
+This will be appended to `wiki/log.md`. Format:
+
+```
+## [YYYY-MM-DD] compile | Compiled "{source_title}" → {destination_paths}
+
+Action: {create|update}. Filed {n} article(s) to {paths}.
+```

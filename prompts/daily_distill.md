@@ -52,3 +52,14 @@ If decision is "skip", the frontmatter field can be null.
 - Meeting transcripts from Fathom are almost always worth promoting (decisions live there)
 - Prefer to promote and let the compiler decide relevance over filtering too aggressively
 - Tag generously — tags are cheap and help the compiler find connections
+
+## Log Entry
+
+After completing your review, include a `"log_entry"` field in your JSON output.
+This will be appended to `wiki/log.md`. Format:
+
+```
+## [YYYY-MM-DD] distill | {decision} "{title}"
+
+Relevance: {score}, Quality: {score}. {reasoning}
+```

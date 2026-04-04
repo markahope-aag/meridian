@@ -87,6 +87,7 @@ token: <MERIDIAN_RECEIVER_TOKEN>
 ├── wiki/              # LLM-maintained knowledge base
 │   ├── _index.md      # master index — ALWAYS read before filing
 │   ├── _backlinks.md  # auto-maintained backlink registry
+│   ├── log.md         # append-only operations log
 │   ├── concepts/      # concept explainers (one concept per file)
 │   ├── articles/      # summaries and analyses of source material
 │   ├── categories/    # category index pages
@@ -207,6 +208,40 @@ provides. The Daily Distill agent normalizes them when promoting to `raw/`.
 
 8. **Update `_index.md` after every write.** Any time you create or modify a wiki article,
    update the index to reflect the change.
+
+9. **Append to `wiki/log.md` after every operation.** Every agent must log what it did.
+
+## Operations Log (`wiki/log.md`)
+
+Append-only log of all agent activity. Every agent appends an entry after completing its
+operation. Never edit or delete existing entries.
+
+### Format
+
+```markdown
+## [YYYY-MM-DD] operation | description
+
+Details of what was done.
+```
+
+### Operations
+
+| Operation | Agent | Description |
+|---|---|---|
+| `ingest` | receiver | Document captured to `capture/` |
+| `distill` | daily_distill | Document scored and promoted/skipped |
+| `compile` | compiler | Raw document compiled into wiki article(s) |
+| `query` | qa_agent | Question answered against the wiki |
+| `lint` | linter | Consistency check or gap identified |
+
+### Example entry
+
+```markdown
+## [2026-04-04] distill | Promoted "Team Standup 2026-04-04" to raw/
+
+Relevance: 8, Quality: 7. Contains architecture decision on auth middleware.
+Filed as raw/2026-04-04-team-standup.md with tags: [meeting, auth, architecture].
+```
 
 ## Agent Conventions
 

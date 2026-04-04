@@ -60,3 +60,14 @@ If a section has no items, write "None this session." and move on.
 - Architectural decisions are the highest-value items — get these right
 - Dead ends are valuable because they prevent re-exploration
 - Don't summarize the whole session — extract only the learnings
+
+## Log Entry
+
+After completing your analysis, append a final section to your output:
+
+```
+---
+log_entry: "## [YYYY-MM-DD] query | Debriefed session {project} — {n} decisions, {n} patterns, {n} dead ends"
+```
+
+This will be appended to `wiki/log.md` by the calling agent.
