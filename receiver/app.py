@@ -16,10 +16,12 @@ Endpoints:
 
 import hashlib
 import json
+import logging
 import os
 import re
 import subprocess
 import sys
+import tempfile
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
@@ -28,6 +30,7 @@ from flask import Flask, Response, jsonify, request
 import yaml
 
 app = Flask(__name__)
+log = logging.getLogger("meridian")
 
 # Paths — set via env or default to /meridian
 MERIDIAN_ROOT = Path(os.environ.get("MERIDIAN_ROOT", "/meridian"))
@@ -525,6 +528,20 @@ def context():
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
+def check_directories():
+    """Verify required directories exist and are writable on startup."""
+    for name, path in [("capture", CAPTURE_DIR), ("raw", RAW_DIR)]:
+        if not path.exists():
+            log.warning("STARTUP: %s directory does not exist: %s", name, path)
+        elif not os.access(path, os.W_OK):
+            log.warning("STARTUP: %s directory is not writable: %s", name, path)
+        else:
+            log.info("STARTUP: %s directory OK: %s", name, path)
+
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+check_directories()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
