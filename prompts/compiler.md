@@ -55,6 +55,45 @@ and open questions. Route compiled output to `wiki/dev/`:
 A single session debrief may produce multiple files across these directories.
 Each decision, pattern, or dead-end gets its own file.
 
+### Client-specific documents
+
+**Always check for client references.** If a document mentions a specific client by name,
+is tagged with a client, or is clearly about client work:
+
+1. File the primary article in `wiki/clients/[client-name]/` using lowercase hyphenated
+   folder names (e.g. "Acme Corp" → `wiki/clients/acme-corp/`)
+2. If this is the first document for a client, create `wiki/clients/[client-name]/_index.md`
+   with: client overview, active projects, key contacts (if known), recent activity, and
+   links to all docs in that folder
+3. If the client folder already exists, update its `_index.md` with the new document
+
+### Transferable learnings
+
+**Always check for transferable insights.** If a document contains knowledge applicable
+beyond one client — platform strategies, channel learnings, what works/doesn't work,
+industry patterns, reusable frameworks:
+
+1. Create or update a page in `wiki/knowledge/[topic]/` (e.g. `wiki/knowledge/paid-social/`,
+   `wiki/knowledge/seo-strategy/`)
+2. Extract the insight cleanly — don't just copy the client context, generalize it
+3. Reference the client example as evidence: "Observed at [client] — see [[clients/acme-corp/campaign-q1]]"
+
+### Cross-filing
+
+A single document may produce files in multiple locations. For example, a client meeting
+about a successful paid social campaign should produce:
+
+- `wiki/clients/acme-corp/2026-04-04-campaign-review.md` — the client-specific article
+- `wiki/knowledge/paid-social/lookalike-audiences.md` — the transferable learning
+- Backlinks in both directions
+
+Always add backlinks between client pages and knowledge pages.
+
+### Knowledge index
+
+Maintain `wiki/knowledge/_index.md` listing all knowledge topics with one-line summaries.
+Update it every time a knowledge page is created or modified.
+
 ## Output Format
 
 Respond with JSON:

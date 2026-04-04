@@ -91,6 +91,12 @@ token: <MERIDIAN_RECEIVER_TOKEN>
 │   ├── concepts/      # concept explainers (one concept per file)
 │   ├── articles/      # summaries and analyses of source material
 │   ├── categories/    # category index pages
+│   ├── clients/       # per-client folders, created on demand
+│   │   └── [name]/    # e.g. acme-corp/
+│   │       └── _index.md  # client overview, projects, contacts, activity
+│   ├── knowledge/     # transferable learnings by topic
+│   │   ├── _index.md  # knowledge topic index
+│   │   └── [topic]/   # e.g. paid-social/, seo-strategy/
 │   └── dev/           # Claude Code learnings
 │       ├── patterns/  # reusable approaches that worked
 │       ├── decisions/ # architectural choices and reasoning
@@ -211,6 +217,30 @@ provides. The Daily Distill agent normalizes them when promoting to `raw/`.
 
 9. **Append to `wiki/log.md` after every operation.** Every agent must log what it did.
 
+10. **Client detection.** If a document mentions a specific client by name or is tagged
+    with a client, file under `wiki/clients/[client-name]/`. Use lowercase hyphenated
+    folder names (e.g. "Acme Corp" → `acme-corp`). On first encounter, create the folder
+    and a `_index.md` with: client overview, active projects, key contacts, recent
+    activity, and links to all client docs.
+
+11. **Transferable learning detection.** If a document contains insights applicable beyond
+    one client — platform strategies, channel learnings, what works/doesn't work, industry
+    patterns — also create or update a page in `wiki/knowledge/[topic]/`. Topics use
+    kebab-case (e.g. `paid-social`, `seo-strategy`, `pitch-deck-structure`).
+
+12. **Cross-filing.** When both client and knowledge apply, file in `wiki/clients/` AND
+    extract the transferable learning to `wiki/knowledge/`. Add backlinks in both
+    directions so client pages reference the general knowledge and knowledge pages
+    reference the client examples.
+
+13. **Client index.** Each `wiki/clients/[name]/_index.md` is maintained by the compiler:
+    client overview, active projects, key contacts, recent activity, links to all docs
+    in that client folder. Updated every time a new doc is filed for that client.
+
+14. **Knowledge index.** `wiki/knowledge/_index.md` lists all knowledge topics with
+    one-line summaries, maintained by the compiler. Updated every time a knowledge
+    page is created or modified.
+
 ## Operations Log (`wiki/log.md`)
 
 Append-only log of all agent activity. Every agent appends an entry after completing its
@@ -283,6 +313,12 @@ When compiling a raw document into wiki articles:
 | article, paper, note | `wiki/articles/` or `wiki/concepts/` | Standard routing |
 | meeting | `wiki/articles/` | Extract decisions + action items as cross-links |
 | claude-session | `wiki/dev/` | Route by content type (see below) |
+| any (client-specific) | `wiki/clients/[name]/` | If document mentions or is tagged with a client |
+| any (transferable) | `wiki/knowledge/[topic]/` | If insights apply beyond one client |
+
+**Client and knowledge routing is additive** — a single document may produce files in
+`wiki/articles/` AND `wiki/clients/` AND `wiki/knowledge/`. The compiler should always
+check for client references and transferable learnings regardless of source type.
 
 ### Claude Code session routing (`claude-session`)
 

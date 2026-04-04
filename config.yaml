@@ -31,6 +31,9 @@ compiler:
   bootstrap_threshold: 20      # switch to steady state after this many wiki articles
   batch_size: 1                # docs processed per run
 
+# Known clients — populated by the compiler on first encounter
+clients: []
+
 # n8n integration
 n8n:
   base_url: https://auto.asymmetric.pro
