@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Meridian Compiler — compile raw/ documents into wiki/ articles.
 
+Two-pass architecture:
+  Pass 1 (Planning): Haiku decides what files to create and where (fast)
+  Pass 2 (Writing):  Sonnet writes the actual content (parallel, 3 workers)
+
 Usage:
     python agents/compiler.py                        # compile all uncompiled raw docs
     python agents/compiler.py --file raw/foo.md      # compile a specific file
-
-Reads AGENTS.md and wiki/_index.md for context, then sends each raw document
-to the LLM for compilation into wiki articles.
 
 Output: JSON summary of what was created/updated.
 """
@@ -16,6 +17,9 @@ import json
 import os
 import re
 import sys
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -28,28 +32,23 @@ RAW_DIR = ROOT / "raw"
 WIKI_DIR = ROOT / "wiki"
 PROMPTS_DIR = ROOT / "prompts"
 
+# Thread-safe lock for file writes
+_write_lock = threading.Lock()
+
 
 def load_config() -> dict:
     with open(ROOT / "config.yaml") as f:
         return yaml.safe_load(f)
 
 
-def load_prompt() -> str:
-    return (PROMPTS_DIR / "compiler.md").read_text(encoding="utf-8")
-
-
 def load_agents_md() -> str:
-    agents_path = ROOT / "AGENTS.md"
-    if agents_path.exists():
-        return agents_path.read_text(encoding="utf-8")
-    return ""
+    path = ROOT / "AGENTS.md"
+    return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
 def load_index() -> str:
-    index_path = WIKI_DIR / "_index.md"
-    if index_path.exists():
-        return index_path.read_text(encoding="utf-8")
-    return "_No index yet._"
+    path = WIKI_DIR / "_index.md"
+    return path.read_text(encoding="utf-8") if path.exists() else "_No index yet._"
 
 
 def get_uncompiled_files() -> list[Path]:
@@ -60,7 +59,6 @@ def get_uncompiled_files() -> list[Path]:
             continue
         content = f.read_text(encoding="utf-8", errors="replace")
         if "compiled_at:" in content:
-            # Check if compiled_at is empty
             match = re.search(r"compiled_at:\s*['\"]?([^'\"\n]*)", content)
             if match and match.group(1).strip() in ("", "null", "~"):
                 files.append(f)
@@ -69,21 +67,67 @@ def get_uncompiled_files() -> list[Path]:
     return files
 
 
-def compile_document(client: anthropic.Anthropic, raw_content: str,
-                     agents_md: str, index_md: str, config: dict) -> dict:
-    """Send a raw document to the LLM for compilation."""
-    system_prompt = load_prompt()
+# ---------------------------------------------------------------------------
+# Pass 1: Planning (Haiku — fast)
+# ---------------------------------------------------------------------------
 
-    user_content = (
-        f"## AGENTS.md\n\n{agents_md}\n\n"
-        f"## wiki/_index.md\n\n{index_md}\n\n"
-        f"## Raw Document to Compile\n\n{raw_content}"
+def plan_document(client: anthropic.Anthropic, raw_content: str,
+                  index_md: str, config: dict) -> dict:
+    """Use Haiku to decide what files to create and where."""
+    system_prompt = (PROMPTS_DIR / "compiler_plan.md").read_text(encoding="utf-8")
+    planning_model = config.get("compiler", {}).get(
+        "planning_model", "claude-haiku-4-5-20251001"
     )
 
     response = client.messages.create(
-        model=config["llm"]["model"],
-        max_tokens=16384,
-        temperature=config["llm"]["temperature"],
+        model=planning_model,
+        max_tokens=4096,
+        temperature=0.2,
+        system=system_prompt,
+        messages=[{
+            "role": "user",
+            "content": (
+                f"## wiki/_index.md\n\n{index_md}\n\n"
+                f"## Raw Document to Compile\n\n{raw_content}"
+            ),
+        }],
+    )
+
+    text = response.content[0].text
+    json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+    if json_match:
+        text = json_match.group(1)
+    return json.loads(text)
+
+
+# ---------------------------------------------------------------------------
+# Pass 2: Writing (Sonnet — parallel)
+# ---------------------------------------------------------------------------
+
+def write_single_file(client: anthropic.Anthropic, raw_content: str,
+                      plan_entry: dict, raw_filename: str,
+                      config: dict) -> dict:
+    """Use Sonnet to write one wiki file from the plan."""
+    system_prompt = (PROMPTS_DIR / "compiler_write.md").read_text(encoding="utf-8")
+    writing_model = config.get("compiler", {}).get(
+        "writing_model", "claude-sonnet-4-6"
+    )
+
+    user_content = (
+        f"## Raw Document\n\n{raw_content}\n\n"
+        f"## Filing Plan Entry\n\n"
+        f"- **Path:** {plan_entry['path']}\n"
+        f"- **Action:** {plan_entry.get('action', 'create')}\n"
+        f"- **Type:** {plan_entry.get('type', 'article')}\n"
+        f"- **Title:** {plan_entry.get('title', '')}\n"
+        f"- **Description:** {plan_entry.get('description', '')}\n"
+        f"- **Source file:** raw/{raw_filename}\n"
+    )
+
+    response = client.messages.create(
+        model=writing_model,
+        max_tokens=8192,
+        temperature=0.3,
         system=system_prompt,
         messages=[{
             "role": "user",
@@ -91,114 +135,219 @@ def compile_document(client: anthropic.Anthropic, raw_content: str,
         }],
     )
 
-    text = response.content[0].text
-    # Extract JSON from response
-    json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
-    if json_match:
-        text = json_match.group(1)
+    content = response.content[0].text.strip()
+    # Strip markdown code block wrapper if present
+    if content.startswith("```"):
+        content = re.sub(r"^```(?:markdown|yaml|md)?\n?", "", content)
+        content = re.sub(r"\n?```$", "", content)
 
-    return json.loads(text)
+    file_path = ROOT / plan_entry["path"]
+    with _write_lock:
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.write_text(content, encoding="utf-8")
 
-
-def write_compiled_files(result: dict) -> list[str]:
-    """Write the files the compiler produced."""
-    written = []
-    for file_entry in result.get("files", []):
-        path = ROOT / file_entry["path"]
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(file_entry["content"], encoding="utf-8")
-        written.append(str(path))
-    return written
+    return {"path": plan_entry["path"], "status": "ok"}
 
 
-def update_index(result: dict):
-    """Update wiki/_index.md with new entries."""
+# ---------------------------------------------------------------------------
+# Index management (append-only, machine-readable section)
+# ---------------------------------------------------------------------------
+
+def update_index_batch(all_index_entries: list[str], all_backlinks: list[dict]):
+    """Update _index.md and _backlinks.md once after all compilations."""
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    # --- _index.md ---
     index_path = WIKI_DIR / "_index.md"
-    index_update = result.get("index_update", "")
-    if not index_update:
-        return
-
     if index_path.exists():
         content = index_path.read_text(encoding="utf-8")
     else:
-        content = "---\ntitle: Meridian Wiki Index\ntype: index\n---\n\n# Meridian Wiki Index\n"
+        content = (
+            "---\ntitle: Meridian Wiki Index\ntype: index\n"
+            f'created: "{now}"\nupdated: "{now}"\n---\n\n'
+            "# Meridian Wiki Index\n"
+        )
 
-    # Remove the "No articles yet" placeholder
-    content = content.replace("_No articles yet. The wiki is in bootstrap mode._\n", "")
-    content = content.replace("_No concepts yet._\n", "")
-    content = content.replace("_No categories yet._\n", "")
+    # Deduplicate: don't add entries whose path already appears in the index
+    new_entries = []
+    for entry in all_index_entries:
+        # Extract the wikilink path from the entry
+        link_match = re.search(r"\[\[([^\]|]+)", entry)
+        if link_match:
+            link_path = link_match.group(1)
+            if link_path not in content:
+                new_entries.append(entry)
+        else:
+            new_entries.append(entry)
 
-    # Update statistics
+    if new_entries:
+        # Append before the machine-readable section or at the end
+        if "<!-- MACHINE_INDEX" in content:
+            content = content.split("<!-- MACHINE_INDEX")[0].rstrip()
+        elif "## Statistics" in content:
+            content = content.split("## Statistics")[0].rstrip()
+
+        content += "\n\n" + "\n".join(new_entries) + "\n"
+
+    # Update/add machine-readable index
     article_count = sum(1 for _ in WIKI_DIR.rglob("*.md")
-                        if _.name not in ("_index.md", "_backlinks.md", "log.md"))
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    content = re.sub(r"Total articles: \d+", f"Total articles: {article_count}", content)
-    content = re.sub(r"Last updated: \d{4}-\d{2}-\d{2}", f"Last updated: {now}", content)
+                        if _.name not in ("_index.md", "_backlinks.md", "log.md", "home.md"))
+    content += (
+        f"\n## Statistics\n\n"
+        f"- Total articles: {article_count}\n"
+        f"- Last updated: {now}\n"
+    )
 
-    # Append new entries before statistics
-    if "## Statistics" in content:
-        content = content.replace("## Statistics", f"{index_update}\n\n## Statistics")
-    else:
-        content += f"\n{index_update}\n"
+    # Machine-readable section
+    existing_entries = []
+    if "<!-- MACHINE_INDEX" in content:
+        mi_match = re.search(
+            r"<!-- MACHINE_INDEX -->\n```json\n(.*?)\n```",
+            content, re.DOTALL
+        )
+        if mi_match:
+            try:
+                existing_entries = json.loads(mi_match.group(1))
+            except json.JSONDecodeError:
+                pass
 
-    index_path.write_text(content, encoding="utf-8")
+    # Add new entries
+    for entry_line in all_index_entries:
+        link_match = re.search(r"\[\[([^\]|]+)", entry_line)
+        desc_match = re.search(r"— (.+)$", entry_line)
+        if link_match:
+            path = link_match.group(1)
+            desc = desc_match.group(1) if desc_match else ""
+            if not any(e.get("path") == path for e in existing_entries):
+                existing_entries.append({
+                    "path": path,
+                    "description": desc,
+                    "added": now,
+                })
 
+    content += (
+        f"\n<!-- MACHINE_INDEX -->\n"
+        f"```json\n{json.dumps(existing_entries, indent=2)}\n```\n"
+    )
 
-def update_backlinks(result: dict):
-    """Update wiki/_backlinks.md."""
-    backlinks = result.get("backlinks", [])
-    if not backlinks:
-        return
+    with _write_lock:
+        index_path.write_text(content, encoding="utf-8")
 
-    bl_path = WIKI_DIR / "_backlinks.md"
-    if bl_path.exists():
-        content = bl_path.read_text(encoding="utf-8")
-    else:
-        content = "---\ntitle: Backlink Registry\ntype: index\n---\n\n# Backlink Registry\n"
+    # --- _backlinks.md ---
+    if all_backlinks:
+        bl_path = WIKI_DIR / "_backlinks.md"
+        if bl_path.exists():
+            bl_content = bl_path.read_text(encoding="utf-8")
+        else:
+            bl_content = "---\ntitle: Backlink Registry\ntype: index\n---\n\n# Backlink Registry\n"
+        bl_content = bl_content.replace("_No backlinks yet._\n", "")
 
-    content = content.replace("_No backlinks yet._\n", "")
+        for bl in all_backlinks:
+            entry = f"- [{bl['from']}]({bl['from']}) \u2192 [{bl['to']}]({bl['to']})\n"
+            if entry not in bl_content:
+                bl_content += entry
 
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    for bl in backlinks:
-        entry = f"- [{bl['from']}]({bl['from']}) → [{bl['to']}]({bl['to']})\n"
-        if entry not in content:
-            content += entry
-
-    content = re.sub(r"updated: \"\d{4}-\d{2}-\d{2}\"", f'updated: "{now}"', content)
-    bl_path.write_text(content, encoding="utf-8")
+        bl_content = re.sub(r'updated: "\d{4}-\d{2}-\d{2}"', f'updated: "{now}"', bl_content)
+        with _write_lock:
+            bl_path.write_text(bl_content, encoding="utf-8")
 
 
 def mark_compiled(filepath: Path):
     """Set compiled_at in the raw document's frontmatter."""
-    content = filepath.read_text(encoding="utf-8")
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-    if "compiled_at:" in content:
-        content = re.sub(r"compiled_at:.*", f"compiled_at: '{now}'", content)
-    elif content.startswith("---"):
-        parts = content.split("---", 2)
-        if len(parts) >= 3:
-            parts[1] = parts[1].rstrip() + f"\ncompiled_at: '{now}'\n"
-            content = "---".join(parts)
-
-    filepath.write_text(content, encoding="utf-8")
+    with _write_lock:
+        content = filepath.read_text(encoding="utf-8")
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        if "compiled_at:" in content:
+            content = re.sub(r"compiled_at:.*", f"compiled_at: '{now}'", content)
+        elif content.startswith("---"):
+            parts = content.split("---", 2)
+            if len(parts) >= 3:
+                parts[1] = parts[1].rstrip() + f"\ncompiled_at: '{now}'\n"
+                content = "---".join(parts)
+        filepath.write_text(content, encoding="utf-8")
 
 
 def append_log(message: str):
     """Append an entry to wiki/log.md."""
-    log_path = WIKI_DIR / "log.md"
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    with _write_lock:
+        log_path = WIKI_DIR / "log.md"
+        if log_path.exists():
+            content = log_path.read_text(encoding="utf-8")
+        else:
+            WIKI_DIR.mkdir(parents=True, exist_ok=True)
+            content = "---\ntitle: Meridian Operations Log\ntype: index\n---\n\n# Operations Log\n"
+        content = content.replace("_No entries yet._\n", "")
+        content += f"\n## [{now}] compile | {message}\n"
+        log_path.write_text(content, encoding="utf-8")
 
-    if log_path.exists():
-        content = log_path.read_text(encoding="utf-8")
-    else:
-        WIKI_DIR.mkdir(parents=True, exist_ok=True)
-        content = "---\ntitle: Meridian Operations Log\ntype: index\n---\n\n# Operations Log\n"
 
-    content = content.replace("_No entries yet._\n", "")
-    content += f"\n## [{now}] compile | {message}\n"
-    log_path.write_text(content, encoding="utf-8")
+# ---------------------------------------------------------------------------
+# Compile one document (plan + parallel write)
+# ---------------------------------------------------------------------------
 
+def compile_one(client: anthropic.Anthropic, filepath: Path,
+                index_md: str, config: dict) -> dict:
+    """Plan then write all files for one raw document."""
+    t0 = time.time()
+    raw_content = filepath.read_text(encoding="utf-8", errors="replace")
+
+    # Truncate very long transcripts to keep within context
+    if len(raw_content) > 80_000:
+        raw_content = raw_content[:80_000] + "\n\n[... truncated at 80k chars ...]"
+
+    # Pass 1: Planning
+    print(f"  Planning {filepath.name}...", file=sys.stderr)
+    try:
+        plan = plan_document(client, raw_content, index_md, config)
+    except (json.JSONDecodeError, Exception) as e:
+        return {"file": str(filepath), "error": f"Planning failed: {e}"}
+
+    plan_entries = plan.get("plan", [])
+    if not plan_entries:
+        return {"file": str(filepath), "error": "Empty plan returned"}
+
+    # Pass 2: Writing (parallel)
+    print(f"  Writing {len(plan_entries)} files for {filepath.name}...", file=sys.stderr)
+    written = []
+    errors = []
+
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        futures = {
+            pool.submit(
+                write_single_file, client, raw_content, entry,
+                filepath.name, config
+            ): entry
+            for entry in plan_entries
+        }
+        for future in as_completed(futures):
+            entry = futures[future]
+            try:
+                result = future.result()
+                written.append(result["path"])
+            except Exception as e:
+                errors.append({"path": entry["path"], "error": str(e)})
+
+    mark_compiled(filepath)
+    elapsed = time.time() - t0
+    print(f"  Done {filepath.name} ({len(written)} files, {elapsed:.1f}s)", file=sys.stderr)
+
+    return {
+        "file": str(filepath),
+        "action": "compiled",
+        "written": written,
+        "errors": errors,
+        "new_clients": plan.get("new_clients", []),
+        "status_changes": plan.get("status_changes", []),
+        "index_entries": plan.get("index_entries", []),
+        "backlinks": plan.get("backlinks", []),
+        "elapsed_s": round(elapsed, 1),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
 
 def main():
     parser = argparse.ArgumentParser(description="Meridian Compiler")
@@ -207,7 +356,7 @@ def main():
 
     config = load_config()
     client = anthropic.Anthropic()
-    agents_md = load_agents_md()
+    index_md = load_index()
 
     if args.file:
         files = [Path(args.file)]
@@ -219,61 +368,38 @@ def main():
         print(json.dumps({"status": "ok", "compiled": 0, "results": []}))
         return
 
+    t_start = time.time()
     results = []
+    all_index_entries = []
+    all_backlinks = []
 
-    for filepath in files:
-        print(f"Compiling {filepath.name}...", file=sys.stderr)
+    # Compile documents with up to 3 concurrent
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        futures = {
+            pool.submit(compile_one, client, fp, index_md, config): fp
+            for fp in files
+        }
+        for future in as_completed(futures):
+            fp = futures[future]
+            try:
+                result = future.result()
+                results.append(result)
+                all_index_entries.extend(result.get("index_entries", []))
+                all_backlinks.extend(result.get("backlinks", []))
+                log_paths = ", ".join(result.get("written", []))
+                append_log(f'Compiled "{fp.name}" \u2192 {log_paths}')
+            except Exception as e:
+                results.append({"file": str(fp), "error": str(e)})
 
-        raw_content = filepath.read_text(encoding="utf-8", errors="replace")
-        index_md = load_index()  # reload each time since we update it
+    # Batch update index and backlinks once
+    if all_index_entries or all_backlinks:
+        update_index_batch(all_index_entries, all_backlinks)
 
-        try:
-            result = compile_document(client, raw_content, agents_md, index_md, config)
-        except json.JSONDecodeError as e:
-            print(f"Error parsing compiler output for {filepath.name}: {e}", file=sys.stderr)
-            results.append({"file": str(filepath), "error": f"JSON parse error: {e}"})
-            continue
-        except Exception as e:
-            print(f"Error compiling {filepath.name}: {e}", file=sys.stderr)
-            results.append({"file": str(filepath), "error": str(e)})
-            continue
-
-        # Check for bootstrap proposal
-        proposal = result.get("proposal")
-        if proposal:
-            results.append({
-                "file": str(filepath),
-                "action": "proposed",
-                "proposal": proposal,
-                "files": [f["path"] for f in result.get("files", [])],
-            })
-            # In bootstrap mode, still write the files since we're running it manually
-            written = write_compiled_files(result)
-            update_index(result)
-            update_backlinks(result)
-            mark_compiled(filepath)
-            log_msg = f'Compiled "{filepath.name}" → {", ".join(written)}'
-            append_log(log_msg)
-            continue
-
-        # Steady state — write directly
-        written = write_compiled_files(result)
-        update_index(result)
-        update_backlinks(result)
-        mark_compiled(filepath)
-
-        log_msg = f'Compiled "{filepath.name}" → {", ".join(written)}'
-        append_log(log_msg)
-
-        results.append({
-            "file": str(filepath),
-            "action": result.get("action", "create"),
-            "written": written,
-        })
-
+    elapsed_total = time.time() - t_start
     output = {
         "status": "ok",
         "compiled": len(results),
+        "elapsed_s": round(elapsed_total, 1),
         "results": results,
     }
     print(json.dumps(output, indent=2))

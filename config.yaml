@@ -29,7 +29,8 @@ distill:
 # Compilation settings
 compiler:
   bootstrap_threshold: 20      # switch to steady state after this many wiki articles
-  batch_size: 1                # docs processed per run
+  planning_model: claude-haiku-4-5-20251001   # fast model for filing decisions
+  writing_model: claude-sonnet-4-6            # quality model for article content
 
 # n8n integration
 n8n:
