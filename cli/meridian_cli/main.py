@@ -16,12 +16,17 @@ Usage:
 """
 
 import argparse
+import io
 import json
 import sys
 from pathlib import Path
 
 import requests
 import yaml
+
+# Fix Unicode output on Windows
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 
 def load_config() -> dict:
