@@ -82,7 +82,7 @@ def compile_document(client: anthropic.Anthropic, raw_content: str,
 
     response = client.messages.create(
         model=config["llm"]["model"],
-        max_tokens=config["llm"]["max_tokens"],
+        max_tokens=16384,
         temperature=config["llm"]["temperature"],
         system=system_prompt,
         messages=[{
