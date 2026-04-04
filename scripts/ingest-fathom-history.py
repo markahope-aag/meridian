@@ -168,8 +168,12 @@ def main():
         try:
             # List endpoint already includes transcript/summary/action_items
             result = send_to_receiver(meeting, receiver_url, receiver_token)
-            print(f"✓ {result.get('filename', 'ok')}", file=sys.stderr)
-            ingested += 1
+            if result.get("status") == "skipped":
+                print(f"⊘ duplicate (already exists)", file=sys.stderr)
+                skipped += 1
+            else:
+                print(f"✓ {result.get('filename', 'ok')}", file=sys.stderr)
+                ingested += 1
             time.sleep(0.5)  # gentle on the receiver
         except Exception as e:
             print(f"✗ {e}", file=sys.stderr)
@@ -180,8 +184,9 @@ def main():
         print(f"Dry run: {len(meetings)} meetings would be ingested.", file=sys.stderr)
     else:
         print(f"Ingested: {ingested}", file=sys.stderr)
+        print(f"Skipped:  {skipped} (duplicates)", file=sys.stderr)
         print(f"Failed:   {failed}", file=sys.stderr)
-        print(f"Total:    {ingested + failed}", file=sys.stderr)
+        print(f"Total:    {ingested + skipped + failed}", file=sys.stderr)
 
 
 if __name__ == "__main__":

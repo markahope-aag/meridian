@@ -225,6 +225,19 @@ def capture_fathom():
     data = request.get_json(force=True)
 
     recording_id = data.get("recording_id", "unknown")
+
+    # Dedup: check if this recording_id already exists in capture/ or raw/
+    rid_str = str(recording_id)
+    for search_dir in (CAPTURE_DIR, RAW_DIR):
+        if search_dir.exists():
+            for f in search_dir.glob(f"*-{rid_str}.md"):
+                return jsonify({
+                    "status": "skipped",
+                    "reason": "duplicate",
+                    "recording_id": recording_id,
+                    "existing_file": str(f),
+                })
+
     title = data.get("title") or data.get("meeting_title") or f"Meeting {recording_id}"
     url = data.get("url", "")
     share_url = data.get("share_url", "")
