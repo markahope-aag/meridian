@@ -1,0 +1,70 @@
+{
+  "name": "Meridian Daily Compile",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Daily 6:30 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://meridian.markahope.com/compile",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.MERIDIAN_RECEIVER_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "id": "http-request",
+      "name": "Run Compiler",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Daily 6:30 AM": {
+      "main": [
+        [
+          {
+            "node": "Run Compiler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

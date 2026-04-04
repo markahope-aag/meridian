@@ -22,6 +22,8 @@ import re
 import subprocess
 import sys
 import tempfile
+import threading
+import uuid
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
@@ -31,6 +33,72 @@ import yaml
 
 app = Flask(__name__)
 log = logging.getLogger("meridian")
+
+# ---------------------------------------------------------------------------
+# Async job tracking
+# ---------------------------------------------------------------------------
+
+_jobs: dict[str, dict] = {}
+_jobs_lock = threading.Lock()
+
+
+def create_job(job_type: str) -> str:
+    """Create a new background job, return its ID."""
+    job_id = uuid.uuid4().hex[:12]
+    with _jobs_lock:
+        _jobs[job_id] = {
+            "id": job_id,
+            "type": job_type,
+            "status": "running",
+            "started_at": datetime.now(timezone.utc).isoformat(),
+            "completed_at": None,
+            "result": None,
+            "error": None,
+        }
+    return job_id
+
+
+def complete_job(job_id: str, result: str):
+    """Mark a job as completed with its result."""
+    with _jobs_lock:
+        if job_id in _jobs:
+            _jobs[job_id]["status"] = "completed"
+            _jobs[job_id]["completed_at"] = datetime.now(timezone.utc).isoformat()
+            _jobs[job_id]["result"] = result
+
+
+def fail_job(job_id: str, error: str):
+    """Mark a job as failed."""
+    with _jobs_lock:
+        if job_id in _jobs:
+            _jobs[job_id]["status"] = "failed"
+            _jobs[job_id]["completed_at"] = datetime.now(timezone.utc).isoformat()
+            _jobs[job_id]["error"] = error
+
+
+def get_job(job_id: str) -> dict | None:
+    """Get job status."""
+    with _jobs_lock:
+        return _jobs.get(job_id, {}).copy() or None
+
+
+def run_agent_async(job_id: str, args: list[str]):
+    """Run an agent subprocess in a background thread."""
+    try:
+        result = subprocess.run(
+            args, capture_output=True, text=True, timeout=600,
+            cwd=str(MERIDIAN_ROOT),
+        )
+        if result.returncode != 0:
+            fail_job(job_id, result.stderr)
+        else:
+            complete_job(job_id, result.stdout)
+    except subprocess.TimeoutExpired:
+        fail_job(job_id, "Agent timed out (600s)")
+    except FileNotFoundError as e:
+        fail_job(job_id, f"Agent not found: {e}")
+    except Exception as e:
+        fail_job(job_id, str(e))
 
 # Paths — set via env or default to /meridian
 MERIDIAN_ROOT = Path(os.environ.get("MERIDIAN_ROOT", "/meridian"))
@@ -398,13 +466,16 @@ def capture_claude_session():
 
 
 # ---------------------------------------------------------------------------
-# POST /distill — run Daily Distill agent
+# POST /distill — run Daily Distill agent (async by default)
 # ---------------------------------------------------------------------------
 
 @app.route("/distill", methods=["POST"])
 @require_auth
 def distill():
     """Run the Daily Distill agent to review capture/ and promote to raw/.
+
+    Returns 202 with a job ID. Poll GET /jobs/<id> for results.
+    Add ?sync=true for synchronous execution (blocks until complete).
 
     Body JSON:
         mode: str (optional) — "auto" for automatic, "dry-run" for scoring only
@@ -413,6 +484,7 @@ def distill():
     data = request.get_json(force=True)
     mode = data.get("mode", "auto")
     file_arg = data.get("file")
+    sync = request.args.get("sync", "").lower() == "true"
 
     args = [sys.executable, str(AGENTS_DIR / "daily_distill.py")]
     if mode == "dry-run":
@@ -420,23 +492,28 @@ def distill():
     if file_arg:
         args.extend(["--file", file_arg])
 
-    try:
-        result = subprocess.run(
-            args, capture_output=True, text=True, timeout=300,
-            cwd=str(MERIDIAN_ROOT),
-        )
-        if result.returncode != 0:
-            return jsonify({"error": "daily_distill failed", "stderr": result.stderr}), 500
+    if sync:
+        try:
+            result = subprocess.run(
+                args, capture_output=True, text=True, timeout=300,
+                cwd=str(MERIDIAN_ROOT),
+            )
+            if result.returncode != 0:
+                return jsonify({"error": "daily_distill failed", "stderr": result.stderr}), 500
+            return jsonify({"status": "ok", "result": result.stdout})
+        except subprocess.TimeoutExpired:
+            return jsonify({"error": "daily_distill timed out"}), 504
+        except FileNotFoundError:
+            return jsonify({"error": "daily_distill.py not found"}), 501
 
-        return jsonify({"status": "ok", "result": result.stdout})
-    except subprocess.TimeoutExpired:
-        return jsonify({"error": "daily_distill timed out"}), 504
-    except FileNotFoundError:
-        return jsonify({"error": "daily_distill.py not found"}), 501
+    job_id = create_job("distill")
+    thread = threading.Thread(target=run_agent_async, args=(job_id, args), daemon=True)
+    thread.start()
+    return jsonify({"status": "accepted", "job_id": job_id}), 202
 
 
 # ---------------------------------------------------------------------------
-# POST /compile — run the compiler agent
+# POST /compile — run the compiler agent (async by default)
 # ---------------------------------------------------------------------------
 
 @app.route("/compile", methods=["POST"])
@@ -444,29 +521,58 @@ def distill():
 def compile():
     """Run the compiler agent to compile raw/ documents into wiki/ articles.
 
+    Returns 202 with a job ID. Poll GET /jobs/<id> for results.
+    Add ?sync=true for synchronous execution (blocks until complete).
+
     Body JSON:
         file: str (optional) — specific raw file to compile; if omitted, compiles all uncompiled
     """
     data = request.get_json(force=True)
     file_arg = data.get("file")
+    sync = request.args.get("sync", "").lower() == "true"
 
     args = [sys.executable, str(AGENTS_DIR / "compiler.py")]
     if file_arg:
         args.extend(["--file", file_arg])
 
-    try:
-        result = subprocess.run(
-            args, capture_output=True, text=True, timeout=300,
-            cwd=str(MERIDIAN_ROOT),
-        )
-        if result.returncode != 0:
-            return jsonify({"error": "compiler failed", "stderr": result.stderr}), 500
+    if sync:
+        try:
+            result = subprocess.run(
+                args, capture_output=True, text=True, timeout=600,
+                cwd=str(MERIDIAN_ROOT),
+            )
+            if result.returncode != 0:
+                return jsonify({"error": "compiler failed", "stderr": result.stderr}), 500
+            return jsonify({"status": "ok", "result": result.stdout})
+        except subprocess.TimeoutExpired:
+            return jsonify({"error": "compiler timed out"}), 504
+        except FileNotFoundError:
+            return jsonify({"error": "compiler.py not found"}), 501
 
-        return jsonify({"status": "ok", "result": result.stdout})
-    except subprocess.TimeoutExpired:
-        return jsonify({"error": "compiler timed out"}), 504
-    except FileNotFoundError:
-        return jsonify({"error": "compiler.py not found"}), 501
+    job_id = create_job("compile")
+    thread = threading.Thread(target=run_agent_async, args=(job_id, args), daemon=True)
+    thread.start()
+    return jsonify({"status": "accepted", "job_id": job_id}), 202
+
+
+# ---------------------------------------------------------------------------
+# GET /jobs/<id> — poll job status
+# ---------------------------------------------------------------------------
+
+@app.route("/jobs/<job_id>", methods=["GET"])
+@require_auth
+def job_status(job_id):
+    """Poll the status of an async job.
+
+    Returns:
+        status: "running" | "completed" | "failed"
+        result: agent output (when completed)
+        error: error message (when failed)
+    """
+    job = get_job(job_id)
+    if not job:
+        return jsonify({"error": "job not found"}), 404
+    return jsonify(job)
 
 
 # ---------------------------------------------------------------------------
