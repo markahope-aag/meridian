@@ -78,9 +78,9 @@ Respond with JSON:
 ## Bootstrap Mode
 
 If there are fewer than 20 articles in the wiki (check `_index.md` statistics):
-- Propose your filing decision but do NOT write files
 - Include a `"proposal"` field explaining where you'd file and why
-- Wait for human approval
+- Still include the full `"files"` array with content — the calling agent will write them
+- The proposal is logged for review but files are written immediately
 
 ## Steady State
 

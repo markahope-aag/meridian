@@ -436,6 +436,40 @@ def distill():
 
 
 # ---------------------------------------------------------------------------
+# POST /compile — run the compiler agent
+# ---------------------------------------------------------------------------
+
+@app.route("/compile", methods=["POST"])
+@require_auth
+def compile():
+    """Run the compiler agent to compile raw/ documents into wiki/ articles.
+
+    Body JSON:
+        file: str (optional) — specific raw file to compile; if omitted, compiles all uncompiled
+    """
+    data = request.get_json(force=True)
+    file_arg = data.get("file")
+
+    args = [sys.executable, str(AGENTS_DIR / "compiler.py")]
+    if file_arg:
+        args.extend(["--file", file_arg])
+
+    try:
+        result = subprocess.run(
+            args, capture_output=True, text=True, timeout=300,
+            cwd=str(MERIDIAN_ROOT),
+        )
+        if result.returncode != 0:
+            return jsonify({"error": "compiler failed", "stderr": result.stderr}), 500
+
+        return jsonify({"status": "ok", "result": result.stdout})
+    except subprocess.TimeoutExpired:
+        return jsonify({"error": "compiler timed out"}), 504
+    except FileNotFoundError:
+        return jsonify({"error": "compiler.py not found"}), 501
+
+
+# ---------------------------------------------------------------------------
 # POST /ask — Q&A against the wiki
 # ---------------------------------------------------------------------------
 
