@@ -149,6 +149,7 @@ Add `?sync=true` for synchronous execution (blocks until complete).
 |---|---|
 | `POST /distill` | Run Daily Distill — score capture docs, promote to raw |
 | `POST /compile` | Run Compiler — compile raw docs into wiki articles |
+| `POST /lint` | Run Linter — wiki health checks, auto-fix + flag for review |
 | `GET /jobs/<id>` | Poll job status: `running`, `completed`, or `failed` |
 
 ### Agent endpoints
@@ -169,6 +170,9 @@ Add `?sync=true` for synchronous execution (blocks until complete).
 | `meridian capture --url <url>` | `POST /capture` | Ingest a URL into capture |
 | `meridian capture --file <path>` | `POST /capture` | Ingest a local file into capture |
 | `meridian capture --text "note"` | `POST /capture` | Capture raw text |
+| `meridian lint` | `POST /lint` | Wiki health check (async, polls until complete) |
+| `meridian lint --dry-run` | `POST /lint` | Report only, no changes |
+| `meridian lint --scope orphans` | `POST /lint` | Run specific check only |
 | `meridian status` | `GET /health` | Check receiver health |
 
 ## Frontmatter Schema
@@ -395,7 +399,35 @@ When reviewing `capture/` for promotion to `raw/`:
 4. During bootstrap: send proposal for human approval (via n8n email)
 5. During steady state (20+ wiki articles): auto-promote for scores >= 8, propose for 6-7
 6. During bootstrap (<20 wiki articles): auto-promote for scores >= 6 (more permissive to seed the wiki)
-6. Never delete from `capture/` — mark processed items by adding frontmatter:
+7. Never delete from `capture/` — mark processed items by adding frontmatter:
    `distill_status: promoted | skipped`
    `distill_date: "2026-04-04"`
    `distill_score: { relevance: 8, quality: 7 }`
+
+## Linter Protocol
+
+Weekly wiki health check (Sundays 7 AM via n8n). Reads all wiki content and
+performs four checks: contradictions, orphans, gaps, and suggested connections.
+
+### Auto-fix (linter acts directly)
+- Rebuild `_backlinks.md` to match actual link state
+- Add missing `_index.md` entries
+- Create stub articles for concepts mentioned in 5+ articles with no existing page
+- Link orphan articles to related content where the connection is unambiguous
+
+### Flag for review (report only)
+- Contradictions between articles
+- Client status changes detected
+- Article merge candidates
+- Orphans with no clear home
+- New article candidates (3-4 mentions, below auto-stub threshold)
+- Suggested connections between unlinked articles
+
+### Output
+- Full report: `outputs/lint-[date].md`
+- Wiki copy: `wiki/articles/lint-[date].md`
+- Log entry appended to `wiki/log.md`
+
+### Scope
+The linter owns structural fixes (links, index, stubs). The compiler owns content.
+The linter never modifies wiki article content directly.

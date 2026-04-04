@@ -556,6 +556,51 @@ def compile():
 
 
 # ---------------------------------------------------------------------------
+# POST /lint — run the linter agent (async by default)
+# ---------------------------------------------------------------------------
+
+@app.route("/lint", methods=["POST"])
+@require_auth
+def lint():
+    """Run the linter agent to check wiki health.
+
+    Returns 202 with a job ID. Poll GET /jobs/<id> for results.
+    Add ?sync=true for synchronous execution.
+
+    Body JSON:
+        mode: str (optional) — "auto" (default) or "dry-run"
+        scope: str (optional) — "contradictions", "orphans", "gaps", or "all" (default)
+    """
+    data = request.get_json(force=True)
+    mode = data.get("mode", "auto")
+    scope = data.get("scope", "all")
+    sync = request.args.get("sync", "").lower() == "true"
+
+    args = [sys.executable, str(AGENTS_DIR / "linter.py"), "--scope", scope]
+    if mode == "dry-run":
+        args.append("--dry-run")
+
+    if sync:
+        try:
+            result = subprocess.run(
+                args, capture_output=True, text=True, timeout=600,
+                cwd=str(MERIDIAN_ROOT),
+            )
+            if result.returncode != 0:
+                return jsonify({"error": "linter failed", "stderr": result.stderr}), 500
+            return jsonify({"status": "ok", "result": result.stdout})
+        except subprocess.TimeoutExpired:
+            return jsonify({"error": "linter timed out"}), 504
+        except FileNotFoundError:
+            return jsonify({"error": "linter.py not found"}), 501
+
+    job_id = create_job("lint")
+    thread = threading.Thread(target=run_agent_async, args=(job_id, args), daemon=True)
+    thread.start()
+    return jsonify({"status": "accepted", "job_id": job_id}), 202
+
+
+# ---------------------------------------------------------------------------
 # GET /jobs/<id> — poll job status
 # ---------------------------------------------------------------------------
 

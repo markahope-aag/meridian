@@ -172,6 +172,47 @@ def cmd_capture(args):
         sys.exit(1)
 
 
+def cmd_lint(args):
+    """Run wiki health check."""
+    data = {"scope": args.scope}
+    if args.dry_run:
+        data["mode"] = "dry-run"
+
+    # Start async job
+    result = api_call("POST", "/lint", data)
+    if result.get("status") == "accepted":
+        job_id = result["job_id"]
+        print(f"Lint job started: {job_id}", file=sys.stderr)
+
+        # Poll until complete
+        import time
+        while True:
+            time.sleep(3)
+            job = api_call("GET", f"/jobs/{job_id}")
+            status = job.get("status")
+            if status == "completed":
+                try:
+                    output = json.loads(job.get("result", "{}"))
+                    print(output.get("report", job.get("result", "")))
+                except (json.JSONDecodeError, TypeError):
+                    print(job.get("result", ""))
+                return
+            elif status == "failed":
+                print(f"Error: {job.get('error', 'unknown')}", file=sys.stderr)
+                sys.exit(1)
+            else:
+                print(".", end="", flush=True, file=sys.stderr)
+    elif result.get("status") == "ok":
+        try:
+            output = json.loads(result.get("result", "{}"))
+            print(output.get("report", result.get("result", "")))
+        except (json.JSONDecodeError, TypeError):
+            print(result.get("result", ""))
+    else:
+        print(f"Error: {result.get('error', 'unknown')}", file=sys.stderr)
+        sys.exit(1)
+
+
 def cmd_status(args):
     """Check receiver health."""
     config = load_config()
@@ -218,6 +259,15 @@ def main():
     p_capture.add_argument("--title", help="Override title")
     p_capture.add_argument("--type", help="Source type override")
     p_capture.set_defaults(func=cmd_capture)
+
+    # lint
+    p_lint = sub.add_parser("lint", help="Run wiki health check")
+    p_lint.add_argument("--scope", default="all",
+                        choices=["contradictions", "orphans", "gaps", "all"],
+                        help="Which checks to run")
+    p_lint.add_argument("--dry-run", action="store_true",
+                        help="Report only, no changes")
+    p_lint.set_defaults(func=cmd_lint)
 
     # status
     p_status = sub.add_parser("status", help="Check receiver health")
