@@ -15,11 +15,11 @@ COPY app.py .
 ENV MERIDIAN_ROOT=/meridian
 ENV PYTHONUNBUFFERED=1
 
-EXPOSE 8090
+EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8090/health')"
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
 
 USER meridian
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8090", "--workers", "2", "--timeout", "120", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "120", "app:app"]
