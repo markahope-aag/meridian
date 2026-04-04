@@ -1,0 +1,36 @@
+# Meridian Configuration
+# Secrets are injected via environment variables — never hardcode them here.
+# Required env vars: ANTHROPIC_API_KEY
+
+# Paths (relative to project root)
+paths:
+  capture: capture/
+  raw: raw/
+  wiki: wiki/
+  outputs: outputs/
+  tools: tools/
+  agents: agents/
+  prompts: prompts/
+
+# LLM settings
+llm:
+  model: claude-sonnet-4-6
+  max_tokens: 4096
+  temperature: 0.3
+
+# Daily Distill settings
+distill:
+  min_relevance: 6
+  min_quality: 6
+  auto_promote_threshold: 8    # auto-promote when both scores >= this
+  approval_email: mark.hope@asymmetric.pro
+
+# Compilation settings
+compiler:
+  bootstrap_threshold: 20      # switch to steady state after this many wiki articles
+  batch_size: 1                # docs processed per run
+
+# n8n integration
+n8n:
+  base_url: https://auto.asymmetric.pro
+  # API key via N8N_API_KEY env var

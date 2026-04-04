@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets — never commit
+.env
+*.env
+credentials.json
+
+# Meridian runtime data — lives on the VM, not in git
+# capture/, raw/, wiki/, outputs/ contain runtime data
+# but we DO track wiki/_index.md, wiki/_backlinks.md, and raw/_index.md as seeds

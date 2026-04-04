@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "meridian-cli"
+version = "0.1.0"
+description = "Thin CLI client for the Meridian knowledge system"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.28",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+meridian = "meridian_cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]

@@ -1,0 +1,276 @@
+# Meridian — Agent Protocol
+
+> Every LLM agent entering this repository MUST read this file first.
+> This is the single source of truth for schema, conventions, and filing rules.
+
+## Project Overview
+
+Meridian is an LLM-maintained personal knowledge base. Documents flow through a pipeline:
+
+```
+capture/ → (Daily Distill) → raw/ → (Compiler) → wiki/
+```
+
+Humans rarely edit `wiki/` directly. The LLM owns it.
+
+## Architecture
+
+All execution happens on the VM. Clients are thin HTTP wrappers.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Hetzner VM (Coolify)                                   │
+│                                                         │
+│  ┌─────────────────────┐     ┌───────────────────────┐  │
+│  │  meridian-receiver   │     │  n8n                  │  │
+│  │  (Flask/Gunicorn)    │◄────│  (event triggers)     │  │
+│  │                      │     └───────────────────────┘  │
+│  │  POST /capture       │                                │
+│  │  POST /capture/fathom│◄─── Fathom webhook             │
+│  │  POST /capture/      │                                │
+│  │    claude-session    │◄─── Claude Code hook            │
+│  │  POST /ask           │                                │
+│  │  POST /debrief       │                                │
+│  │  POST /context       │                                │
+│  └──────────┬───────────┘                                │
+│             │ bind mount                                 │
+│             ▼                                            │
+│  ┌─────────────────────────────────────────────────┐     │
+│  │  /meridian/                                     │     │
+│  │  capture/ → raw/ → wiki/ → outputs/             │     │
+│  └─────────────────────────────────────────────────┘     │
+│             │                                            │
+└─────────────┼────────────────────────────────────────────┘
+              │ Obsidian Sync
+              ▼
+┌──────────────────────┐
+│  Any machine          │
+│  - Obsidian (viewer)  │
+│  - meridian CLI       │
+│    (thin HTTP client) │
+│  - Claude Code        │
+│    (post-session hook)│
+└──────────────────────┘
+```
+
+### Components
+
+| Component | Where | Role |
+|---|---|---|
+| **meridian-receiver** | Coolify container (bind mount to `/meridian/`) | Central API — all writes and agent execution |
+| **meridian CLI** | Any machine (`pip install -e .`) | Thin HTTP client — `meridian ask`, `meridian debrief`, `meridian context` |
+| **n8n** | Coolify container | Event-driven triggers (Fathom webhooks, scheduled distill/lint) |
+| **Obsidian Sync** | VM ↔ all machines | Syncs entire `/meridian/` tree for local viewing |
+| **Claude Code hooks** | Any machine | Post-session debrief via HTTP to receiver |
+
+### Auth
+
+- All receiver endpoints require `Authorization: Bearer <MERIDIAN_RECEIVER_TOKEN>`
+- Token is set as a Coolify env var on the receiver container
+- Each local machine stores the token in `~/.meridian/config.yaml`
+- n8n includes the token in HTTP Request node headers
+
+### Local config (`~/.meridian/config.yaml`)
+
+```yaml
+receiver_url: https://meridian.markahope.com
+token: <MERIDIAN_RECEIVER_TOKEN>
+```
+
+## Directory Layout
+
+```
+/meridian/
+├── AGENTS.md          ← you are here
+├── capture/           # unfiltered intake — everything lands here first
+├── raw/               # promoted source docs with normalized frontmatter
+├── wiki/              # LLM-maintained knowledge base
+│   ├── _index.md      # master index — ALWAYS read before filing
+│   ├── _backlinks.md  # auto-maintained backlink registry
+│   ├── concepts/      # concept explainers (one concept per file)
+│   ├── articles/      # summaries and analyses of source material
+│   ├── categories/    # category index pages
+│   └── dev/           # Claude Code learnings
+│       ├── patterns/  # reusable approaches that worked
+│       ├── decisions/ # architectural choices and reasoning
+│       └── dead-ends/ # things that failed and why
+├── outputs/           # reports, slides, charts filed back by agents
+├── tools/             # CLI scripts (used by humans and agents)
+├── agents/            # agent loop scripts
+├── prompts/           # all LLM system prompts as .md files
+├── receiver/          # meridian-receiver HTTP service (deployed on Coolify)
+│   ├── app.py         # Flask app — capture, ask, debrief, context endpoints
+│   ├── Dockerfile     # production image with gunicorn
+│   └── README.md      # deployment and Fathom webhook setup
+├── cli/               # thin meridian CLI (pip-installable)
+│   ├── pyproject.toml
+│   └── meridian_cli/
+│       ├── __init__.py
+│       └── main.py
+├── scripts/           # setup and hook scripts
+│   ├── setup-machine.sh   # one-time machine onboarding
+│   └── hooks/
+│       └── post-session.sh # Claude Code post-session hook
+└── config.yaml        # paths and settings (no secrets)
+```
+
+## Receiver API
+
+All endpoints require `Authorization: Bearer <token>`.
+
+### Capture endpoints
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `POST /capture` | Generic | Write any `.md` payload to `capture/` |
+| `POST /capture/fathom` | Fathom-specific | Format `new-meeting-content-ready` webhook payload as `.md` |
+| `POST /capture/claude-session` | Claude Code | Convert JSONL session transcript to `.md` in `capture/` |
+
+### Agent endpoints
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `POST /ask` | Q&A | Accept a question, run Q&A agent against wiki, return result, file to `outputs/` |
+| `POST /debrief` | Debrief | Accept a session transcript, run debrief agent, file to `capture/` |
+| `POST /context` | Context | Accept a topic, search wiki, return a context brief |
+
+### CLI commands
+
+| Command | Calls | Description |
+|---|---|---|
+| `meridian ask "question"` | `POST /ask` | Ask the knowledge base a question |
+| `meridian debrief` | `POST /debrief` | Debrief a Claude Code session |
+| `meridian context "topic"` | `POST /context` | Get a context brief on a topic |
+| `meridian capture --url <url>` | `POST /capture` | Ingest a URL into capture |
+| `meridian capture --file <path>` | `POST /capture` | Ingest a local file into capture |
+| `meridian capture --text "note"` | `POST /capture` | Capture raw text |
+| `meridian status` | `GET /health` | Check receiver health |
+
+## Frontmatter Schema
+
+### Raw documents (`raw/`)
+
+Every file in `raw/` MUST have this frontmatter:
+
+```yaml
+---
+title: "Document Title"
+source_url: "https://..."
+source_type: article | paper | repo | dataset | image | note | meeting | claude-session
+date_ingested: "2026-04-04"
+compiled_at:                # blank until compiler processes it
+tags: []
+summary: ""                 # one line, filled by compiler
+---
+```
+
+### Wiki articles (`wiki/`)
+
+```yaml
+---
+title: "Article Title"
+type: concept | article | category | index
+created: "2026-04-04"
+updated: "2026-04-04"
+source_docs: []             # list of raw/ filenames this was compiled from
+tags: []
+---
+```
+
+### Capture documents (`capture/`)
+
+Capture docs have minimal or no frontmatter — they arrive in whatever format the source
+provides. The Daily Distill agent normalizes them when promoting to `raw/`.
+
+## Filing Rules
+
+1. **Always read `wiki/_index.md` first.** Before creating or modifying any wiki article,
+   read the full index to understand the current structure and avoid duplicates.
+
+2. **One concept per file.** Don't create monolithic pages. If a topic has distinct
+   subtopics, each gets its own file with cross-links.
+
+3. **File names are kebab-case.** Examples: `transformer-architecture.md`,
+   `attention-mechanism.md`, `2026-04-04-team-standup.md`.
+
+4. **Backlinks are mandatory.** When article A references article B, both files must
+   reflect the link. Update `_backlinks.md` accordingly.
+
+5. **Categories are emergent.** Don't pre-create categories. When 3+ articles share a
+   theme, create a category page that links to them.
+
+6. **Incremental updates only.** Never rewrite an existing article from scratch unless
+   explicitly asked. Append, amend, or create a new related article instead.
+
+7. **Source attribution.** Every wiki article must list its source documents in the
+   `source_docs` frontmatter field.
+
+8. **Update `_index.md` after every write.** Any time you create or modify a wiki article,
+   update the index to reflect the change.
+
+## Agent Conventions
+
+### Environment
+- `ANTHROPIC_API_KEY` is available as an environment variable on the receiver container
+- All agent scripts run on the VM, invoked by the receiver or n8n
+- Python scripts use stdlib + `anthropic` + `requests` — minimal dependencies
+- All prompts live in `prompts/` as `.md` files — never hardcode prompts in scripts
+
+### CLI Interface
+Every tool and agent script must:
+- Accept arguments via CLI (argparse or sys.argv)
+- Print structured output to stdout (JSON preferred for tools, markdown for agents)
+- Exit with code 0 on success, non-zero on failure
+- Log to stderr, never stdout (stdout is for output)
+
+### Error Handling
+- If `wiki/_index.md` doesn't exist, create it — don't crash
+- If a referenced file is missing, log a warning and continue
+- Never silently swallow errors — log them to stderr
+
+## Compilation Protocol
+
+When compiling a raw document into wiki articles:
+
+1. Read `AGENTS.md` (this file)
+2. Read `wiki/_index.md` to understand current wiki state
+3. Read the raw document
+4. Decide: does this update an existing article, or warrant a new one?
+5. If **bootstrap mode** (fewer than 20 wiki articles): propose the filing decision
+   and wait for human approval before writing
+6. If **steady state**: file directly, following all rules above
+7. Update `wiki/_index.md` and `wiki/_backlinks.md`
+
+### Source type routing
+
+| Source type | Destination | Notes |
+|---|---|---|
+| article, paper, note | `wiki/articles/` or `wiki/concepts/` | Standard routing |
+| meeting | `wiki/articles/` | Extract decisions + action items as cross-links |
+| claude-session | `wiki/dev/` | Route by content type (see below) |
+
+### Claude Code session routing (`claude-session`)
+
+Session debriefs contain structured sections. Route each to the appropriate `wiki/dev/` subdirectory:
+
+| Content | Destination | Filename pattern |
+|---|---|---|
+| Architectural decisions | `wiki/dev/decisions/` | `decision-{slug}.md` |
+| Reusable patterns | `wiki/dev/patterns/` | `pattern-{slug}.md` |
+| Failed approaches | `wiki/dev/dead-ends/` | `dead-end-{slug}.md` |
+
+A single debrief may produce multiple files. Each decision, pattern, or dead-end gets its own file.
+
+## Daily Distill Protocol
+
+When reviewing `capture/` for promotion to `raw/`:
+
+1. Read every new/unprocessed file in `capture/`
+2. Score each on relevance (0-10) and quality (0-10)
+3. For items scoring 6+ on both: propose promotion to `raw/` with normalized frontmatter
+4. During bootstrap: send proposal for human approval (via n8n email)
+5. During steady state: promote automatically for items scoring 8+, propose for 6-7
+6. Never delete from `capture/` — mark processed items by adding frontmatter:
+   `distill_status: promoted | skipped`
+   `distill_date: "2026-04-04"`
+   `distill_score: { relevance: 8, quality: 7 }`
