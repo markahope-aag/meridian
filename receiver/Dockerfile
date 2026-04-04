@@ -7,11 +7,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app.py .
-
-# /meridian/ is provided at runtime via Coolify bind mount.
-# It contains everything: capture/, raw/, wiki/, agents/, prompts/, config.yaml.
-# The receiver only needs its own app.py — all other code is read from the bind mount.
+# app.py is read from the bind mount at /meridian/receiver/app.py.
+# This means endpoint changes take effect without rebuilding the image.
+# Gunicorn points at the bind-mounted copy.
 ENV MERIDIAN_ROOT=/meridian
 ENV PYTHONUNBUFFERED=1
 
@@ -22,4 +20,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
 
 USER meridian
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "120", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "120", "--chdir", "/meridian/receiver", "app:app"]
