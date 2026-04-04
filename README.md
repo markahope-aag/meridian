@@ -74,20 +74,22 @@ All execution happens on a Hetzner VM managed by Coolify. Clients are thin HTTP 
 | `POST /capture` | Write any markdown to `capture/` |
 | `POST /capture/fathom` | Format Fathom meeting webhook payload |
 | `POST /capture/claude-session` | Convert Claude Code JSONL transcript |
-| `POST /distill` | Run the Daily Distill agent |
-| `POST /compile` | Run the Compiler agent |
+| `POST /distill` | Run Daily Distill (async — returns 202, poll `/jobs/<id>`) |
+| `POST /compile` | Run Compiler (async — returns 202, poll `/jobs/<id>`) |
+| `GET /jobs/<id>` | Poll async job status |
 | `POST /ask` | Q&A against the wiki |
 | `POST /debrief` | Debrief a Claude Code session |
 | `POST /context` | Search wiki, return context brief |
 | `GET /health` | Health check |
 
-All endpoints except `/health` require bearer token auth.
+All endpoints except `/health` require bearer token auth. Pipeline endpoints (`/distill`, `/compile`) are async by default — add `?sync=true` for blocking execution.
 
 **meridian CLI** — A pip-installable Python package (`pip install -e ./cli`) that wraps the receiver API. Commands: `meridian ask`, `debrief`, `context`, `capture`, `status`. Works identically on any machine. Reads `~/.meridian/config.yaml` for the receiver URL and token.
 
-**n8n** — Event-driven triggers. Two workflows:
+**n8n** — Event-driven triggers. Three workflows:
 - **Fathom webhook** — Fathom fires `new-meeting-content-ready` → n8n receives it → forwards to receiver `/capture/fathom`
-- **Daily Distill** — Schedule trigger at 6 AM → calls receiver `/distill`
+- **Daily Distill** — 6:00 AM → `POST /distill` (async, scores and promotes capture → raw)
+- **Daily Compile** — 6:30 AM → `POST /compile` (async, compiles raw → wiki articles)
 
 **Syncthing** — Syncs the entire `/meridian/` directory from the VM to every machine in real-time. Runs as a systemd service on the VM, as a background app on laptops.
 

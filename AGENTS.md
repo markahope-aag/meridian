@@ -140,20 +140,24 @@ All endpoints require `Authorization: Bearer <token>`.
 | `POST /capture/fathom` | Fathom-specific | Format `new-meeting-content-ready` webhook payload as `.md` |
 | `POST /capture/claude-session` | Claude Code | Convert JSONL session transcript to `.md` in `capture/` |
 
-### Pipeline endpoints
+### Pipeline endpoints (async)
 
-| Endpoint | Method | Purpose |
-|---|---|---|
-| `POST /distill` | Distill | Run Daily Distill — score capture docs, promote to raw |
-| `POST /compile` | Compile | Run Compiler — compile raw docs into wiki articles |
+These return `202 Accepted` with a `job_id` by default. Poll `GET /jobs/<id>` for results.
+Add `?sync=true` for synchronous execution (blocks until complete).
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /distill` | Run Daily Distill — score capture docs, promote to raw |
+| `POST /compile` | Run Compiler — compile raw docs into wiki articles |
+| `GET /jobs/<id>` | Poll job status: `running`, `completed`, or `failed` |
 
 ### Agent endpoints
 
-| Endpoint | Method | Purpose |
-|---|---|---|
-| `POST /ask` | Q&A | Accept a question, run Q&A agent against wiki, return result, file to `outputs/` |
-| `POST /debrief` | Debrief | Accept a session transcript, run debrief agent, file to `capture/` |
-| `POST /context` | Context | Accept a topic, search wiki, return a context brief |
+| Endpoint | Purpose |
+|---|---|
+| `POST /ask` | Accept a question, run Q&A agent against wiki, return result, file to `outputs/` |
+| `POST /debrief` | Accept a session transcript, run debrief agent, file to `capture/` |
+| `POST /context` | Accept a topic, search wiki, return a context brief |
 
 ### CLI commands
 

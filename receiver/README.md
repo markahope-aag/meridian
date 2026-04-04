@@ -15,8 +15,9 @@ This means updates to agents or prompts take effect immediately without rebuildi
 | `POST /capture` | Bearer | Write generic .md to `capture/` |
 | `POST /capture/fathom` | Bearer | Format Fathom meeting webhook → `capture/` |
 | `POST /capture/claude-session` | Bearer | Convert Claude Code JSONL transcript → `capture/` |
-| `POST /distill` | Bearer | Run Daily Distill agent (score and promote capture → raw) |
-| `POST /compile` | Bearer | Run Compiler agent (compile raw → wiki) |
+| `POST /distill` | Bearer | Run Daily Distill (async — returns 202, poll `/jobs/<id>`) |
+| `POST /compile` | Bearer | Run Compiler (async — returns 202, poll `/jobs/<id>`) |
+| `GET /jobs/<id>` | Bearer | Poll async job status: `running`, `completed`, `failed` |
 | `POST /ask` | Bearer | Q&A against the wiki |
 | `POST /debrief` | Bearer | Debrief a Claude Code session |
 | `POST /context` | Bearer | Search wiki, return context brief |
@@ -157,17 +158,27 @@ curl -X POST $URL/capture/claude-session \
   -H "Content-Type: application/json" \
   -d '{"transcript_path": "/path/to/session.jsonl"}'
 
-# Distill (dry-run)
+# Distill (async — returns 202 with job_id)
 curl -X POST $URL/distill \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"mode": "auto"}'
+
+# Distill (synchronous — blocks until complete)
+curl -X POST "$URL/distill?sync=true" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"mode": "dry-run"}'
 
-# Compile all uncompiled raw docs
+# Compile (async)
 curl -X POST $URL/compile \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{}'
+
+# Poll job status
+curl $URL/jobs/JOB_ID_HERE \
+  -H "Authorization: Bearer $TOKEN"
 
 # Ask
 curl -X POST $URL/ask \
