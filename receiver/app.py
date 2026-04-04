@@ -398,6 +398,44 @@ def capture_claude_session():
 
 
 # ---------------------------------------------------------------------------
+# POST /distill — run Daily Distill agent
+# ---------------------------------------------------------------------------
+
+@app.route("/distill", methods=["POST"])
+@require_auth
+def distill():
+    """Run the Daily Distill agent to review capture/ and promote to raw/.
+
+    Body JSON:
+        mode: str (optional) — "auto" for automatic, "dry-run" for scoring only
+        file: str (optional) — specific capture file to process
+    """
+    data = request.get_json(force=True)
+    mode = data.get("mode", "auto")
+    file_arg = data.get("file")
+
+    args = [sys.executable, str(AGENTS_DIR / "daily_distill.py")]
+    if mode == "dry-run":
+        args.append("--dry-run")
+    if file_arg:
+        args.extend(["--file", file_arg])
+
+    try:
+        result = subprocess.run(
+            args, capture_output=True, text=True, timeout=300,
+            cwd=str(MERIDIAN_ROOT),
+        )
+        if result.returncode != 0:
+            return jsonify({"error": "daily_distill failed", "stderr": result.stderr}), 500
+
+        return jsonify({"status": "ok", "result": result.stdout})
+    except subprocess.TimeoutExpired:
+        return jsonify({"error": "daily_distill timed out"}), 504
+    except FileNotFoundError:
+        return jsonify({"error": "daily_distill.py not found"}), 501
+
+
+# ---------------------------------------------------------------------------
 # POST /ask — Q&A against the wiki
 # ---------------------------------------------------------------------------
 
