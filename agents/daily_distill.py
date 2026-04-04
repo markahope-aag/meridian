@@ -196,7 +196,15 @@ def main():
             if not args.dry_run:
                 mark_processed(filepath, decision)
 
-                auto_threshold = config["distill"]["auto_promote_threshold"]
+                # Use bootstrap threshold if wiki has < 20 articles
+                wiki_dir = ROOT / "wiki"
+                article_count = sum(1 for _ in wiki_dir.rglob("*.md")
+                                    if _.name not in ("_index.md", "_backlinks.md", "log.md"))
+                if article_count < config["compiler"]["bootstrap_threshold"]:
+                    auto_threshold = config["distill"].get("bootstrap_promote_threshold", 6)
+                else:
+                    auto_threshold = config["distill"]["auto_promote_threshold"]
+
                 if (decision["decision"] == "promote"
                         and decision["relevance"] >= auto_threshold
                         and decision["quality"] >= auto_threshold):

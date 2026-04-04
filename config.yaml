@@ -22,7 +22,8 @@ llm:
 distill:
   min_relevance: 6
   min_quality: 6
-  auto_promote_threshold: 8    # auto-promote when both scores >= this
+  auto_promote_threshold: 8          # steady state: auto-promote when both scores >= this
+  bootstrap_promote_threshold: 6     # bootstrap (<20 wiki articles): auto-promote when both scores >= this
   approval_email: mark.hope@asymmetric.pro
 
 # Compilation settings

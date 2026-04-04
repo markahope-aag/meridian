@@ -304,7 +304,8 @@ When reviewing `capture/` for promotion to `raw/`:
 2. Score each on relevance (0-10) and quality (0-10)
 3. For items scoring 6+ on both: propose promotion to `raw/` with normalized frontmatter
 4. During bootstrap: send proposal for human approval (via n8n email)
-5. During steady state: promote automatically for items scoring 8+, propose for 6-7
+5. During steady state (20+ wiki articles): auto-promote for scores >= 8, propose for 6-7
+6. During bootstrap (<20 wiki articles): auto-promote for scores >= 6 (more permissive to seed the wiki)
 6. Never delete from `capture/` — mark processed items by adding frontmatter:
    `distill_status: promoted | skipped`
    `distill_date: "2026-04-04"`
