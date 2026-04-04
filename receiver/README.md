@@ -17,6 +17,7 @@ This means updates to agents or prompts take effect immediately without rebuildi
 | `POST /capture/claude-session` | Bearer | Convert Claude Code JSONL transcript → `capture/` |
 | `POST /distill` | Bearer | Run Daily Distill (async — returns 202, poll `/jobs/<id>`) |
 | `POST /compile` | Bearer | Run Compiler (async — returns 202, poll `/jobs/<id>`) |
+| `POST /lint` | Bearer | Run Linter (async — wiki health checks, auto-fix + flag) |
 | `GET /jobs/<id>` | Bearer | Poll async job status: `running`, `completed`, `failed` |
 | `POST /ask` | Bearer | Q&A against the wiki |
 | `POST /debrief` | Bearer | Debrief a Claude Code session |
@@ -175,6 +176,12 @@ curl -X POST $URL/compile \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{}'
+
+# Lint (async)
+curl -X POST $URL/lint \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"mode": "dry-run", "scope": "all"}'
 
 # Poll job status
 curl $URL/jobs/JOB_ID_HERE \

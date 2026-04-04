@@ -76,6 +76,7 @@ All execution happens on a Hetzner VM managed by Coolify. Clients are thin HTTP 
 | `POST /capture/claude-session` | Convert Claude Code JSONL transcript |
 | `POST /distill` | Run Daily Distill (async — returns 202, poll `/jobs/<id>`) |
 | `POST /compile` | Run Compiler (async — returns 202, poll `/jobs/<id>`) |
+| `POST /lint` | Run Linter (async — wiki health checks, auto-fix + flag) |
 | `GET /jobs/<id>` | Poll async job status |
 | `POST /ask` | Q&A against the wiki |
 | `POST /debrief` | Debrief a Claude Code session |
@@ -86,10 +87,11 @@ All endpoints except `/health` require bearer token auth. Pipeline endpoints (`/
 
 **meridian CLI** — A pip-installable Python package (`pip install -e ./cli`) that wraps the receiver API. Commands: `meridian ask`, `debrief`, `context`, `capture`, `status`. Works identically on any machine. Reads `~/.meridian/config.yaml` for the receiver URL and token.
 
-**n8n** — Event-driven triggers. Three workflows:
+**n8n** — Event-driven triggers. Four workflows:
 - **Fathom webhook** — Fathom fires `new-meeting-content-ready` → n8n receives it → forwards to receiver `/capture/fathom`
 - **Daily Distill** — 6:00 AM → `POST /distill` (async, scores and promotes capture → raw)
 - **Daily Compile** — 6:30 AM → `POST /compile` (async, compiles raw → wiki articles)
+- **Weekly Lint** — Sundays 7:00 AM → `POST /lint` (async, wiki health checks + auto-fix)
 
 **Syncthing** — Syncs the entire `/meridian/` directory from the VM to every machine in real-time. Runs as a systemd service on the VM, as a background app on laptops.
 
@@ -161,7 +163,7 @@ All endpoints except `/health` require bearer token auth. Pipeline endpoints (`/
 | Compiler | `agents/compiler.py` | POST `/compile` | Compile raw docs into wiki articles |
 | Debrief | `agents/debrief.py` | POST `/debrief` | Extract learnings from Claude Code sessions |
 | Q&A | `agents/qa_agent.py` | POST `/ask` | Answer questions against the wiki |
-| Linter | `agents/linter.py` | TBD | Consistency checks and gap detection |
+| Linter | `agents/linter.py` | n8n schedule (Sun 7 AM) | Wiki health checks, auto-fix + flag for review |
 
 ## Getting Started
 
