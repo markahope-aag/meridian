@@ -28,7 +28,7 @@ def get_fathom_headers():
     if not key:
         print("Error: FATHOM_API_KEY env var not set", file=sys.stderr)
         sys.exit(1)
-    return {"Authorization": f"Bearer {key}"}
+    return {"X-Api-Key": key}
 
 
 def get_receiver_config():
@@ -68,7 +68,7 @@ def fetch_meetings(headers, after=None, before=None, limit=None):
             params["before"] = before
 
         resp = requests.get(
-            f"{FATHOM_API}/calls",
+            f"{FATHOM_API}/meetings",
             headers=headers,
             params=params,
             timeout=30,
@@ -76,19 +76,16 @@ def fetch_meetings(headers, after=None, before=None, limit=None):
         resp.raise_for_status()
         data = resp.json()
 
-        calls = data.get("calls", data.get("data", []))
-        if isinstance(data, list):
-            calls = data
-
-        meetings.extend(calls)
-        print(f"  Fetched {len(calls)} meetings (total: {len(meetings)})", file=sys.stderr)
+        items = data.get("items", [])
+        meetings.extend(items)
+        print(f"  Fetched {len(items)} meetings (total: {len(meetings)})", file=sys.stderr)
 
         if limit and len(meetings) >= limit:
             meetings = meetings[:limit]
             break
 
-        cursor = data.get("next_cursor") or data.get("cursor")
-        if not cursor or not calls:
+        cursor = data.get("next_cursor")
+        if not cursor or not items:
             break
 
         # Rate limit: ~1 req/sec stays well under 60/min
@@ -97,10 +94,10 @@ def fetch_meetings(headers, after=None, before=None, limit=None):
     return meetings
 
 
-def fetch_meeting_detail(meeting_id, headers):
+def fetch_meeting_detail(recording_id, headers):
     """Fetch full meeting details including transcript, summary, action items."""
     resp = requests.get(
-        f"{FATHOM_API}/calls/{meeting_id}",
+        f"{FATHOM_API}/meetings/{recording_id}",
         headers=headers,
         params={
             "include_transcript": "true",
@@ -154,7 +151,7 @@ def main():
 
     for i, meeting in enumerate(meetings, 1):
         title = meeting.get("title") or meeting.get("meeting_title") or "Untitled"
-        meeting_id = meeting.get("id") or meeting.get("recording_id") or "?"
+        meeting_id = meeting.get("recording_id") or meeting.get("id") or "?"
         created = meeting.get("created_at") or meeting.get("scheduled_start_time") or "?"
         date_str = created[:10] if len(str(created)) >= 10 else created
 
