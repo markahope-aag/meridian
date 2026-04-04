@@ -57,15 +57,39 @@ Each decision, pattern, or dead-end gets its own file.
 
 ### Client-specific documents
 
-**Always check for client references.** If a document mentions a specific client by name,
-is tagged with a client, or is clearly about client work:
+**Always check for client references.** Detect client mentions dynamically from content:
+- Company names in context of "our client", "the client", "we're working with",
+  "their campaign", "their account"
+- Names in meeting attendee lists (from Fathom transcripts)
+- Email domains of participants (e.g. `@acme.com` → Acme)
+- Recurring named entities across documents
 
-1. File the primary article in `wiki/clients/[client-name]/` using lowercase hyphenated
-   folder names (e.g. "Acme Corp" → `wiki/clients/acme-corp/`)
-2. If this is the first document for a client, create `wiki/clients/[client-name]/_index.md`
-   with: client overview, active projects, key contacts (if known), recent activity, and
-   links to all docs in that folder
-3. If the client folder already exists, update its `_index.md` with the new document
+**If a new client is detected** (not yet in the wiki), flag it for approval in your output:
+```json
+"new_client": {"name": "Acme Corp", "slug": "acme", "status": "current"}
+```
+Still include the files array — the calling agent will create the folder after confirmation.
+
+**Infer client status from context:**
+- **Current** (`wiki/clients/current/[name]/`) — active campaigns, recent meetings, ongoing work, present tense
+- **Former** (`wiki/clients/former/[name]/`) — past tense, "when we worked with", closed projects
+- **Prospect** (`wiki/clients/prospects/[name]/`) — proposal language, discovery calls, "potential"
+
+**Status transitions:** If you detect signals that a client's status has changed (e.g.
+"we've wrapped up with X"), flag it for review rather than moving folders:
+```json
+"status_change": {"client": "acme", "from": "current", "to": "former", "signal": "wrap-up meeting notes"}
+```
+
+**Client _index.md** — on first encounter, create `wiki/clients/[status]/[name]/_index.md` with:
+- Status (current / former / prospect)
+- First seen date
+- Last activity date
+- Key contacts (extracted from meeting attendees)
+- Active projects
+- Links to all related docs and knowledge/ extractions
+
+On subsequent documents, update the existing `_index.md`.
 
 ### Transferable learnings
 
