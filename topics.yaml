@@ -1,0 +1,362 @@
+# Meridian Knowledge Topic Registry
+# The compiler MUST match against this taxonomy before creating knowledge folders.
+# If no match, flag for review — never create a new topic folder without approval.
+
+categories:
+
+  # === ADVERTISING & MEDIA ===
+  - name: "Google Ads"
+    slug: google-ads
+    category: advertising-media
+    aliases: ["google-ads-api", "google-ads-management", "google-ads-optimization", "google-ads-strategy", "google-shopping", "google-merchant-center", "search-advertising", "search-marketing", "search-strategy"]
+
+  - name: "Paid Social"
+    slug: paid-social
+    category: advertising-media
+    aliases: ["meta-ads", "meta-platforms", "linkedin-ads", "linkedin-advertising", "linkedin-campaigns", "linkedin-marketing", "linkedin-strategy", "tiktok-shop", "paid-ads", "paid-ads-strategy", "paid-advertising", "paid-media", "paid-search"]
+
+  - name: "PPC"
+    slug: ppc
+    category: advertising-media
+    aliases: ["ppc-advertising", "ppc-conversion-tracking", "ppc-optimization", "ppc-strategy"]
+
+  - name: "Programmatic & Traditional"
+    slug: programmatic
+    category: advertising-media
+    aliases: ["audio-advertising", "podcast-advertising", "ooh-advertising", "billboard-marketing", "geofencing", "geo-targeting", "direct-mail", "print-marketing"]
+
+  - name: "Amazon Advertising"
+    slug: amazon-advertising
+    category: advertising-media
+    aliases: ["amazon-seller", "amazon-fba"]
+
+  # === SEO & SEARCH ===
+  - name: "SEO"
+    slug: seo
+    category: seo-search
+    aliases: ["seo-strategy", "seo-content", "seo-content-strategy", "seo-tools", "seo-automation", "seo-monitoring", "seo-health-scores", "seo-copywriting", "organic-seo", "organic-growth", "website-seo", "domain-authority", "keyword-research", "link-building"]
+
+  - name: "Local SEO"
+    slug: local-seo
+    category: seo-search
+    aliases: ["local-marketing", "local-services", "google-business-profile", "google-reviews", "directory-management", "reputation-management"]
+
+  - name: "Technical SEO"
+    slug: technical-seo
+    category: seo-search
+    aliases: ["seo-technical", "site-health", "web-health", "website-health", "google-search-console"]
+
+  - name: "AI Search"
+    slug: ai-search
+    category: seo-search
+    aliases: ["ai-search-visibility", "seo-aeo", "seo-aio", "google-ai-overviews"]
+
+  # === CONTENT & CREATIVE ===
+  - name: "Content Marketing"
+    slug: content-marketing
+    category: content-creative
+    aliases: ["content", "content-creation", "content-management", "content-operations", "content-process", "content-production", "content-quality", "content-strategy", "content-licensing", "case-study-strategy", "newsletter-strategy"]
+
+  - name: "Copywriting"
+    slug: copywriting
+    category: content-creative
+    aliases: ["ad-copy", "website-copywriting", "seo-copywriting"]
+
+  - name: "Video Marketing"
+    slug: video-marketing
+    category: content-creative
+    aliases: ["video-content", "video-hosting", "video-optimization", "video-production", "video-seo", "video-strategy", "youtube"]
+
+  - name: "Design"
+    slug: design
+    category: content-creative
+    aliases: ["graphic-design", "print-design", "design-management", "design-process", "design-systems", "design-workflow", "creative-assets", "creative-ideation", "creative-strategy", "image-editing", "image-optimization", "product-photography", "signage"]
+
+  - name: "Branding"
+    slug: branding
+    category: content-creative
+    aliases: ["brand-guidelines", "brand-identity", "brand-management", "brand-positioning", "brand-storytelling", "brand-strategy"]
+
+  # === EMAIL & AUTOMATION ===
+  - name: "Email Marketing"
+    slug: email-marketing
+    category: email-automation
+    aliases: ["email-automation", "email-campaigns", "email-deliverability", "email-enrichment", "email-infrastructure", "email-list-management", "email-outreach", "email-strategy", "email-systems", "email-verification", "klaviyo", "sendgrid", "list-growth", "sms-marketing"]
+
+  - name: "Marketing Automation"
+    slug: marketing-automation
+    category: email-automation
+    aliases: ["automation", "process-automation", "form-automation", "workflow", "zapier-automation", "zapier-integrations", "zapier-patterns"]
+
+  - name: "CRM Automation"
+    slug: crm-automation
+    category: email-automation
+    aliases: ["crm-integration", "crm-integrations", "crm-optimization"]
+
+  # === CRM & SALES TOOLS ===
+  - name: "HubSpot"
+    slug: hubspot
+    category: crm-sales-tools
+    aliases: ["hubspot-api", "hubspot-automation", "hubspot-crm", "hubspot-integration", "hubspot-integrations", "hubspot-marketing", "hubspot-workflow"]
+
+  - name: "Salesforce"
+    slug: salesforce
+    category: crm-sales-tools
+    aliases: ["salesforce-abm", "salesforce-account-engagement", "salesforce-crm", "salesforce-data", "sharepoint-salesforce-integration"]
+
+  - name: "GoHighLevel"
+    slug: gohighlevel
+    category: crm-sales-tools
+    aliases: ["gohighlevel-workflow"]
+
+  - name: "CRM"
+    slug: crm
+    category: crm-sales-tools
+    aliases: ["crm-adoption", "crm-analytics", "crm-attribution", "crm-development", "crm-implementation", "crm-operations", "crm-platforms", "crm-setup", "crm-strategy", "crm-tools", "eldermark", "eldermark-crm", "eldermark-integration"]
+
+  # === WEBSITE & WEB ===
+  - name: "Website"
+    slug: website
+    category: website-web
+    aliases: ["web-design", "web-development", "website-design", "website-architecture", "website-content", "website-engagement", "website-features", "website-forms", "website-governance", "website-launch", "website-launches", "website-maintenance", "website-management", "website-operations", "website-optimization", "website-performance", "website-qa", "website-security", "website-strategy", "website-troubleshooting", "web-optimization", "web-presence", "web-strategy", "web-tools", "landing-pages", "landing-page-design", "landing-page-optimization", "landing-page-strategy", "contact-page-design", "staging-environment", "web-forms", "form-design", "form-integration", "gravity-forms", "web-chat"]
+
+  - name: "WordPress"
+    slug: wordpress
+    category: website-web
+    aliases: ["wordpress-backend", "wordpress-booking", "wordpress-careers", "wordpress-constraints", "wordpress-content", "wordpress-customization", "wordpress-deployment", "wordpress-design", "wordpress-development", "wordpress-divi", "wordpress-forms", "wordpress-hipaa", "wordpress-hosting", "wordpress-hubspot-integration", "wordpress-infrastructure", "wordpress-integrations", "wordpress-maintenance", "wordpress-migration", "wordpress-optimization", "wordpress-performance", "wordpress-saas", "wordpress-security", "wordpress-seo", "wordpress-site-management", "wordpress-site-optimization", "wordpress-strategy", "wordpress-ui-ux"]
+
+  - name: "Webflow"
+    slug: webflow
+    category: website-web
+    aliases: ["webflow-automation", "webflow-integration", "webflow-patterns", "webflow-seo"]
+
+  - name: "Web Analytics"
+    slug: web-analytics
+    category: website-web
+    aliases: ["website-analytics", "microsoft-clarity", "google-tag-manager", "gtm-analytics", "gtm-audit"]
+
+  # === ECOMMERCE ===
+  - name: "Ecommerce Strategy"
+    slug: ecommerce-strategy
+    category: ecommerce
+    aliases: ["ecommerce", "ecommerce-integrations", "ecommerce-operations", "ecommerce-platforms", "ecommerce-security", "ecommerce-ux", "b2b-ecommerce", "b2b-channel-launch", "marketplace-setup", "marketplace-strategy", "retail-expansion", "retail-marketing", "retail-strategy", "wholesale-strategy", "fulfillment-logistics", "fulfillment-operations", "fulfillment-strategy", "inventory-management"]
+
+  - name: "Shopify"
+    slug: shopify
+    category: ecommerce
+    aliases: ["shopify-integrations"]
+
+  - name: "WooCommerce"
+    slug: woocommerce
+    category: ecommerce
+    aliases: ["woocommerce-b2b", "woocommerce-bookly", "woocommerce-bookly-integration", "woocommerce-bookly-square", "woocommerce-integrations", "woocommerce-payments", "bookly-integrations", "bookly-woocommerce", "booking-integrations", "booking-systems"]
+
+  - name: "Amazon Strategy"
+    slug: amazon-strategy
+    category: ecommerce
+    aliases: ["amazon-fba", "amazon-seller", "grocery-retail", "food-service-sales", "food-beverage-sales"]
+
+  # === ANALYTICS & TRACKING ===
+  - name: "Analytics"
+    slug: analytics
+    category: analytics-tracking
+    aliases: ["analytics-reporting", "analytics-tools", "ga4-analytics", "google-analytics", "marketing-analytics", "marketing-dashboards", "measurement", "performance-metrics", "tracking-audits"]
+
+  - name: "Call Tracking"
+    slug: call-tracking
+    category: analytics-tracking
+    aliases: ["call-analytics", "call-attribution", "callrail", "callrail-integration", "callrail-integrations", "phone-tracking", "phone-strategy", "phone-systems"]
+
+  - name: "Attribution"
+    slug: attribution
+    category: analytics-tracking
+    aliases: ["marketing-attribution", "campaign-tracking", "conversion-tracking", "conversion-optimization", "qr-code-tracking"]
+
+  # === INTEGRATIONS & TECH ===
+  - name: "Zapier"
+    slug: zapier
+    category: integrations-tech
+    aliases: ["zapier-automation", "zapier-integrations", "zapier-patterns"]
+
+  - name: "DNS & Domains"
+    slug: dns-domains
+    category: integrations-tech
+    aliases: ["dns-cloudflare", "dns-domain-management", "dns-hosting", "dns-infrastructure", "dns-management", "dns-migration", "domain-management", "domain-registrar-management", "domain-security", "registrar-access"]
+
+  - name: "Web Hosting"
+    slug: web-hosting
+    category: integrations-tech
+    aliases: ["hosting-admin", "website-hosting", "internet-infrastructure", "server-operations"]
+
+  - name: "Integrations"
+    slug: integrations
+    category: integrations-tech
+    aliases: ["saas-integrations", "google-integrations", "microsoft-integrations", "ninox-integrations", "stripe-integration", "stripe-payments", "stripe-webhooks", "paypal-integrations", "payment-gateways", "payment-integrations", "payment-processing", "payments", "payment-forms", "webhooks", "google-workspace", "google-suite"]
+
+  # === AI & AUTOMATION ===
+  - name: "AI Tools"
+    slug: ai-tools
+    category: ai-automation
+    aliases: ["ai-productivity", "ai-prompting", "ai-research", "ai-tooling", "ai-content-governance", "practical-ai"]
+
+  - name: "AI Marketing"
+    slug: ai-marketing
+    category: ai-automation
+    aliases: ["ai-driven-services", "ai-chatbots", "chatbot-design", "chatbot-strategy", "ai-voice-agents", "voice-ai"]
+
+  - name: "AI Agents"
+    slug: ai-agents
+    category: ai-automation
+    aliases: ["ai-systems"]
+
+  - name: "AI Workflows"
+    slug: ai-workflows
+    category: ai-automation
+    aliases: ["ai-automation", "ai-workflow"]
+
+  # === CLIENT & AGENCY OPERATIONS ===
+  - name: "Agency Operations"
+    slug: agency-operations
+    category: agency-ops
+    aliases: ["agency-positioning", "agency-strategy", "service-delivery", "service-model", "service-offerings", "retainer-models", "retainer-pricing", "scope-management"]
+
+  - name: "Client Management"
+    slug: client-management
+    category: agency-ops
+    aliases: ["client-acquisition", "client-audits", "client-comms", "client-communication", "client-discovery", "client-health", "client-management-tools", "client-operations", "client-relations", "client-reporting", "client-retention", "client-strategy", "client-success", "clientbrain", "account-management"]
+
+  - name: "Project Management"
+    slug: project-management
+    category: agency-ops
+    aliases: ["clickup", "clickup-workflow", "task-automation", "task-management", "project-automation", "project-handoff", "process-management", "process-operations", "approval-workflows"]
+
+  - name: "Reporting"
+    slug: reporting
+    category: agency-ops
+    aliases: ["marketing-reporting", "sales-reporting", "client-reporting", "marketing-dashboards"]
+
+  - name: "Pricing"
+    slug: pricing
+    category: agency-ops
+    aliases: ["pricing-models", "pricing-strategy", "performance-based-contracts"]
+
+  # === SALES ===
+  - name: "Sales Methodology"
+    slug: sales-methodology
+    category: sales
+    aliases: ["sales-process", "sales-process-design", "sales-pitch-structure", "sales-training", "objection-handling", "sales-objections", "value-proposition", "live-demo-patterns"]
+
+  - name: "Sales Enablement"
+    slug: sales-enablement
+    category: sales
+    aliases: ["sales-assets", "sales-collateral", "sales-development", "sales-tools", "sales-automation", "sales-operations", "sales-pipeline", "sales-strategy", "proposal-design", "proposal-management", "proposal-templates"]
+
+  - name: "Lead Generation"
+    slug: lead-generation
+    category: sales
+    aliases: ["lead-enrichment", "lead-handoff", "lead-location", "lead-management", "lead-nurture", "lead-qualification", "lead-tracking", "data-appending", "data-enrichment", "data-hygiene", "data-management", "database-management", "email-enrichment", "zoominfo", "zoominfo-clay"]
+
+  - name: "Outbound Sales"
+    slug: outbound-sales
+    category: sales
+    aliases: ["sales-outreach", "outreach-performance", "outreach-stack", "linkedin-sales-navigator", "linkedin-automation", "abm", "abm-strategy", "account-based-marketing"]
+
+  # === STRATEGY ===
+  - name: "Marketing Strategy"
+    slug: marketing-strategy
+    category: strategy
+    aliases: ["digital-marketing", "digital-marketing-strategy", "digital-presence", "marketing", "marketing-campaigns", "marketing-channels", "marketing-operations", "marketing-ops", "marketing-automation", "campaign-planning", "campaign-strategy", "channel-strategy", "media-recommendations", "strategic-planning", "strategy"]
+
+  - name: "Brand Strategy"
+    slug: brand-strategy
+    category: strategy
+    aliases: ["brand-positioning", "brand-storytelling", "brand-identity", "brand-guidelines", "brand-management", "buyer-personas", "market-segmentation"]
+
+  - name: "Competitive Analysis"
+    slug: competitive-analysis
+    category: strategy
+    aliases: ["competitive-intelligence", "competitive-positioning", "competitive-strategy", "competitor-analysis", "market-analysis"]
+
+  - name: "Go-to-Market"
+    slug: go-to-market
+    category: strategy
+    aliases: ["market-expansion", "fintech-go-to-market", "product-launch", "product-launches", "product-positioning"]
+
+  # === INDUSTRY-SPECIFIC ===
+  - name: "Senior Living Marketing"
+    slug: senior-living
+    category: industry
+    aliases: ["senior-living-marketing", "assisted-living", "assisted-living-marketing", "retirement-community-marketing"]
+
+  - name: "Food & Beverage"
+    slug: food-beverage
+    category: industry
+    aliases: ["food-regulatory", "food-regulatory-compliance", "food-labeling", "fda-compliance", "fda-food-classification", "hemp-regulation", "dietary-supplements", "food-service", "cpg-strategy", "packaging-strategy", "packaging-sales", "packaging-verticals", "product-packaging"]
+
+  - name: "Nonprofit"
+    slug: nonprofit
+    category: industry
+    aliases: ["nonprofit-fundraising", "nonprofit-operations", "nonprofit-web-strategy", "capital-campaigns", "donation-campaigns", "grant-compliance", "grant-automation"]
+
+  - name: "B2B Marketing"
+    slug: b2b-marketing
+    category: industry
+    aliases: ["b2b-sales", "b2b-services", "b2b-strategy", "b2g-sales"]
+
+  - name: "eLearning"
+    slug: elearning
+    category: industry
+    aliases: ["elearning-course-development", "elearning-design", "elearning-development", "course-development", "instructional-design", "instructional-tools", "learning-design", "learning-management-systems", "online-courses", "training-program-design", "articulate-360", "articulate-rise-360"]
+
+  - name: "SaaS"
+    slug: saas
+    category: industry
+    aliases: ["saas-development", "saas-pricing", "saas-product-development", "saas-product-strategy", "saas-sales-process", "saas-tools", "custom-app-development", "app-development", "product-development", "product-management", "product-operations", "product-strategy"]
+
+  # === COMPLIANCE & LEGAL ===
+  - name: "Regulatory Compliance"
+    slug: regulatory-compliance
+    category: compliance-legal
+    aliases: ["compliance", "compliance-marketing", "regulatory-marketing", "local-compliance", "us-import-compliance", "web3-compliance"]
+
+  - name: "HIPAA Compliance"
+    slug: hipaa-compliance
+    category: compliance-legal
+    aliases: []
+
+  - name: "Legal"
+    slug: legal
+    category: compliance-legal
+    aliases: ["legal-compliance", "legal-operations", "legal-services-marketing", "litigation-strategy", "llc-law", "business-law", "trademark-management"]
+
+  # === TEAM & OPERATIONS ===
+  - name: "Team Operations"
+    slug: team-operations
+    category: team-ops
+    aliases: ["team-collaboration", "team-communication", "team-culture", "team-development", "team-logistics", "team-management", "team-practices", "team-structure", "team-tools", "remote-culture", "organizational-design", "organizational-development", "org-structure"]
+
+  - name: "Hiring"
+    slug: hiring
+    category: team-ops
+    aliases: ["recruitment-advertising", "recruitment-marketing"]
+
+  - name: "Onboarding"
+    slug: onboarding
+    category: team-ops
+    aliases: ["offboarding"]
+
+  - name: "Financial Operations"
+    slug: financial-operations
+    category: team-ops
+    aliases: ["accounting-operations", "accounts-receivable", "financial-planning", "financial-reporting", "revenue-finance", "business-metrics", "business-economics", "business-operations", "business-process-optimization", "business-strategy", "business-infrastructure", "business-model", "company-operations", "operations", "operations-systems", "resource-allocation", "resource-management", "okr", "okr-framework"]
+
+  # === TOOLS (internal — map to wiki/dev/) ===
+  - name: "Meridian"
+    slug: meridian
+    category: tools-internal
+    aliases: ["meridian-architecture"]
+
+  - name: "Internal Tools"
+    slug: internal-tools
+    category: tools-internal
+    aliases: ["asymmetric-strategy", "asym-xray", "x-ray-platform", "internal-tools", "tools", "tools-and-automation", "tool-training", "browser-tools"]
