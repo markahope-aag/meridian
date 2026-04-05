@@ -52,11 +52,28 @@ def load_index() -> str:
 
 
 def load_registry(filename: str) -> str:
-    """Load a YAML registry file and return as string for the LLM."""
+    """Load a YAML registry and return a compact version for the LLM."""
     path = ROOT / filename
-    if path.exists():
-        return path.read_text(encoding="utf-8")
-    return ""
+    if not path.exists():
+        return ""
+    with open(path) as f:
+        data = yaml.safe_load(f) or {}
+
+    # Build compact representation: slug → [aliases]
+    items = data.get("clients", data.get("categories", []))
+    lines = []
+    for item in items:
+        name = item.get("name", "")
+        slug = item.get("slug", "")
+        status = item.get("status", "")
+        aliases = item.get("aliases", [])
+        alias_str = ", ".join(aliases[:10]) if aliases else ""
+        if "clients" in filename:
+            lines.append(f"- {slug} ({status}): \"{name}\" [{alias_str}]")
+        else:
+            cat = item.get("category", "")
+            lines.append(f"- {slug} ({cat}): \"{name}\" [{alias_str}]")
+    return "\n".join(lines)
 
 
 def load_registry_data(filename: str) -> dict:
@@ -373,14 +390,20 @@ def compile_one(client: anthropic.Anthropic, filepath: Path,
     t0 = time.time()
     raw_content = filepath.read_text(encoding="utf-8", errors="replace")
 
-    # Truncate very long transcripts to keep within context
-    if len(raw_content) > 80_000:
-        raw_content = raw_content[:80_000] + "\n\n[... truncated at 80k chars ...]"
+    # Truncate for planning pass (Haiku has 200K context, need room for registries)
+    planning_content = raw_content
+    if len(planning_content) > 40_000:
+        planning_content = planning_content[:40_000] + "\n\n[... truncated for planning ...]"
+
+    # Keep more for writing pass (Sonnet has larger context)
+    writing_content = raw_content
+    if len(writing_content) > 80_000:
+        writing_content = writing_content[:80_000] + "\n\n[... truncated at 80k chars ...]"
 
     # Pass 1: Planning (with registries)
     print(f"  Planning {filepath.name}...", file=sys.stderr)
     try:
-        plan = plan_document(client, raw_content, index_md,
+        plan = plan_document(client, planning_content, index_md,
                              clients_yaml, topics_yaml, config)
     except (json.JSONDecodeError, Exception) as e:
         return {"file": str(filepath), "error": f"Planning failed: {e}"}
@@ -404,7 +427,7 @@ def compile_one(client: anthropic.Anthropic, filepath: Path,
     with ThreadPoolExecutor(max_workers=3) as pool:
         futures = {
             pool.submit(
-                write_single_file, client, raw_content, entry,
+                write_single_file, client, writing_content, entry,
                 filepath.name, config
             ): entry
             for entry in plan_entries
