@@ -1,0 +1,320 @@
+# Meridian Client Registry
+# Canonical client names, slugs, and known aliases.
+# The compiler MUST match against this list before creating client folders.
+# If no match, flag for review — never create a new folder without approval.
+
+clients:
+  # === CURRENT (from invoicing sheet) ===
+  - name: "Doudlah Farms"
+    slug: doudlah-farms
+    status: current
+    aliases: ["DFO", "doodla", "doodla-farms", "doodle-farms", "toodla-farms", "zoodla", "doodlers", "old-world", "old-world-popcorn", "old-world-nostalgia", "bean-vivo", "beanvivo", "lula-b2b", "lula-barnes"]
+    website: https://doudlahfarms.com/
+
+  - name: "AviaryAI"
+    slug: aviary
+    status: current
+    aliases: ["aviary-ai", "aviaryai", "the-aviary", "saviary", "helloaviary"]
+    website: https://www.helloaviary.ai/
+
+  - name: "Quarra Stone"
+    slug: quarra
+    status: current
+    aliases: ["quarra-italia", "quarastone", "quarrowstone", "quora", "quora-italia", "quora-stone", "cora", "cora-italia", "cora-stone", "choirstone", "carstone", "coristone", "corristone", "corustone", "core-of-stone"]
+    website: https://www.quarrastone.com/
+
+  - name: "Crazy Lenny's E-Bikes"
+    slug: crazy-lennys
+    status: current
+    aliases: ["crazy-lenny", "crazy-lennys", "crazy-lennys-grannys", "crazylenna", "crazylany", "crazy-leanings", "crazy-learning", "crazy-lenin", "crazy-lennies", "crazy-lindys", "crazy-linis", "crazyling-e-bikes", "grannys"]
+    website: https://www.crazylennysebikes.com/
+
+  - name: "The Cordwainer"
+    slug: cordwainer
+    status: current
+    aliases: ["cordwaining", "codewiner", "the-cordwainer"]
+    website: https://cordwainermemorycare.com/
+
+  - name: "Citrus America"
+    slug: citrus-america
+    status: current
+    aliases: ["citrus", "citra-casa"]
+    website: https://citrusamerica.com/
+
+  - name: "Skaalen Retirement Services"
+    slug: skaalen
+    status: current
+    aliases: ["skallen", "skullen", "skullin", "scullin", "scallin", "scallon", "scalding", "scallion-worship", "scotland"]
+    website: https://skaalen.com/
+
+  - name: "Paper Tube Co"
+    slug: papertube
+    status: current
+    aliases: ["paper-tube-co", "papercube", "paper2email", "paper-two", "kepatube"]
+    website: https://papertube.co/
+
+  - name: "Advanced Health & Safety"
+    slug: ahs
+    status: current
+    aliases: ["advanced-health", "advanced-health-and-safety", "advanced-health-safety", "ahs", "madison-asbestos", "madison-asbestos-services", "hazardos", "hhs", "hs"]
+    website: https://madisonasbestos.com/
+
+  - name: "Didion"
+    slug: didion
+    status: current
+    aliases: ["didion-milling", "didion-recruitment", "didyna", "diddy", "gideon", "gideon-emacs"]
+    website: https://didioninc.com/
+
+  - name: "Exterior Renovations"
+    slug: exterior-renovations
+    status: current
+    aliases: ["exterior", "exterior-renovation", "reynolds-exterior"]
+    website: https://exteriorrenovations.com/
+
+  - name: "Overhead Door Company of Madison"
+    slug: overhead-door
+    status: current
+    aliases: ["overhead", "overhead-doors", "overhead-door-madison", "overhead-door-medicine"]
+    website: https://www.overheaddoormadison.com/
+
+  - name: "SonoPlot"
+    slug: sonoplot
+    status: current
+    aliases: ["sona-plot", "sonoplat"]
+    website: https://www.sonoplot.com/
+
+  - name: "Reynolds Transfer and Storage"
+    slug: reynolds
+    status: current
+    aliases: ["reynolds-transfer"]
+    website: https://reynoldstransfer.com/
+
+  - name: "Village of Maple Bluff"
+    slug: maple-bluff
+    status: current
+    aliases: ["vilas", "vilas-county", "vilas-county-edc", "vilus", "violus", "vlas"]
+
+  - name: "Wisconsin Masonic Foundation"
+    slug: wi-masons
+    status: current
+    aliases: ["wisconsin-masonic", "wi-masons"]
+
+  - name: "Asymmetric Marketing"
+    slug: asymmetric
+    status: current
+    aliases: ["asymmetric-applications", "asymmetric-applications-group", "asymmetric-marketing", "symmetric"]
+
+  # === CLIENTS FROM MEETINGS (not on invoice sheet — verify status) ===
+  - name: "Agility Recovery"
+    slug: agility-recovery
+    status: current
+    aliases: ["agility", "agility-courses", "agility-way", "avr"]
+
+  - name: "BluepointATM"
+    slug: bluepoint
+    status: current
+    aliases: ["bluepoint-atm", "bluepointatm", "blue-point", "loot-point"]
+
+  - name: "CAI"
+    slug: cai
+    status: current
+    aliases: []
+
+  - name: "American Extractions"
+    slug: american-extractions
+    status: current
+    aliases: ["american-extraction", "american"]
+
+  - name: "A New Dawn / Shine"
+    slug: new-dawn-shine
+    status: current
+    aliases: ["a-new-dawn", "a-new-dawn-therapy", "new-dawn", "newdown", "shine", "shine-construction-cleaning", "shine-marketing", "the-shine"]
+
+  - name: "Trachte"
+    slug: trachte
+    status: current
+    aliases: ["trachty", "track-right", "tracku", "tracti", "tracti-building-systems", "traffy", "trakti", "trocta", "trocte"]
+
+  - name: "Seamless Building Solutions"
+    slug: seamless
+    status: current
+    aliases: ["seamless-building-solutions", "seamless-building-systems"]
+
+  - name: "Adava Care"
+    slug: adava-care
+    status: current
+    aliases: ["adabacare", "adavacare", "adavacare-karosh", "adava-cares", "adawa-care", "adovacare", "davacare", "abdabakir", "ababacare", "karosh"]
+
+  - name: "Axley Law"
+    slug: axley
+    status: current
+    aliases: ["axley-law-firm"]
+
+  - name: "Avant Gardening"
+    slug: avant-gardening
+    status: current
+    aliases: ["avant", "avant-garde", "avoke-gardening", "gardening-account"]
+
+  - name: "PEMA.io"
+    slug: pema
+    status: current
+    aliases: ["pema-io", "pima"]
+
+  - name: "Flynn Audio"
+    slug: flynn-audio
+    status: current
+    aliases: ["flynn", "flan-audio", "flint-audio", "plain-audio", "clean-audio", "lynn-audio", "sam-flynn", "sam"]
+
+  - name: "Capitol Bank"
+    slug: capitol-bank
+    status: former
+    aliases: ["capital-bank"]
+
+  - name: "VCEDC"
+    slug: vcedc
+    status: current
+    aliases: ["vce", "vilas-county-edc"]
+
+  - name: "FinWellU"
+    slug: finwellu
+    status: current
+    aliases: ["fenwell", "fenwell-u", "fieldwell", "financial-u", "financialu", "financial-utesk", "finwell-u", "firestone", "next-level", "nextlevel", "next-level-financial", "next-level-financialu", "nlp-wealth-management"]
+
+  - name: "SBS Wisconsin"
+    slug: sbs
+    status: current
+    aliases: ["sbswi"]
+
+  - name: "LaMarie Beauty"
+    slug: lamarie
+    status: current
+    aliases: ["la-marie", "lamarie-beauty", "la-marie-beauty", "la-marie-connect", "lamaurie", "lameri-beauty", "lammary", "lmb"]
+
+  - name: "AB Hooper"
+    slug: ab-hooper
+    status: current
+    aliases: ["hooper"]
+
+  - name: "HazardOS"
+    slug: hazardos
+    status: current
+    aliases: ["aiden-app"]
+    notes: "SaaS product, related to Advanced Health & Safety"
+
+  # === FROM INVOICING HISTORY (may be former) ===
+  - name: "Evolution Body Transformation"
+    slug: evolution-body
+    status: former
+    aliases: []
+
+  - name: "The King Company"
+    slug: king-company
+    status: former
+    aliases: []
+
+  - name: "Global Coin"
+    slug: global-coin
+    status: former
+    aliases: []
+
+  - name: "Innoviom"
+    slug: innoviom
+    status: former
+    aliases: ["innoviom-websites"]
+
+  - name: "Naviant"
+    slug: naviant
+    status: former
+    aliases: []
+
+  - name: "Dirty Ducts"
+    slug: dirty-ducts
+    status: former
+    aliases: []
+
+  - name: "Machinery Source"
+    slug: machinery-source
+    status: former
+    aliases: ["machine-resource"]
+
+  - name: "Jupmode"
+    slug: jupmode
+    status: former
+    aliases: []
+
+  - name: "Bake Believe"
+    slug: bake-believe
+    status: former
+    aliases: ["make-believe"]
+
+  - name: "Best Defense"
+    slug: best-defense
+    status: former
+    aliases: []
+
+  - name: "CraftOptics"
+    slug: craftoptics
+    status: former
+    aliases: []
+
+  - name: "Gulf Coast Business Credit"
+    slug: gulf-coast
+    status: former
+    aliases: []
+
+  - name: "Hooper Corp"
+    slug: hooper
+    status: former
+    aliases: ["ab-hooper"]
+
+  - name: "Kern's Dumpsters"
+    slug: kerns-dumpsters
+    status: former
+    aliases: ["kearns-dumpsters"]
+
+  - name: "Mine & Process Service"
+    slug: mine-process
+    status: former
+    aliases: []
+
+  - name: "Utility Management Services"
+    slug: utility-management
+    status: former
+    aliases: []
+
+  - name: "Vintage Fields"
+    slug: vintage-fields
+    status: former
+    aliases: []
+
+  - name: "WALA"
+    slug: wala
+    status: former
+    aliases: []
+
+  - name: "WrenchWay"
+    slug: wrenchway
+    status: former
+    aliases: []
+
+  - name: "JBF Concrete & Landscape"
+    slug: jbf
+    status: current
+    aliases: ["jbf-concrete", "jbf-concrete-landscape", "jbf-site"]
+
+  - name: "Three Gaits"
+    slug: three-gaits
+    status: current
+    aliases: ["three-gates"]
+
+  - name: "Blue Sky Capital"
+    slug: blue-sky
+    status: current
+    aliases: ["bluesky", "blue-sky-capital", "blue-sky-social"]
+
+  # === INTERNAL / NOT CLIENTS ===
+  - name: "_internal"
+    slug: _internal
+    status: internal
+    aliases: ["ops-sync", "team-stand-up", "daily-stand-up", "sprint-planning", "weekly-call-w-karly", "weekly-call-w-melissa", "weekly-call-w-sebastian", "weekly-call-w-gilbert", "weekly-call-w-ben", "weekly-call-w-jacob", "impromptu-zoom-meeting", "content-call", "ai-training", "billing", "account-coordinator"]
+    notes: "Internal meetings — file to wiki/articles/ not wiki/clients/"
