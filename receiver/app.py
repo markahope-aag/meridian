@@ -8,6 +8,8 @@ Endpoints:
     POST /capture              — generic markdown capture
     POST /capture/fathom       — Fathom meeting webhook
     POST /capture/claude-session — Claude Code session transcript
+    POST /capture/gdrive       — ingest a Google Drive file (from Sieve)
+    GET  /check                — check if a gdrive file already exists
     POST /ask                  — Q&A against the wiki
     POST /debrief              — debrief a Claude Code session
     POST /context              — search wiki for a context brief
@@ -15,6 +17,7 @@ Endpoints:
 """
 
 import hashlib
+import io
 import json
 import logging
 import os
@@ -759,6 +762,219 @@ def context():
         "brief": "\n".join(brief_parts),
         "results": results[:10],
     })
+
+
+# ---------------------------------------------------------------------------
+# Google Drive helpers (for /capture/gdrive)
+# ---------------------------------------------------------------------------
+
+_gdrive_service = None
+
+
+def get_gdrive_service():
+    """Build a Google Drive API client from the GOOGLE_SERVICE_ACCOUNT_JSON env var."""
+    global _gdrive_service
+    if _gdrive_service is not None:
+        return _gdrive_service
+
+    sa_json = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
+    if not sa_json:
+        raise RuntimeError("GOOGLE_SERVICE_ACCOUNT_JSON env var not set")
+
+    from google.oauth2 import service_account
+    from googleapiclient.discovery import build
+
+    info = json.loads(sa_json)
+    creds = service_account.Credentials.from_service_account_info(
+        info, scopes=["https://www.googleapis.com/auth/drive.readonly"]
+    )
+    _gdrive_service = build("drive", "v3", credentials=creds)
+    return _gdrive_service
+
+
+# Mime types exportable as plain text
+_EXPORT_TYPES = {
+    "application/vnd.google-apps.document": "text/plain",
+    "application/vnd.google-apps.presentation": "text/plain",
+    "application/vnd.google-apps.spreadsheet": "text/csv",
+}
+
+
+def download_gdrive_text(file_id: str, mime_type: str) -> str:
+    """Download a Google Drive file and return its text content."""
+    service = get_gdrive_service()
+
+    # Google Workspace files: export as text
+    if mime_type in _EXPORT_TYPES:
+        export_mime = _EXPORT_TYPES[mime_type]
+        resp = service.files().export(fileId=file_id, mimeType=export_mime).execute()
+        text = resp.decode("utf-8") if isinstance(resp, bytes) else resp
+        return text.strip()
+
+    # PDF: download and extract with pypdf
+    if mime_type == "application/pdf":
+        resp = service.files().get_media(fileId=file_id).execute()
+        from pypdf import PdfReader
+        reader = PdfReader(io.BytesIO(resp))
+        pages = [page.extract_text() or "" for page in reader.pages]
+        return "\n\n".join(pages).strip()
+
+    # DOCX: download and extract with python-docx
+    if mime_type in (
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ):
+        resp = service.files().get_media(fileId=file_id).execute()
+        from docx import Document
+        doc = Document(io.BytesIO(resp))
+        paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+        return "\n\n".join(paragraphs).strip()
+
+    # Default: try downloading as plain text
+    resp = service.files().get_media(fileId=file_id).execute()
+    text = resp.decode("utf-8", errors="replace") if isinstance(resp, bytes) else str(resp)
+    return text.strip()
+
+
+# ---------------------------------------------------------------------------
+# POST /capture/gdrive — ingest a Google Drive file from Sieve
+# ---------------------------------------------------------------------------
+
+@app.route("/capture/gdrive", methods=["POST"])
+@require_auth
+def capture_gdrive():
+    """Download a file from Google Drive, convert to markdown, write to capture/.
+
+    Body JSON:
+        file_id: str (required) — Google Drive file ID
+        filename: str (required)
+        drive_url: str
+        mime_type: str
+        metadata: {folder, modified_at, owner_email, word_count}
+    """
+    data = request.get_json(force=True)
+    file_id = data.get("file_id")
+    filename = data.get("filename")
+    mime_type = data.get("mime_type", "")
+    drive_url = data.get("drive_url", "")
+    metadata = data.get("metadata", {})
+
+    if not file_id or not filename:
+        return jsonify({"status": "error", "error": "file_id and filename are required"}), 400
+
+    # Dedup: check if this gdrive_file_id already exists
+    existing = find_gdrive_file(file_id)
+    if existing:
+        return jsonify({
+            "status": "skipped",
+            "reason": "duplicate",
+            "file": existing,
+        })
+
+    # Download and convert
+    try:
+        text = download_gdrive_text(file_id, mime_type)
+    except Exception as e:
+        log.error("Failed to download gdrive file %s: %s", file_id, e)
+        return jsonify({"status": "error", "error": f"download failed: {e}"}), 500
+
+    if not text:
+        return jsonify({"status": "error", "error": "no text content extracted"}), 422
+
+    # Strip extension from title
+    title = Path(filename).stem
+
+    # Build frontmatter
+    frontmatter = yaml.dump({
+        "title": title,
+        "source_url": drive_url,
+        "source_type": "gdrive",
+        "gdrive_file_id": file_id,
+        "gdrive_folder": metadata.get("folder", ""),
+        "date_ingested": now_ts(),
+        "compiled_at": "",
+        "owner": metadata.get("owner_email", ""),
+        "modified_at": metadata.get("modified_at", ""),
+        "word_count": metadata.get("word_count"),
+        "tags": [],
+        "summary": "",
+    }, default_flow_style=False, sort_keys=False).strip()
+
+    md = f"---\n{frontmatter}\n---\n\n{text}\n"
+
+    # Write to capture/
+    date_prefix = now_str()
+    safe_name = slugify(title)
+    out_filename = f"{date_prefix}-{safe_name}.md"
+    filepath = write_capture_file(out_filename, md)
+
+    # Append to wiki/log.md
+    append_log(f"ingest | gdrive: {filename}")
+
+    relative_path = f"capture/{out_filename}"
+    log.info("Captured gdrive file: %s -> %s", filename, relative_path)
+
+    return jsonify({"status": "ok", "file": relative_path})
+
+
+def append_log(entry: str):
+    """Append an entry to wiki/log.md."""
+    log_file = WIKI_DIR / "log.md"
+    try:
+        WIKI_DIR.mkdir(parents=True, exist_ok=True)
+        date = now_str()
+        line = f"\n## {date} {entry}\n"
+        with open(log_file, "a", encoding="utf-8") as f:
+            f.write(line)
+    except Exception as e:
+        log.warning("Failed to append to log.md: %s", e)
+
+
+# ---------------------------------------------------------------------------
+# GET /check — check if a gdrive file already exists in Meridian
+# ---------------------------------------------------------------------------
+
+@app.route("/check", methods=["GET"])
+@require_auth
+def check_gdrive():
+    """Check if a file with the given gdrive_file_id already exists.
+
+    Query params:
+        gdrive_file_id: str (required)
+
+    Response:
+        {"exists": false}
+        {"exists": true, "location": "capture|raw|wiki", "file": "path/to/file.md"}
+    """
+    gdrive_file_id = request.args.get("gdrive_file_id")
+    if not gdrive_file_id:
+        return jsonify({"error": "gdrive_file_id query param required"}), 400
+
+    result = find_gdrive_file(gdrive_file_id)
+    if result:
+        # Determine location from path
+        location = "capture"
+        if "/raw/" in result or result.startswith("raw/"):
+            location = "raw"
+        elif "/wiki/" in result or result.startswith("wiki/"):
+            location = "wiki"
+        return jsonify({"exists": True, "location": location, "file": result})
+
+    return jsonify({"exists": False})
+
+
+def find_gdrive_file(gdrive_file_id: str) -> str | None:
+    """Scan capture/, raw/, wiki/ for a file with matching gdrive_file_id in frontmatter."""
+    for search_dir in (CAPTURE_DIR, RAW_DIR, WIKI_DIR):
+        if not search_dir.exists():
+            continue
+        for md_file in search_dir.rglob("*.md"):
+            try:
+                head = md_file.read_text(encoding="utf-8", errors="replace")[:2000]
+                if f"gdrive_file_id: {gdrive_file_id}" in head:
+                    return str(md_file.relative_to(MERIDIAN_ROOT))
+            except Exception:
+                continue
+    return None
 
 
 # ---------------------------------------------------------------------------
