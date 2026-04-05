@@ -51,6 +51,36 @@ def load_index() -> str:
     return path.read_text(encoding="utf-8") if path.exists() else "_No index yet._"
 
 
+def load_registry(filename: str) -> str:
+    """Load a YAML registry file and return as string for the LLM."""
+    path = ROOT / filename
+    if path.exists():
+        return path.read_text(encoding="utf-8")
+    return ""
+
+
+def load_registry_data(filename: str) -> dict:
+    """Load a YAML registry as parsed data for validation."""
+    path = ROOT / filename
+    if path.exists():
+        with open(path) as f:
+            return yaml.safe_load(f) or {}
+    return {}
+
+
+def build_slug_lookup(registry_data: dict, key: str) -> dict[str, str]:
+    """Build a lookup: alias → canonical slug from a registry."""
+    lookup = {}
+    items = registry_data.get(key, registry_data.get("categories", []))
+    for item in items:
+        slug = item.get("slug", "")
+        lookup[slug] = slug
+        lookup[item.get("name", "").lower()] = slug
+        for alias in item.get("aliases", []):
+            lookup[alias.lower()] = slug
+    return lookup
+
+
 def get_uncompiled_files() -> list[Path]:
     """Find raw/ files that haven't been compiled yet."""
     files = []
@@ -72,7 +102,8 @@ def get_uncompiled_files() -> list[Path]:
 # ---------------------------------------------------------------------------
 
 def plan_document(client: anthropic.Anthropic, raw_content: str,
-                  index_md: str, config: dict) -> dict:
+                  index_md: str, clients_yaml: str, topics_yaml: str,
+                  config: dict) -> dict:
     """Use Haiku to decide what files to create and where."""
     system_prompt = (PROMPTS_DIR / "compiler_plan.md").read_text(encoding="utf-8")
     planning_model = config.get("compiler", {}).get(
@@ -88,6 +119,8 @@ def plan_document(client: anthropic.Anthropic, raw_content: str,
             "role": "user",
             "content": (
                 f"## wiki/_index.md\n\n{index_md}\n\n"
+                f"## Client Registry (clients.yaml)\n\n{clients_yaml}\n\n"
+                f"## Topic Registry (topics.yaml)\n\n{topics_yaml}\n\n"
                 f"## Raw Document to Compile\n\n{raw_content}"
             ),
         }],
@@ -98,6 +131,52 @@ def plan_document(client: anthropic.Anthropic, raw_content: str,
     if json_match:
         text = json_match.group(1)
     return json.loads(text)
+
+
+def validate_plan(plan: dict, client_lookup: dict, topic_lookup: dict) -> dict:
+    """Validate plan entries against registries. Fix or flag invalid paths."""
+    validated_entries = []
+    warnings = []
+
+    for entry in plan.get("plan", []):
+        path = entry.get("path", "")
+
+        # Validate client paths
+        if "/clients/" in path:
+            # Extract the client slug from path like wiki/clients/current/slug/file.md
+            parts = path.split("/")
+            if len(parts) >= 5:
+                client_slug = parts[3]  # wiki/clients/status/SLUG/...
+                if client_slug not in client_lookup.values():
+                    # Try to find a match
+                    matched = client_lookup.get(client_slug.lower())
+                    if matched:
+                        parts[3] = matched
+                        entry["path"] = "/".join(parts)
+                    else:
+                        warnings.append(f"Skipped {path}: client '{client_slug}' not in registry")
+                        continue
+
+        # Validate knowledge paths
+        if "/knowledge/" in path:
+            parts = path.split("/")
+            if len(parts) >= 4:
+                topic_slug = parts[2]  # wiki/knowledge/SLUG/...
+                if topic_slug not in topic_lookup.values():
+                    matched = topic_lookup.get(topic_slug.lower())
+                    if matched:
+                        parts[2] = matched
+                        entry["path"] = "/".join(parts)
+                    else:
+                        warnings.append(f"Skipped {path}: topic '{topic_slug}' not in registry")
+                        continue
+
+        validated_entries.append(entry)
+
+    plan["plan"] = validated_entries
+    if warnings:
+        plan["validation_warnings"] = warnings
+    return plan
 
 
 # ---------------------------------------------------------------------------
@@ -287,7 +366,9 @@ def append_log(message: str):
 # ---------------------------------------------------------------------------
 
 def compile_one(client: anthropic.Anthropic, filepath: Path,
-                index_md: str, config: dict) -> dict:
+                index_md: str, clients_yaml: str, topics_yaml: str,
+                client_lookup: dict, topic_lookup: dict,
+                config: dict) -> dict:
     """Plan then write all files for one raw document."""
     t0 = time.time()
     raw_content = filepath.read_text(encoding="utf-8", errors="replace")
@@ -296,16 +377,24 @@ def compile_one(client: anthropic.Anthropic, filepath: Path,
     if len(raw_content) > 80_000:
         raw_content = raw_content[:80_000] + "\n\n[... truncated at 80k chars ...]"
 
-    # Pass 1: Planning
+    # Pass 1: Planning (with registries)
     print(f"  Planning {filepath.name}...", file=sys.stderr)
     try:
-        plan = plan_document(client, raw_content, index_md, config)
+        plan = plan_document(client, raw_content, index_md,
+                             clients_yaml, topics_yaml, config)
     except (json.JSONDecodeError, Exception) as e:
         return {"file": str(filepath), "error": f"Planning failed: {e}"}
 
+    # Validate plan against registries
+    plan = validate_plan(plan, client_lookup, topic_lookup)
+    if plan.get("validation_warnings"):
+        for w in plan["validation_warnings"]:
+            print(f"    WARN: {w}", file=sys.stderr)
+
     plan_entries = plan.get("plan", [])
     if not plan_entries:
-        return {"file": str(filepath), "error": "Empty plan returned"}
+        mark_compiled(filepath)
+        return {"file": str(filepath), "action": "skipped", "reason": "no valid plan entries after validation"}
 
     # Pass 2: Writing (parallel)
     print(f"  Writing {len(plan_entries)} files for {filepath.name}...", file=sys.stderr)
@@ -358,6 +447,16 @@ def main():
     client = anthropic.Anthropic()
     index_md = load_index()
 
+    # Load registries once
+    clients_yaml = load_registry("clients.yaml")
+    topics_yaml = load_registry("topics.yaml")
+    client_data = load_registry_data("clients.yaml")
+    topic_data = load_registry_data("topics.yaml")
+    client_lookup = build_slug_lookup(client_data, "clients")
+    topic_lookup = build_slug_lookup(topic_data, "categories")
+
+    print(f"Loaded registries: {len(client_lookup)} client aliases, {len(topic_lookup)} topic aliases", file=sys.stderr)
+
     if args.file:
         files = [Path(args.file)]
     else:
@@ -376,7 +475,9 @@ def main():
     # Compile documents with up to 3 concurrent
     with ThreadPoolExecutor(max_workers=3) as pool:
         futures = {
-            pool.submit(compile_one, client, fp, index_md, config): fp
+            pool.submit(compile_one, client, fp, index_md,
+                        clients_yaml, topics_yaml,
+                        client_lookup, topic_lookup, config): fp
             for fp in files
         }
         for future in as_completed(futures):
