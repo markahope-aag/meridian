@@ -1,17 +1,18 @@
 # Meridian — Project Status
 
-*Last updated: 2026-04-05*
+*Last updated: 2026-04-06*
 
 ## The Numbers
 
 | Layer | Count |
 |---|---|
-| Wiki articles | 137 (and growing — compiler is running) |
-| Raw source docs | 700 |
-| Capture (pending) | 24 |
-| Client folders | 19 |
-| Knowledge topics | 37 |
-| Git commits | 29 |
+| Wiki articles | 3,898 |
+| Concepts | 42 |
+| Client folders | 40 current, 5 former |
+| Knowledge topics | 67 |
+| Raw source docs | 711 |
+| Capture (pending) | 80 |
+| Git commits | 35 |
 
 ## Pipeline — Fully Operational
 
@@ -29,6 +30,7 @@ Manual ─────────→ meridian capture ──→ /capture ──
                                 │
                     Daily Compile (6:30 AM) ←─────────────┘
                     Haiku plans → Sonnet writes (3 parallel)
+                    Registry-enforced (clients.yaml + topics.yaml)
                                 │
                              wiki/ ──→ Syncthing ──→ Obsidian
                                 │
@@ -36,13 +38,63 @@ Manual ─────────→ meridian capture ──→ /capture ──
                     Auto-fix + flag for review
 ```
 
-## Clients Detected (19)
+## Clients (40 current, 5 former)
 
-AB Hooper, Agility Recovery, American Extractions, Asymmetric Applications, Aviary, Cora, Cordwainer, Coristone, Crazy Lindy's, Didion, Doodla, Doudlah Farms, Gus, HazardOS, PaperTube, PIMA, Quarra, Trachte, W.I. Mason's
+### Current
+AB Hooper, Adava Care, Agility Recovery, AHS (Advanced Health & Safety), American Extractions, Asymmetric, Avant Gardening, AviaryAI, Axley Law, BluepointATM, Blue Sky Capital, Citrus America, The Cordwainer, Crazy Lenny's E-Bikes, Didion, Doudlah Farms, Exterior Renovations, FinWellU, Flynn Audio, HazardOS, Hooper Corp, JBF Concrete, LaMarie Beauty, Machinery Source, Village of Maple Bluff, A New Dawn / Shine, Overhead Door, Paper Tube Co, PEMA, Quarra Stone, Reynolds Transfer, SBS Wisconsin, Seamless Building Solutions, Skaalen, SonoPlot, Three Gaits, Trachte, VCEDC, W.I. Mason's Foundation
 
-## Knowledge Base (37 Topics)
+### Former
+American Extractions, Bake Believe, BluepointATM, Capitol Bank, Global Coin
 
-Accounting Operations, AI Tools, Amazon Strategy, Articulate Rise 360, Audio Advertising, Business Development, Content Marketing, Content Strategy, CRM Automation, Data Enrichment, Ecommerce Strategy, Email Marketing, Food Regulatory Compliance, Google Ads, Grant Compliance, Instructional Design, Microsoft Clarity, Paid Social, PPC Strategy, Print Design, Product Packaging, Project Management, SaaS Integrations, Salesforce CRM, Sales Methodology, Search Advertising, SEO, SEO Strategy, SharePoint/Salesforce Integration, Team Operations, Trade Show Marketing, Video Optimization, Web Design, Web Forms, Website Strategy, Website Troubleshooting
+## Knowledge Base (67 Topics)
+
+### Advertising & Media
+Google Ads, Paid Social, PPC, Programmatic, Amazon Advertising
+
+### SEO & Search
+SEO, Local SEO, Technical SEO, AI Search
+
+### Content & Creative
+Content Marketing, Copywriting, Video Marketing, Design, Branding
+
+### Email & Automation
+Email Marketing, Marketing Automation, CRM Automation
+
+### CRM & Sales Tools
+HubSpot, Salesforce, GoHighLevel, CRM
+
+### Website & Web
+Website, WordPress, Webflow, Web Analytics
+
+### Ecommerce
+Ecommerce Strategy, Shopify, WooCommerce, Amazon Strategy
+
+### Analytics & Tracking
+Analytics, Call Tracking, Attribution
+
+### Integrations & Tech
+Zapier, DNS & Domains, Web Hosting, Integrations
+
+### AI & Automation
+AI Tools, AI Marketing, AI Agents, AI Workflows
+
+### Client & Agency Operations
+Agency Operations, Client Management, Project Management, Reporting, Pricing
+
+### Sales
+Sales Methodology, Sales Enablement, Lead Generation, Outbound Sales
+
+### Strategy
+Marketing Strategy, Brand Strategy, Competitive Analysis, Go-to-Market
+
+### Industry-Specific
+Senior Living, Food & Beverage, Nonprofit, B2B Marketing, eLearning, SaaS
+
+### Compliance & Legal
+Regulatory Compliance, HIPAA Compliance, Legal
+
+### Team & Operations
+Team Operations, Hiring, Onboarding, Financial Operations
 
 ## Automation Layer
 
@@ -60,7 +112,7 @@ Accounting Operations, AI Tools, Amazon Strategy, Articulate Rise 360, Audio Adv
 | Receiver (`meridian.markahope.com`) | Healthy |
 | Syncthing (VM ↔ PC) | Active |
 | n8n (`auto.asymmetric.pro`) | 4 Meridian workflows active |
-| Obsidian vault | Syncing |
+| Obsidian vault | Syncing (wiki/ folder only) |
 | CLI (`meridian` command) | Installed |
 | Claude Code hook | Registered |
 | Fathom webhook | Registered |
@@ -74,9 +126,9 @@ Flask/Gunicorn service on Coolify. All endpoints:
 | Endpoint | Purpose |
 |---|---|
 | `POST /capture` | Generic markdown capture |
-| `POST /capture/fathom` | Fathom meeting webhook (with dedup) |
+| `POST /capture/fathom` | Fathom meeting webhook (with dedup by recording_id) |
 | `POST /capture/claude-session` | Claude Code session transcript |
-| `POST /capture/gdrive` | Google Drive file ingestion |
+| `POST /capture/gdrive` | Google Drive file ingestion (with dedup) |
 | `POST /distill` | Run Daily Distill (async) |
 | `POST /compile` | Run Compiler (async) |
 | `POST /lint` | Run Linter (async) |
@@ -98,6 +150,15 @@ Pipeline endpoints are async by default (return 202 + job_id). Add `?sync=true` 
 | Debrief | `agents/debrief.py` | Extract learnings from Claude Code sessions |
 | Q&A | `agents/qa_agent.py` | Research wiki, synthesize answers with citations |
 | Linter | `agents/linter.py` | Wiki health checks, auto-fix + flag for review |
+
+### Registries
+
+| File | Purpose |
+|---|---|
+| `clients.yaml` | Canonical client names, slugs, aliases — compiler must match |
+| `topics.yaml` | Canonical knowledge topics, slugs, aliases — compiler must match |
+
+The compiler validates every planned file path against these registries before writing. Unmatched clients or topics are flagged, never invented.
 
 ### CLI (`meridian` command)
 
@@ -133,15 +194,16 @@ meridian status                      # Check receiver health
 ## Key Design Decisions
 
 - **AGENTS.md** is the source of truth for all agent behavior
+- **Registry-enforced compiler**: `clients.yaml` and `topics.yaml` are mandatory — the compiler cannot invent new client folders or knowledge topics
 - **Two-pass compiler**: Haiku plans (fast), Sonnet writes (quality), 3 parallel workers
-- **Dynamic client detection**: inferred from content, not a static list
-- **Cross-filing**: client docs + transferable learnings in `wiki/knowledge/`
-- **Bootstrap → steady state**: permissive thresholds (<20 articles), then autonomous
+- **Cross-filing**: client docs + transferable learnings in `wiki/knowledge/` with backlinks
+- **Client status tracking**: current/former/prospect with status transition flagging
 - **All execution on VM**: CLI and hooks are just HTTP clients
 - **Prompts as files**: `prompts/*.md`, never hardcoded
 - **Capture cleanup**: files deleted after distill (promoted → raw, skipped → deleted)
 - **Fathom dedup**: by recording_id across capture/ and raw/
+- **Obsidian optimization**: only `wiki/` indexed, raw/capture/code excluded via ignore filters
 
 ## Repo
 
-`github.com/markahope-aag/meridian` (public) — 29 commits on main
+`github.com/markahope-aag/meridian` (public) — 35 commits on main

@@ -124,16 +124,15 @@ All endpoints except `/health` require bearer token auth. Pipeline endpoints (`/
 │       ├── decisions/ # architectural choices
 │       └── dead-ends/ # things that failed
 ├── outputs/           # reports, slides, charts
+├── outputs/           # reports, slides, charts
 ├── agents/            # Python agent scripts
-│   ├── daily_distill.py
-│   ├── compiler.py
-│   └── debrief.py
 ├── prompts/           # LLM system prompts (never hardcoded)
 ├── receiver/          # Flask API service
 ├── cli/               # pip-installable CLI
 ├── n8n/               # importable n8n workflow JSONs
 ├── scripts/           # setup and hook scripts
-├── tools/             # CLI utility scripts
+├── clients.yaml       # client registry — canonical names, slugs, aliases
+├── topics.yaml        # knowledge topic registry — canonical topics, aliases
 └── config.yaml        # paths and settings (no secrets)
 ```
 
@@ -151,9 +150,9 @@ All endpoints except `/health` require bearer token auth. Pipeline endpoints (`/
 
 **Append-only operations log.** `wiki/log.md` records every agent action with a consistent format (`## [date] operation | description`). Gives a timeline of how the wiki evolved.
 
-**Dynamic client detection.** The compiler detects client references from document content — attendee names, email domains, contextual phrases — rather than maintaining a static client list. New clients are flagged for human approval. Client status (current/former/prospect) is inferred from context.
+**Registry-enforced filing.** The compiler validates every file path against `clients.yaml` (canonical client names) and `topics.yaml` (canonical knowledge topics) before writing. It cannot invent new client folders or knowledge topics — unmatched names are flagged for review. This prevents the proliferation of misspelled/duplicate folders from speech-to-text transcripts.
 
-**Cross-filing with knowledge extraction.** Client-specific documents are filed under `wiki/clients/`, but transferable learnings are also extracted to `wiki/knowledge/` with backlinks in both directions. Knowledge compounds across clients.
+**Cross-filing with knowledge extraction.** Client-specific documents are filed under `wiki/clients/`, and transferable learnings are extracted to `wiki/knowledge/` with backlinks in both directions. Knowledge compounds across clients.
 
 ## Agents
 
