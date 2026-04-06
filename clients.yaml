@@ -38,7 +38,7 @@ clients:
   - name: "Citrus America"
     slug: citrus-america
     status: current
-    aliases: ["citrus", "citra-casa"]
+    aliases: ["citrus", "citra-casa", "CAI"]
     website: https://citrusamerica.com/
 
   - name: "Skaalen Retirement Services"
@@ -59,7 +59,7 @@ clients:
     aliases: ["advanced-health", "advanced-health-and-safety", "advanced-health-safety", "ahs", "madison-asbestos", "madison-asbestos-services", "hazardos", "hhs", "hs"]
     website: https://madisonasbestos.com/
 
-  - name: "Didion"
+  - name: "Didion Milling"
     slug: didion
     status: current
     aliases: ["didion-milling", "didion-recruitment", "didyna", "diddy", "gideon", "gideon-emacs"]
@@ -115,11 +115,6 @@ clients:
     status: current
     aliases: ["bluepoint-atm", "bluepointatm", "blue-point", "loot-point"]
 
-  - name: "CAI"
-    slug: cai
-    status: current
-    aliases: []
-
   - name: "American Extractions"
     slug: american-extractions
     status: current
@@ -130,7 +125,7 @@ clients:
     status: current
     aliases: ["a-new-dawn", "a-new-dawn-therapy", "new-dawn", "newdown", "shine", "shine-construction-cleaning", "shine-marketing", "the-shine"]
 
-  - name: "Trachte"
+  - name: "Trachte Building Systems"
     slug: trachte
     status: current
     aliases: ["trachty", "track-right", "tracku", "tracti", "tracti-building-systems", "traffy", "trakti", "trocta", "trocte"]
@@ -155,7 +150,7 @@ clients:
     status: current
     aliases: ["avant", "avant-garde", "avoke-gardening", "gardening-account"]
 
-  - name: "PEMA.io"
+  - name: "PEMA"
     slug: pema
     status: current
     aliases: ["pema-io", "pima"]
@@ -170,30 +165,30 @@ clients:
     status: former
     aliases: ["capital-bank"]
 
-  - name: "VCEDC"
+  - name: "Vilas County Economic Development"
     slug: vcedc
     status: current
-    aliases: ["vce", "vilas-county-edc"]
+    aliases: ["vce", "vilas-county-edc", "VCEDC"]
 
   - name: "FinWellU"
     slug: finwellu
     status: current
     aliases: ["fenwell", "fenwell-u", "fieldwell", "financial-u", "financialu", "financial-utesk", "finwell-u", "firestone", "next-level", "nextlevel", "next-level-financial", "next-level-financialu", "nlp-wealth-management"]
 
-  - name: "SBS Wisconsin"
+  - name: "Seamless Building Systems"
     slug: sbs
     status: current
-    aliases: ["sbswi"]
+    aliases: ["sbswi", "SBS Wisconsin"]
 
   - name: "LaMarie Beauty"
     slug: lamarie
     status: current
     aliases: ["la-marie", "lamarie-beauty", "la-marie-beauty", "la-marie-connect", "lamaurie", "lameri-beauty", "lammary", "lmb"]
 
-  - name: "AB Hooper"
+  - name: "Hooper"
     slug: ab-hooper
     status: current
-    aliases: ["hooper"]
+    aliases: ["hooper", "AB Hooper"]
 
   - name: "HazardOS"
     slug: hazardos
