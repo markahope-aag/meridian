@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Search — Meridian{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 24px;">Search</h1>
+
+<form action="/search" method="get" style="margin-bottom: 24px;">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search the wiki..."
+           style="width: 100%; background: var(--bg); border: 1px solid var(--border);
+                  border-radius: 6px; color: var(--text); padding: 12px; font-size: 16px;">
+</form>
+
+{% if query %}
+<div style="color: var(--text-muted); margin-bottom: 16px;">
+    {{ results|length }} results for "{{ query }}"
+</div>
+{% endif %}
+
+{% for r in results %}
+<div class="search-result">
+    <div class="title"><a href="/article/{{ r.path }}">{{ r.title }}</a></div>
+    <div class="path">{{ r.path }}</div>
+    <div class="excerpt">{{ r.excerpt }}...</div>
+</div>
+{% endfor %}
+{% endblock %}

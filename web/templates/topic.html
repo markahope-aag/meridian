@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ slug }} — Meridian{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 8px;">{{ slug }}</h1>
+<div style="color: var(--text-muted); margin-bottom: 24px;">{{ articles|length }} articles</div>
+
+<div class="card">
+    <h2>Articles</h2>
+    {% for a in articles %}
+    <div class="list-item">
+        <div>
+            <a href="/article/{{ a.path }}">{{ a.title }}</a>
+            <div style="font-size: 11px; color: var(--text-muted);">{{ a.word_count }} words · {{ a.updated or a.created }}</div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

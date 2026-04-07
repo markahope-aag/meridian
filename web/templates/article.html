@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }} — Meridian{% endblock %}
+{% block content %}
+<div class="meta">
+    <span>{{ article.path }}</span>
+    {% if article.layer %}<span>Layer {{ article.layer }}</span>{% endif %}
+    {% if article.type %}<span>{{ article.type }}</span>{% endif %}
+    {% if article.client_source %}<span>Client: {{ article.client_source }}</span>{% endif %}
+    {% if article.word_count %}<span>{{ article.word_count }} words</span>{% endif %}
+    {% if article.updated %}<span>Updated: {{ article.updated }}</span>{% endif %}
+</div>
+
+{% if article.tags %}
+<div style="margin-bottom: 16px;">
+    {% for tag in article.tags %}
+    <span class="tag">{{ tag }}</span>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="card article-body">
+    {{ body_html | safe }}
+</div>
+{% endblock %}

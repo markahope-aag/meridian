@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Ask — Meridian{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 24px;">Ask Meridian</h1>
+
+<form class="ask-form" method="POST" action="/ask">
+    <textarea name="question" placeholder="Ask a question about your knowledge base...">{{ question }}</textarea>
+    <button type="submit">Ask</button>
+</form>
+
+{% if answer %}
+<div class="card answer">
+    <h2>Answer</h2>
+    <div class="article-body">{{ answer }}</div>
+</div>
+{% endif %}
+{% endblock %}

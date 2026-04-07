@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Meridian — Dashboard{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 24px;">Dashboard</h1>
+
+<div class="stat-grid">
+    <div class="stat-box">
+        <div class="number">{{ stats.wiki_total }}</div>
+        <div class="label">Wiki Articles</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ stats.client_folders }}</div>
+        <div class="label">Clients</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ stats.knowledge_topics }}</div>
+        <div class="label">Knowledge Topics</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ stats.concepts }}</div>
+        <div class="label">Concepts</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ stats.raw }}</div>
+        <div class="label">Raw Sources</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ stats.capture }}</div>
+        <div class="label">Capture Queue</div>
+    </div>
+</div>
+
+<div class="two-col">
+    <div class="card">
+        <h2>Clients ({{ clients|length }})</h2>
+        {% for c in clients %}
+        <div class="list-item">
+            <a href="/client/{{ c.slug }}">{{ c.slug }}</a>
+            <span class="count">{{ c.articles }}</span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="card">
+        <h2>Knowledge Topics ({{ topics|length }})</h2>
+        {% for t in topics[:30] %}
+        <div class="list-item">
+            <a href="/topic/{{ t.slug }}">{{ t.slug }}</a>
+            <span class="count">{{ t.articles }}</span>
+        </div>
+        {% endfor %}
+        {% if topics|length > 30 %}
+        <div style="padding: 8px 0; color: var(--text-muted); font-size: 13px;">
+            ... and {{ topics|length - 30 }} more
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <h2>Recent Activity</h2>
+    {% for entry in recent_log %}
+    <div class="log-entry">
+        <span class="log-date">{{ entry.date }}</span> — {{ entry.entry }}
+    </div>
+    {% endfor %}
+    {% if not recent_log %}
+    <div style="color: var(--text-muted);">No recent activity.</div>
+    {% endif %}
+</div>
+{% endblock %}
