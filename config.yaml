@@ -32,6 +32,46 @@ compiler:
   planning_model: claude-haiku-4-5-20251001   # fast model for filing decisions
   writing_model: claude-sonnet-4-6            # quality model for article content
 
+# Domain stability profiles — how fast different knowledge domains change
+domain_stability:
+  fundamental:
+    description: "Human psychology, direct response, core principles"
+    change_sensitivity: 0.5
+    web_monitoring: quarterly
+    expected_half_life: decades
+    examples: [copywriting, direct-response, brand-psychology]
+  strategy:
+    description: "Marketing strategy, channel strategy, buyer journey"
+    change_sensitivity: 0.3
+    web_monitoring: quarterly
+    expected_half_life: years
+    examples: [content-marketing, brand-strategy, go-to-market]
+  platform-tactics:
+    description: "How to use platforms effectively"
+    change_sensitivity: 0.2
+    web_monitoring: monthly
+    expected_half_life: years-to-months
+    examples: [google-ads, seo, meta-ads, email-marketing]
+  platform-mechanics:
+    description: "Specific platform rules, settings, algorithms"
+    change_sensitivity: 0.1
+    web_monitoring: weekly
+    expected_half_life: months
+    examples: [google-ads-bidding, meta-targeting, algorithm-specifics]
+  regulatory:
+    description: "Laws, policies, compliance requirements"
+    change_sensitivity: 0.0
+    web_monitoring: continuous
+    expected_half_life: unpredictable
+    examples: [fda-compliance, hipaa, privacy-law, platform-policies]
+
+# Synthesis settings — Layer 3 knowledge generation
+synthesis:
+  fragments_before_synthesis: 3    # trigger synthesis after N new fragments
+  synthesis_per_day: 5             # max topics synthesized daily
+  bootstrap_threshold: 6           # distill score threshold < 20 articles
+  steady_state_threshold: 8        # distill score threshold >= 20 articles
+
 # n8n integration
 n8n:
   base_url: https://auto.asymmetric.pro

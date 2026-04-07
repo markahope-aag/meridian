@@ -206,6 +206,62 @@ tags: []
 ---
 ```
 
+### Layer 2 articles (`wiki/knowledge/`, `wiki/clients/`)
+
+Layer 2 articles are compiled from raw sources — client work, meeting transcripts,
+ingested documents. They add these fields to the base wiki frontmatter:
+
+```yaml
+---
+layer: 2
+client_source: "Doudlah Farms"   # client name if from client work, null if not
+industry_context: "food-beverage" # industry slug if applicable
+transferable: true                # true if insight applies beyond this client
+---
+```
+
+### Layer 3 articles (`wiki/knowledge/`)
+
+Layer 3 articles are synthesized knowledge — distilled from multiple Layer 2 sources
+into authoritative topic articles. They track confidence, currency, and domain dynamics:
+
+```yaml
+---
+layer: 3
+source_count: 5                        # number of Layer 2 sources synthesized
+current_status: current                # current | evolving | superseded | deprecated
+rate_of_change: moderate               # stable | slow | moderate | high | volatile
+domain_type: platform-tactics          # fundamental | strategy | platform-tactics |
+                                       #   platform-mechanics | regulatory
+confidence: high                       # low | medium | high | established
+evidence_count: 8                      # total evidence citations
+first_seen: "2025-10-15"              # earliest source date
+last_updated: "2026-04-06"
+supporting_sources: []                 # source docs that support this knowledge
+contradicting_sources: []              # source docs that contradict
+hypothesis: false                      # true if unvalidated theory
+evolution_timeline: []                 # chronological changes tracked
+superseded_by: null                    # link to replacement article if deprecated
+web_monitoring_frequency: monthly      # none | quarterly | monthly | weekly | continuous
+---
+```
+
+### Layer 4 articles (`wiki/layer4/`)
+
+Layer 4 articles capture cross-topic patterns, emerging trends, knowledge drift,
+and unresolved contradictions:
+
+```yaml
+---
+layer: 4
+concept_type: pattern                  # pattern | drift | emergence | contradiction
+topics_connected: []                   # list of Layer 3 topic slugs this connects
+confidence: medium                     # low | medium | high | established
+first_detected: "2026-03-15"
+last_updated: "2026-04-06"
+---
+```
+
 ### Capture documents (`capture/`)
 
 Capture docs have minimal or no frontmatter — they arrive in whatever format the source
