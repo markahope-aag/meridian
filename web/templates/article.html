@@ -1,13 +1,19 @@
 {% extends "base.html" %}
 {% block title %}{{ article.title }} — Meridian{% endblock %}
 {% block content %}
-<div class="meta">
-    <span>{{ article.path }}</span>
-    {% if article.layer %}<span>Layer {{ article.layer }}</span>{% endif %}
-    {% if article.type %}<span>{{ article.type }}</span>{% endif %}
-    {% if article.client_source %}<span>Client: {{ article.client_source }}</span>{% endif %}
-    {% if article.word_count %}<span>{{ article.word_count }} words</span>{% endif %}
-    {% if article.updated %}<span>Updated: {{ article.updated }}</span>{% endif %}
+<div style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <div class="meta">
+        <span>{{ article.path }}</span>
+        {% if article.layer %}<span>Layer {{ article.layer }}</span>{% endif %}
+        {% if article.type %}<span>{{ article.type }}</span>{% endif %}
+        {% if article.client_source %}<span>Client: {{ article.client_source }}</span>{% endif %}
+        {% if article.word_count %}<span>{{ article.word_count }} words</span>{% endif %}
+        {% if article.updated %}<span>Updated: {{ article.updated }}</span>{% endif %}
+    </div>
+    <div style="display: flex; gap: 8px; flex-shrink: 0;">
+        <a href="/download/md/{{ article.path }}" class="download-btn">&#8595; MD</a>
+        <a href="/download/pdf/{{ article.path }}" class="download-btn">&#8595; PDF</a>
+    </div>
 </div>
 
 {% if article.tags %}

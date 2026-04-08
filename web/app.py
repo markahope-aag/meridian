@@ -356,6 +356,87 @@ def ask_page():
     return render_template("ask.html", question=question, answer_html=answer_html)
 
 
+@app.route("/download/md/<path:article_path>")
+def download_md(article_path):
+    """Download article as raw markdown."""
+    from flask import send_file
+    filepath = MERIDIAN_ROOT / article_path
+    if not filepath.exists() or not str(filepath).startswith(str(MERIDIAN_ROOT)):
+        return "Not found", 404
+    return send_file(filepath, as_attachment=True, download_name=filepath.name,
+                     mimetype="text/markdown")
+
+
+@app.route("/download/pdf/<path:article_path>")
+def download_pdf(article_path):
+    """Download article as PDF."""
+    filepath = MERIDIAN_ROOT / article_path
+    if not filepath.exists() or not str(filepath).startswith(str(MERIDIAN_ROOT)):
+        return "Not found", 404
+
+    article = read_article(filepath)
+    body_html = render_markdown(article["body"])
+
+    html = f"""<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>{article['title']}</title>
+<style>
+    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.7; color: #1f2937; }}
+    h1 {{ font-size: 1.8rem; margin: 1.5rem 0 0.75rem; }}
+    h2 {{ font-size: 1.4rem; margin: 1.25rem 0 0.5rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; }}
+    h3 {{ font-size: 1.1rem; margin: 1rem 0 0.5rem; }}
+    p {{ margin: 0.75rem 0; }}
+    ul, ol {{ margin: 0.75rem 0; padding-left: 1.5rem; }}
+    li {{ margin: 0.25rem 0; }}
+    code {{ background: #f3f4f6; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.9em; }}
+    pre {{ background: #f3f4f6; padding: 1rem; border-radius: 6px; overflow-x: auto; }}
+    blockquote {{ border-left: 3px solid #d1d5db; padding-left: 1rem; color: #6b7280; margin: 1rem 0; }}
+    table {{ border-collapse: collapse; width: 100%; margin: 1rem 0; }}
+    th, td {{ border: 1px solid #e5e7eb; padding: 0.5rem 0.75rem; text-align: left; }}
+    th {{ background: #f3f4f6; font-weight: 600; }}
+    a {{ color: #2563eb; }}
+    .meta {{ font-size: 0.8rem; color: #6b7280; margin-bottom: 1rem; }}
+</style>
+</head><body>
+<div class="meta">{article['path']} · {article.get('word_count', '')} words · {article.get('updated', '')}</div>
+{body_html}
+</body></html>"""
+
+    try:
+        import subprocess, tempfile
+        with tempfile.NamedTemporaryFile(suffix=".html", delete=False, mode="w", encoding="utf-8") as tmp_html:
+            tmp_html.write(html)
+            tmp_html_path = tmp_html.name
+        pdf_path = tmp_html_path.replace(".html", ".pdf")
+        # Try wkhtmltopdf first, fall back to weasyprint
+        try:
+            subprocess.run(["wkhtmltopdf", "--quiet", tmp_html_path, pdf_path],
+                           capture_output=True, timeout=30)
+        except FileNotFoundError:
+            try:
+                from weasyprint import HTML
+                HTML(string=html).write_pdf(pdf_path)
+            except ImportError:
+                # Last resort: return HTML as downloadable file
+                import os
+                os.unlink(tmp_html_path)
+                from flask import Response
+                return Response(html, mimetype="text/html",
+                                headers={"Content-Disposition": f"attachment; filename={filepath.stem}.html"})
+        from flask import send_file
+        import os
+        response = send_file(pdf_path, as_attachment=True,
+                             download_name=f"{filepath.stem}.pdf", mimetype="application/pdf")
+        os.unlink(tmp_html_path)
+        # Clean up PDF after sending (deferred)
+        return response
+    except Exception as e:
+        from flask import Response
+        return Response(html, mimetype="text/html",
+                        headers={"Content-Disposition": f"attachment; filename={filepath.stem}.html"})
+
+
 @app.route("/api/stats")
 def api_stats():
     return jsonify(get_stats())
