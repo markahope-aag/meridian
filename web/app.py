@@ -29,8 +29,69 @@ def get_md():
     ])
 
 
+def process_citations(text: str) -> tuple[str, list[dict]]:
+    """Convert [[source1, source2]] inline citations to footnote numbers."""
+    citations = []
+    citation_map = {}
+    counter = [1]
+
+    def clean_name(s: str) -> str:
+        s = s.strip().replace(".md", "").replace(".MD", "")
+        s = s.split("/")[-1]  # take filename only
+        s = s.replace("-", " ").replace("_", " ")
+        return s.title()
+
+    def replace_citation(match):
+        raw = match.group(1)
+        sources = [s.strip() for s in raw.split(",")]
+
+        # Heuristic: if it looks like a citation (multiple items, or has path-like names)
+        # vs a single wikilink. Citations typically have commas or .md suffixes.
+        if len(sources) == 1 and "." not in sources[0] and "/" not in sources[0]:
+            # Single wikilink, not a citation — leave for wikilink converter
+            return match.group(0)
+
+        key = "|".join(sorted(sources))
+        if key in citation_map:
+            num = citation_map[key]
+        else:
+            num = counter[0]
+            citation_map[key] = num
+            citations.append({
+                "number": num,
+                "sources": sources,
+                "display_names": [clean_name(s) for s in sources],
+            })
+            counter[0] += 1
+
+        return f'<sup class="citation">[{num}]</sup>'
+
+    processed = re.sub(r"\[\[([^\]]+)\]\]", replace_citation, text)
+    return processed, citations
+
+
+def build_sources_html(citations: list[dict]) -> str:
+    """Build footnote-style sources section."""
+    if not citations:
+        return ""
+
+    lines = ['<div class="sources-section">', "<h2>Sources</h2>", '<ol class="sources-list">']
+    for cite in citations:
+        lines.append(f'<li id="source-{cite["number"]}">')
+        links = []
+        for source, display in zip(cite["sources"], cite["display_names"]):
+            slug = source.strip().replace(".md", "")
+            if not slug.startswith("wiki/"):
+                slug = f"wiki/{slug}"
+            links.append(f'<a href="/article/{slug}.md" class="source-link">{display}</a>')
+        lines.append(" &middot; ".join(links))
+        lines.append("</li>")
+    lines.append("</ol></div>")
+    return "\n".join(lines)
+
+
 def convert_wikilinks(text: str) -> str:
-    """Convert [[wikilinks]] to clickable HTML links."""
+    """Convert remaining [[wikilinks]] to clickable HTML links."""
     def replace_link(match):
         full = match.group(1)
         if "|" in full:
@@ -38,7 +99,6 @@ def convert_wikilinks(text: str) -> str:
         else:
             target = full
             display = target.split("/")[-1].replace("-", " ").title()
-        # Normalize path
         if not target.startswith("wiki/"):
             target = f"wiki/{target}"
         if not target.endswith(".md"):
@@ -48,10 +108,17 @@ def convert_wikilinks(text: str) -> str:
 
 
 def render_markdown(body: str) -> str:
-    """Convert markdown body to HTML with wikilink support."""
+    """Convert markdown body to HTML with citation footnotes and wikilinks."""
+    # Step 1: Process citations (before wikilinks)
+    body, citations = process_citations(body)
+    # Step 2: Convert remaining wikilinks
     body = convert_wikilinks(body)
+    # Step 3: Render markdown to HTML
     md = get_md()
-    return md.convert(body)
+    article_html = md.convert(body)
+    # Step 4: Append sources section
+    sources_html = build_sources_html(citations)
+    return article_html + sources_html
 
 app = Flask(__name__)
 
