@@ -246,13 +246,20 @@ def write_synthesis(client: anthropic.Anthropic, topic_name: str, topic_slug: st
 # Main synthesis flow
 # ---------------------------------------------------------------------------
 
-def synthesize_topic(topic_slug: str, dry_run: bool = False) -> dict:
+def synthesize_topic(topic_slug: str, dry_run: bool = False, force: bool = False) -> dict:
     """Synthesize one topic into a Layer 3 article."""
     t0 = time.time()
     config = load_config()
     topics_registry = load_topics_registry()
     topic_info = topics_registry.get(topic_slug, {"name": topic_slug})
     topic_name = topic_info.get("name", topic_slug)
+
+    # Check if already synthesized (unless --force)
+    output_path = WIKI_DIR / "knowledge" / topic_slug / "index.md"
+    if output_path.exists() and not force:
+        content = output_path.read_text(encoding="utf-8", errors="replace")
+        if "layer: 3" in content:
+            return {"topic": topic_slug, "action": "skipped", "reason": "already synthesized (use --force to overwrite)"}
 
     # Find fragments
     fragment_paths = find_fragments(topic_slug)
@@ -359,9 +366,10 @@ def main():
     parser = argparse.ArgumentParser(description="Meridian Synthesizer")
     parser.add_argument("--topic", required=True, help="Topic slug to synthesize")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be synthesized")
+    parser.add_argument("--force", action="store_true", help="Overwrite existing synthesis")
     args = parser.parse_args()
 
-    result = synthesize_topic(args.topic, dry_run=args.dry_run)
+    result = synthesize_topic(args.topic, dry_run=args.dry_run, force=args.force)
     print(json.dumps(result, indent=2))
 
 
