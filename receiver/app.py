@@ -668,32 +668,27 @@ def synthesize_schedule():
 @app.route("/synthesize/queue", methods=["GET"])
 def synthesize_queue():
     """Get synthesis queue status. No auth required."""
-    try:
-        supabase_url = os.environ.get("SUPABASE_URL", "https://mpktcabncjodpmyfqeht.supabase.co")
-        supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
-        if not supabase_key:
-            return jsonify({"error": "SUPABASE_SERVICE_ROLE_KEY not set"}), 500
+    queue_path = MERIDIAN_ROOT / "synthesis_queue.json"
+    if not queue_path.exists():
+        return jsonify({"pending": 0, "running": 0, "complete": 0, "failed": 0,
+                        "total": 0, "next_5": []})
 
-        headers = {
-            "apikey": supabase_key,
-            "Authorization": f"Bearer {supabase_key}",
-        }
-        resp = requests.get(
-            f"{supabase_url}/rest/v1/synthesis_queue?order=priority.desc",
-            headers=headers, timeout=10,
-        )
-        resp.raise_for_status()
-        items = resp.json()
+    try:
+        with open(queue_path) as f:
+            items = json.load(f)
 
         status = {"pending": 0, "running": 0, "complete": 0, "failed": 0, "total": len(items)}
         for item in items:
             s = item.get("status", "pending")
             if s in status:
                 status[s] += 1
+
+        pending = [i for i in items if i.get("status") == "pending"]
+        pending.sort(key=lambda x: x.get("priority", 0), reverse=True)
         status["next_5"] = [
             {"topic": i["topic"], "fragment_count": i.get("fragment_count", 0)}
-            for i in items if i.get("status") == "pending"
-        ][:5]
+            for i in pending[:5]
+        ]
 
         return jsonify(status)
     except Exception as e:
