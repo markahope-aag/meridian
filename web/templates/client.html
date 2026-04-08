@@ -4,9 +4,9 @@
 <h1 style="margin-bottom: 8px;">{{ slug }}</h1>
 <div style="color: var(--text-muted); margin-bottom: 24px;">{{ articles|length }} articles</div>
 
-{% if index_article %}
-<div class="card article-body">
-    {{ index_article.body | safe }}
+{% if index_html %}
+<div class="card article-content">
+    {{ index_html | safe }}
 </div>
 {% endif %}
 

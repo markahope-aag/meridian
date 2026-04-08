@@ -12,9 +12,46 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
+import markdown
 from flask import Flask, jsonify, render_template, request
 import requests
 import yaml
+
+
+def get_md():
+    """Create a fresh Markdown converter."""
+    return markdown.Markdown(extensions=[
+        "extra",
+        "codehilite",
+        "toc",
+        "nl2br",
+        "sane_lists",
+    ])
+
+
+def convert_wikilinks(text: str) -> str:
+    """Convert [[wikilinks]] to clickable HTML links."""
+    def replace_link(match):
+        full = match.group(1)
+        if "|" in full:
+            target, display = full.split("|", 1)
+        else:
+            target = full
+            display = target.split("/")[-1].replace("-", " ").title()
+        # Normalize path
+        if not target.startswith("wiki/"):
+            target = f"wiki/{target}"
+        if not target.endswith(".md"):
+            target += ".md"
+        return f"[{display}](/article/{target})"
+    return re.sub(r"\[\[([^\]]+)\]\]", replace_link, text)
+
+
+def render_markdown(body: str) -> str:
+    """Convert markdown body to HTML with wikilink support."""
+    body = convert_wikilinks(body)
+    md = get_md()
+    return md.convert(body)
 
 app = Flask(__name__)
 
@@ -218,15 +255,7 @@ def view_article(article_path):
         return "Not found", 404
 
     article = read_article(filepath)
-
-    # Convert markdown links to HTML links
-    body_html = article["body"]
-    # Convert [[wikilinks]] to clickable links
-    body_html = re.sub(
-        r"\[\[([^\]|]+?)(?:\|([^\]]+))?\]\]",
-        lambda m: f'<a href="/article/wiki/{m.group(1)}.md">{m.group(2) or m.group(1)}</a>',
-        body_html
-    )
+    body_html = render_markdown(article["body"])
 
     return render_template("article.html", article=article, body_html=body_html)
 
@@ -242,6 +271,7 @@ def view_client(slug):
     # Read _index.md
     index_path = client_dir / "_index.md"
     index_article = read_article(index_path) if index_path.exists() else None
+    index_html = render_markdown(index_article["body"]) if index_article else ""
 
     # List all articles
     articles = []
@@ -251,7 +281,8 @@ def view_client(slug):
         articles.append(read_article(f))
 
     return render_template("client.html", slug=slug,
-                           index_article=index_article, articles=articles)
+                           index_article=index_article, index_html=index_html,
+                           articles=articles)
 
 
 @app.route("/topic/<slug>")

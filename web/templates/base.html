@@ -116,30 +116,38 @@
         .log-entry:last-child { border-bottom: none; }
         .log-date { color: var(--text-muted); font-family: monospace; }
 
-        .article-body {
+        .article-content {
             line-height: 1.8;
             font-size: 15px;
         }
-        .article-body h1 { font-size: 28px; margin: 24px 0 12px; }
-        .article-body h2 { font-size: 22px; margin: 20px 0 10px; color: var(--accent); }
-        .article-body h3 { font-size: 18px; margin: 16px 0 8px; }
-        .article-body p { margin: 8px 0; }
-        .article-body ul, .article-body ol { margin: 8px 0 8px 24px; }
-        .article-body pre {
+        .article-content h1 { font-size: 1.8rem; font-weight: 700; margin: 1.5rem 0 0.75rem; }
+        .article-content h2 { font-size: 1.4rem; font-weight: 600; margin: 1.25rem 0 0.5rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
+        .article-content h3 { font-size: 1.1rem; font-weight: 600; margin: 1rem 0 0.5rem; }
+        .article-content p { margin: 0.75rem 0; line-height: 1.7; }
+        .article-content ul, .article-content ol { margin: 0.75rem 0; padding-left: 1.5rem; }
+        .article-content li { margin: 0.25rem 0; line-height: 1.6; }
+        .article-content strong { font-weight: 600; }
+        .article-content em { font-style: italic; }
+        .article-content blockquote { border-left: 3px solid var(--border); padding-left: 1rem; color: var(--text-muted); margin: 1rem 0; }
+        .article-content pre {
             background: var(--bg);
             border: 1px solid var(--border);
             border-radius: 6px;
-            padding: 12px;
+            padding: 1rem;
             overflow-x: auto;
+            margin: 1rem 0;
         }
-        .article-body code { font-family: monospace; font-size: 13px; }
-        .article-body table { border-collapse: collapse; width: 100%; margin: 12px 0; }
-        .article-body th, .article-body td {
+        .article-content code { font-family: monospace; font-size: 0.9em; background: var(--bg); padding: 0.1rem 0.3rem; border-radius: 3px; }
+        .article-content pre code { background: none; padding: 0; }
+        .article-content table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+        .article-content th, .article-content td {
             border: 1px solid var(--border);
-            padding: 8px 12px;
+            padding: 0.5rem 0.75rem;
             text-align: left;
         }
-        .article-body th { background: var(--bg); }
+        .article-content th { background: var(--bg); font-weight: 600; }
+        .article-content a { color: var(--accent); text-decoration: none; }
+        .article-content a:hover { text-decoration: underline; }
 
         .meta { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
         .meta span { margin-right: 16px; }
