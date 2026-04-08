@@ -424,13 +424,27 @@ def ask_page():
 
 
 @app.route("/download/md/<path:article_path>")
+def make_download_name(filepath: Path, article_path: str) -> str:
+    """Build a human-readable download filename from the article path."""
+    parts = Path(article_path).parts  # e.g. wiki/knowledge/google-ads/index.md
+    if filepath.name == "index.md":
+        # Synthesis article: use topic/client name
+        parent = filepath.parent.name  # e.g. "google-ads"
+        return f"{parent}-synthesis.md"
+    if filepath.name == "_index.md":
+        parent = filepath.parent.name
+        return f"{parent}-overview.md"
+    return filepath.name
+
+
 def download_md(article_path):
     """Download article as raw markdown."""
     from flask import send_file
     filepath = MERIDIAN_ROOT / article_path
     if not filepath.exists() or not str(filepath).startswith(str(MERIDIAN_ROOT)):
         return "Not found", 404
-    return send_file(filepath, as_attachment=True, download_name=filepath.name,
+    name = make_download_name(filepath, article_path)
+    return send_file(filepath, as_attachment=True, download_name=name,
                      mimetype="text/markdown")
 
 
@@ -489,19 +503,22 @@ def download_pdf(article_path):
                 import os
                 os.unlink(tmp_html_path)
                 from flask import Response
+                html_name = make_download_name(filepath, article_path).replace(".md", ".html")
                 return Response(html, mimetype="text/html",
-                                headers={"Content-Disposition": f"attachment; filename={filepath.stem}.html"})
+                                headers={"Content-Disposition": f"attachment; filename={html_name}"})
         from flask import send_file
         import os
+        pdf_name = make_download_name(filepath, article_path).replace(".md", ".pdf")
         response = send_file(pdf_path, as_attachment=True,
-                             download_name=f"{filepath.stem}.pdf", mimetype="application/pdf")
+                             download_name=pdf_name, mimetype="application/pdf")
         os.unlink(tmp_html_path)
         # Clean up PDF after sending (deferred)
         return response
     except Exception as e:
         from flask import Response
+        html_name = make_download_name(filepath, article_path).replace(".md", ".html")
         return Response(html, mimetype="text/html",
-                        headers={"Content-Disposition": f"attachment; filename={filepath.stem}.html"})
+                        headers={"Content-Disposition": f"attachment; filename={html_name}"})
 
 
 @app.route("/api/stats")
