@@ -118,7 +118,11 @@ def get_queue_status() -> dict:
 
 def process_pending(limit: int = 5):
     """Process the next N pending topics."""
-    from agents.synthesizer import synthesize_topic
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("synthesizer", ROOT / "agents" / "synthesizer.py")
+    synth_mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(synth_mod)
+    synthesize_topic = synth_mod.synthesize_topic
 
     queue = load_queue()
     pending = [i for i in queue if i.get("status") == "pending"]

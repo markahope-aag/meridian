@@ -2,15 +2,31 @@
 {% block title %}{{ slug }} — Meridian{% endblock %}
 {% block content %}
 <h1 style="margin-bottom: 8px;">{{ slug }}</h1>
-<div style="color: var(--text-muted); margin-bottom: 24px;">{{ articles|length }} articles</div>
+<div style="color: var(--text-muted); margin-bottom: 24px;">
+    {{ articles|length }} fragments
+    {% if synthesis %}
+    · <span style="background: var(--green); color: #000; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;">Layer 3 Synthesized</span>
+    <span style="font-size: 12px; margin-left: 4px;">
+        {{ synthesis.frontmatter.confidence }} · {{ synthesis.frontmatter.evidence_count }} evidence · updated {{ synthesis.frontmatter.last_updated }}
+    </span>
+    {% else %}
+    · <span style="color: var(--yellow); font-size: 12px;">Pending synthesis</span>
+    {% endif %}
+</div>
+
+{% if synthesis_html %}
+<div class="card article-content" style="border-left: 3px solid var(--green);">
+    {{ synthesis_html | safe }}
+</div>
+{% endif %}
 
 <div class="card">
-    <h2>Articles</h2>
+    <h2>Layer 2 Fragments ({{ articles|length }})</h2>
     {% for a in articles %}
     <div class="list-item">
         <div>
             <a href="/article/{{ a.path }}">{{ a.title }}</a>
-            <div style="font-size: 11px; color: var(--text-muted);">{{ a.word_count }} words · {{ a.updated or a.created }}</div>
+            <div style="font-size: 11px; color: var(--text-muted);">{{ a.word_count }} words · {{ a.updated or a.created }}{% if a.client_source %} · {{ a.client_source }}{% endif %}</div>
         </div>
     </div>
     {% endfor %}

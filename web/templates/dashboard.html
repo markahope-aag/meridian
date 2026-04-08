@@ -53,7 +53,13 @@
         <h2>Knowledge Topics ({{ topics|length }})</h2>
         {% for t in topics[:30] %}
         <div class="list-item">
-            <a href="/topic/{{ t.slug }}">{{ t.slug }}</a>
+            <div>
+                <a href="/topic/{{ t.slug }}">{{ t.slug }}</a>
+                {% if t.layer3 %}
+                <span style="background: var(--green); color: #000; padding: 1px 8px; border-radius: 10px; font-size: 10px; margin-left: 6px; font-weight: 600;">L3</span>
+                <span style="font-size: 11px; color: var(--text-muted); margin-left: 4px;">{{ t.confidence }} · {{ t.evidence_count }} evidence</span>
+                {% endif %}
+            </div>
             <span class="count">{{ t.articles }}</span>
         </div>
         {% endfor %}

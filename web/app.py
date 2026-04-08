@@ -177,15 +177,33 @@ def dashboard():
                 article_count = sum(1 for _ in d.glob("*.md") if _.name != "_index.md")
                 clients.append({"slug": d.name, "articles": article_count})
 
-    # Knowledge topics
+    # Knowledge topics with Layer 3 detection
     topics = []
     knowledge_dir = WIKI_DIR / "knowledge"
     if knowledge_dir.exists():
         for d in sorted(knowledge_dir.iterdir()):
             if d.is_dir():
-                article_count = sum(1 for _ in d.rglob("*.md") if _.name != "_index.md")
-                topics.append({"slug": d.name, "articles": article_count})
-        topics.sort(key=lambda x: x["articles"], reverse=True)
+                article_count = sum(1 for _ in d.rglob("*.md")
+                                    if _.name not in ("_index.md", "index.md"))
+                topic_data = {"slug": d.name, "articles": article_count,
+                              "layer3": False, "confidence": "", "evidence_count": 0,
+                              "last_updated": ""}
+                # Check for Layer 3 synthesis
+                index_file = d / "index.md"
+                if index_file.exists():
+                    try:
+                        content = index_file.read_text(encoding="utf-8", errors="replace")
+                        if "layer: 3" in content:
+                            topic_data["layer3"] = True
+                            fm, _ = parse_frontmatter(content)
+                            topic_data["confidence"] = fm.get("confidence", "")
+                            topic_data["evidence_count"] = fm.get("evidence_count", 0)
+                            topic_data["last_updated"] = fm.get("last_updated", "")
+                    except Exception:
+                        pass
+                topics.append(topic_data)
+        # Sort: Layer 3 first, then by article count
+        topics.sort(key=lambda x: (not x["layer3"], -x["articles"]))
 
     # Synthesis queue status
     synth_status = {"pending": 0, "running": 0, "complete": 0, "failed": 0}
@@ -291,13 +309,26 @@ def view_topic(slug):
     if not topic_dir.exists():
         return "Topic not found", 404
 
+    # Check for Layer 3 synthesis
+    synthesis = None
+    synthesis_html = ""
+    index_file = topic_dir / "index.md"
+    if index_file.exists():
+        synthesis = read_article(index_file)
+        if synthesis.get("frontmatter", {}).get("layer") == 3:
+            synthesis_html = render_markdown(synthesis["body"])
+        else:
+            synthesis = None
+
+    # List Layer 2 articles
     articles = []
     for f in sorted(topic_dir.rglob("*.md")):
-        if f.name == "_index.md":
+        if f.name in ("_index.md", "index.md"):
             continue
         articles.append(read_article(f))
 
-    return render_template("topic.html", slug=slug, articles=articles)
+    return render_template("topic.html", slug=slug, articles=articles,
+                           synthesis=synthesis, synthesis_html=synthesis_html)
 
 
 @app.route("/ask", methods=["GET", "POST"])
