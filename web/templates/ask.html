@@ -8,10 +8,10 @@
     <button type="submit">Ask</button>
 </form>
 
-{% if answer %}
-<div class="card answer">
+{% if answer_html %}
+<div class="card">
     <h2>Answer</h2>
-    <div class="article-body">{{ answer }}</div>
+    <div class="article-content">{{ answer_html | safe }}</div>
 </div>
 {% endif %}
 {% endblock %}

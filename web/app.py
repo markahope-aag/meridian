@@ -348,11 +348,12 @@ def ask_page():
             timeout=120,
         )
         result = resp.json()
-        answer = result.get("result", result.get("error", "No answer"))
+        raw_answer = result.get("result", result.get("error", "No answer"))
+        answer_html = render_markdown(raw_answer)
     except Exception as e:
-        answer = f"Error: {e}"
+        answer_html = f"<p>Error: {e}</p>"
 
-    return render_template("ask.html", question=question, answer=answer)
+    return render_template("ask.html", question=question, answer_html=answer_html)
 
 
 @app.route("/api/stats")
