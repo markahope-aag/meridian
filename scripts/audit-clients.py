@@ -183,7 +183,8 @@ def infer_topic(filename: str, title: str, tags: list, client_industry: str) -> 
     if client_industry in industry_topic_map:
         return industry_topic_map[client_industry]
 
-    return ""
+    # Catch-all for untagged
+    return "agency-operations"
 
 
 def classify_article(title: str, filename: str, words: int) -> str:
