@@ -423,7 +423,6 @@ def ask_page():
     return render_template("ask.html", question=question, answer_html=answer_html)
 
 
-@app.route("/download/md/<path:article_path>")
 def make_download_name(filepath: Path, article_path: str) -> str:
     """Build a human-readable download filename from the article path."""
     parts = Path(article_path).parts  # e.g. wiki/knowledge/google-ads/index.md
@@ -437,6 +436,7 @@ def make_download_name(filepath: Path, article_path: str) -> str:
     return filepath.name
 
 
+@app.route("/download/md/<path:article_path>")
 def download_md(article_path):
     """Download article as raw markdown."""
     from flask import send_file
