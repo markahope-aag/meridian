@@ -15,6 +15,11 @@
 </div>
 
 {% if synthesis_html %}
+<div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 8px;">
+    <a href="/article/wiki/knowledge/{{ slug }}/index.md" class="download-btn">Open full article</a>
+    <a href="/download/md/wiki/knowledge/{{ slug }}/index.md" class="download-btn">&#8595; MD</a>
+    <a href="/download/pdf/wiki/knowledge/{{ slug }}/index.md" class="download-btn">&#8595; PDF</a>
+</div>
 <div class="card article-content" style="border-left: 3px solid var(--green);">
     {{ synthesis_html | safe }}
 </div>
