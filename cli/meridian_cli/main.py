@@ -213,6 +213,62 @@ def cmd_lint(args):
         sys.exit(1)
 
 
+def cmd_synthesize(args):
+    """Synthesize a topic or run the schedule."""
+    if args.queue:
+        result = api_call("GET", "/synthesize/queue")
+        print(f"Pending:  {result.get('pending', '?')}")
+        print(f"Running:  {result.get('running', '?')}")
+        print(f"Complete: {result.get('complete', '?')}")
+        print(f"Failed:   {result.get('failed', '?')}")
+        print(f"Total:    {result.get('total', '?')}")
+        next_5 = result.get("next_5", [])
+        if next_5:
+            print(f"\nNext up:")
+            for t in next_5:
+                print(f"  {t['topic']} ({t.get('fragment_count', '?')} fragments)")
+        return
+
+    if args.schedule:
+        result = api_call("POST", "/synthesize/schedule", {"limit": args.limit or 5})
+    elif args.topic:
+        topic = " ".join(args.topic) if isinstance(args.topic, list) else args.topic
+        result = api_call("POST", "/synthesize", {"topic": topic})
+    else:
+        print("Error: provide a topic name, --schedule, or --queue", file=sys.stderr)
+        sys.exit(1)
+
+    if result.get("status") == "accepted":
+        job_id = result["job_id"]
+        print(f"Synthesis job started: {job_id}", file=sys.stderr)
+        import time
+        while True:
+            time.sleep(5)
+            job = api_call("GET", f"/jobs/{job_id}")
+            status = job.get("status")
+            if status == "completed":
+                try:
+                    output = json.loads(job.get("result", "{}"))
+                    if "results" in output:
+                        for r in output["results"]:
+                            print(f"\n{r.get('topic', '?')}: {r.get('evidence_count', '?')} evidence, "
+                                  f"{r.get('claims', '?')} claims → {r.get('output_path', '?')}")
+                    else:
+                        print(f"\n{output.get('topic', '?')}: {output.get('evidence_count', '?')} evidence, "
+                              f"{output.get('claims', '?')} claims → {output.get('output_path', '?')}")
+                except (json.JSONDecodeError, TypeError):
+                    print(job.get("result", ""))
+                return
+            elif status == "failed":
+                print(f"Error: {job.get('error', 'unknown')}", file=sys.stderr)
+                sys.exit(1)
+            else:
+                print(".", end="", flush=True, file=sys.stderr)
+    else:
+        print(f"Error: {result.get('error', 'unknown')}", file=sys.stderr)
+        sys.exit(1)
+
+
 def cmd_status(args):
     """Check receiver health."""
     config = load_config()
@@ -268,6 +324,14 @@ def main():
     p_lint.add_argument("--dry-run", action="store_true",
                         help="Report only, no changes")
     p_lint.set_defaults(func=cmd_lint)
+
+    # synthesize
+    p_synth = sub.add_parser("synthesize", help="Synthesize Layer 3 knowledge")
+    p_synth.add_argument("topic", nargs="*", help="Topic slug to synthesize")
+    p_synth.add_argument("--schedule", action="store_true", help="Process next batch from queue")
+    p_synth.add_argument("--queue", action="store_true", help="Show queue status")
+    p_synth.add_argument("--limit", type=int, help="Max topics for --schedule")
+    p_synth.set_defaults(func=cmd_synthesize)
 
     # status
     p_status = sub.add_parser("status", help="Check receiver health")

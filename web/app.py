@@ -150,9 +150,32 @@ def dashboard():
                 topics.append({"slug": d.name, "articles": article_count})
         topics.sort(key=lambda x: x["articles"], reverse=True)
 
+    # Synthesis queue status
+    synth_status = {"pending": 0, "running": 0, "complete": 0, "failed": 0}
+    layer3_count = 0
+    try:
+        if RECEIVER_TOKEN:
+            resp = requests.get(f"{RECEIVER_URL}/synthesize/queue", timeout=5)
+            if resp.status_code == 200:
+                synth_status = resp.json()
+    except Exception:
+        pass
+
+    # Count Layer 3 articles
+    knowledge_dir = WIKI_DIR / "knowledge"
+    if knowledge_dir.exists():
+        for idx in knowledge_dir.rglob("index.md"):
+            try:
+                content = idx.read_text(encoding="utf-8", errors="replace")
+                if "layer: 3" in content:
+                    layer3_count += 1
+            except Exception:
+                pass
+
     return render_template("dashboard.html",
                            stats=stats, recent_log=recent_log,
-                           clients=clients, topics=topics)
+                           clients=clients, topics=topics,
+                           synth_status=synth_status, layer3_count=layer3_count)
 
 
 @app.route("/search")

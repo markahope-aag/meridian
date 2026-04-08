@@ -28,6 +28,14 @@
         <div class="number">{{ stats.capture }}</div>
         <div class="label">Capture Queue</div>
     </div>
+    <div class="stat-box">
+        <div class="number">{{ layer3_count }}</div>
+        <div class="label">Layer 3 Articles</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ synth_status.get('complete', 0) }}/{{ synth_status.get('total', '?') }}</div>
+        <div class="label">Synthesis Queue</div>
+    </div>
 </div>
 
 <div class="two-col">

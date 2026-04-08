@@ -617,6 +617,90 @@ def lint():
 
 
 # ---------------------------------------------------------------------------
+# POST /synthesize — synthesize a single topic
+# ---------------------------------------------------------------------------
+
+@app.route("/synthesize", methods=["POST"])
+@require_auth
+def synthesize():
+    """Synthesize a Layer 3 article for a topic.
+
+    Body JSON:
+        topic: str (required) — canonical topic slug
+    """
+    data = request.get_json(force=True)
+    topic = data.get("topic")
+    if not topic:
+        return jsonify({"error": "topic is required"}), 400
+
+    args = [sys.executable, str(AGENTS_DIR / "synthesizer.py"), "--topic", topic]
+
+    job_id = create_job("synthesize")
+    thread = threading.Thread(target=run_agent_async, args=(job_id, args), daemon=True)
+    thread.start()
+    return jsonify({"status": "accepted", "job_id": job_id}), 202
+
+
+# ---------------------------------------------------------------------------
+# POST /synthesize/schedule — process next N pending topics
+# ---------------------------------------------------------------------------
+
+@app.route("/synthesize/schedule", methods=["POST"])
+@require_auth
+def synthesize_schedule():
+    """Process next pending topics from the synthesis queue."""
+    data = request.get_json(force=True) if request.data else {}
+    limit = data.get("limit", 5)
+
+    args = [sys.executable, str(AGENTS_DIR / "synthesis_scheduler.py"),
+            "--limit", str(limit)]
+
+    job_id = create_job("synthesize_schedule")
+    thread = threading.Thread(target=run_agent_async, args=(job_id, args), daemon=True)
+    thread.start()
+    return jsonify({"status": "accepted", "job_id": job_id}), 202
+
+
+# ---------------------------------------------------------------------------
+# GET /synthesize/queue — synthesis queue status
+# ---------------------------------------------------------------------------
+
+@app.route("/synthesize/queue", methods=["GET"])
+def synthesize_queue():
+    """Get synthesis queue status. No auth required."""
+    try:
+        supabase_url = os.environ.get("SUPABASE_URL", "https://mpktcabncjodpmyfqeht.supabase.co")
+        supabase_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+        if not supabase_key:
+            return jsonify({"error": "SUPABASE_SERVICE_ROLE_KEY not set"}), 500
+
+        headers = {
+            "apikey": supabase_key,
+            "Authorization": f"Bearer {supabase_key}",
+        }
+        resp = requests.get(
+            f"{supabase_url}/rest/v1/synthesis_queue?order=priority.desc",
+            headers=headers, timeout=10,
+        )
+        resp.raise_for_status()
+        items = resp.json()
+
+        status = {"pending": 0, "running": 0, "complete": 0, "failed": 0, "total": len(items)}
+        for item in items:
+            s = item.get("status", "pending")
+            if s in status:
+                status[s] += 1
+        status["next_5"] = [
+            {"topic": i["topic"], "fragment_count": i.get("fragment_count", 0)}
+            for i in items if i.get("status") == "pending"
+        ][:5]
+
+        return jsonify(status)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ---------------------------------------------------------------------------
 # GET /jobs/<id> — poll job status
 # ---------------------------------------------------------------------------
 
