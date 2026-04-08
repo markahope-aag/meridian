@@ -151,7 +151,7 @@ def extract_batch(client: anthropic.Anthropic, topic_name: str,
 
     response = client.messages.create(
         model=planning_model,
-        max_tokens=4096,
+        max_tokens=16384,
         temperature=0.2,
         system=system_prompt,
         messages=[{
@@ -161,12 +161,35 @@ def extract_batch(client: anthropic.Anthropic, topic_name: str,
     )
 
     text = response.content[0].text
-    json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
-    if json_match:
-        text = json_match.group(1)
+
+    # Strip markdown code block wrapper if present
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        # Remove opening ```json and closing ```
+        stripped = re.sub(r"^```(?:json)?\s*\n?", "", stripped)
+        stripped = re.sub(r"\n?```\s*$", "", stripped)
+
     try:
-        return json.loads(text)
+        return json.loads(stripped)
     except json.JSONDecodeError:
+        # Try to find the outermost JSON object
+        start = stripped.find("{")
+        if start >= 0:
+            # Find matching closing brace by counting
+            depth = 0
+            for i in range(start, len(stripped)):
+                if stripped[i] == "{":
+                    depth += 1
+                elif stripped[i] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        try:
+                            return json.loads(stripped[start:i + 1])
+                        except json.JSONDecodeError:
+                            break
+
+        print(f"    WARN: failed to parse extraction JSON ({len(text)} chars)", file=sys.stderr)
+        print(f"    First 200 chars: {text[:200]}", file=sys.stderr)
         return {"claims": [], "patterns": [], "contradictions": [],
                 "exceptions": [], "evidence": [], "client_mentions": []}
 
