@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 import markdown
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, Response, jsonify, render_template, request, send_file
 import requests
 import yaml
 
@@ -45,9 +45,11 @@ def process_citations(text: str) -> tuple[str, list[dict]]:
         raw = match.group(1)
         sources = [s.strip() for s in raw.split(",")]
 
-        # Heuristic: if it looks like a citation (multiple items, or has path-like names)
-        # vs a single wikilink. Citations typically have commas or .md suffixes.
-        if len(sources) == 1 and "." not in sources[0] and "/" not in sources[0]:
+        # Heuristic: citations have commas (multiple sources) or .md suffixes.
+        # Single items without .md are wikilinks — leave for wikilink converter.
+        has_comma = "," in raw
+        has_md = ".md" in raw.lower()
+        if not has_comma and not has_md:
             # Single wikilink, not a citation — leave for wikilink converter
             return match.group(0)
 
@@ -376,6 +378,9 @@ def view_topic(slug):
     if not topic_dir.exists():
         return "Topic not found", 404
 
+    # Get proper topic name
+    topic_name = slug.replace("-", " ").title()
+
     # Check for Layer 3 synthesis
     synthesis = None
     synthesis_html = ""
@@ -383,6 +388,7 @@ def view_topic(slug):
     if index_file.exists():
         synthesis = read_article(index_file)
         if synthesis.get("frontmatter", {}).get("layer") == 3:
+            topic_name = synthesis.get("title", topic_name)
             synthesis_html = render_markdown(synthesis["body"])
         else:
             synthesis = None
@@ -394,8 +400,9 @@ def view_topic(slug):
             continue
         articles.append(read_article(f))
 
-    return render_template("topic.html", slug=slug, articles=articles,
-                           synthesis=synthesis, synthesis_html=synthesis_html)
+    return render_template("topic.html", slug=slug, topic_name=topic_name,
+                           articles=articles, synthesis=synthesis,
+                           synthesis_html=synthesis_html)
 
 
 @app.route("/ask", methods=["GET", "POST"])
@@ -439,7 +446,6 @@ def make_download_name(filepath: Path, article_path: str) -> str:
 @app.route("/download/md/<path:article_path>")
 def download_md(article_path):
     """Download article as raw markdown."""
-    from flask import send_file
     filepath = MERIDIAN_ROOT / article_path
     if not filepath.exists() or not str(filepath).startswith(str(MERIDIAN_ROOT)):
         return "Not found", 404
@@ -485,37 +491,17 @@ def download_pdf(article_path):
 </body></html>"""
 
     try:
-        import subprocess, tempfile
-        with tempfile.NamedTemporaryFile(suffix=".html", delete=False, mode="w", encoding="utf-8") as tmp_html:
-            tmp_html.write(html)
-            tmp_html_path = tmp_html.name
-        pdf_path = tmp_html_path.replace(".html", ".pdf")
-        # Try wkhtmltopdf first, fall back to weasyprint
-        try:
-            subprocess.run(["wkhtmltopdf", "--quiet", tmp_html_path, pdf_path],
-                           capture_output=True, timeout=30)
-        except FileNotFoundError:
-            try:
-                from weasyprint import HTML
-                HTML(string=html).write_pdf(pdf_path)
-            except ImportError:
-                # Last resort: return HTML as downloadable file
-                import os
-                os.unlink(tmp_html_path)
-                from flask import Response
-                html_name = make_download_name(filepath, article_path).replace(".md", ".html")
-                return Response(html, mimetype="text/html",
-                                headers={"Content-Disposition": f"attachment; filename={html_name}"})
-        from flask import send_file
-        import os
+        from weasyprint import HTML
+        import io
+        pdf_bytes = HTML(string=html).write_pdf()
         pdf_name = make_download_name(filepath, article_path).replace(".md", ".pdf")
-        response = send_file(pdf_path, as_attachment=True,
-                             download_name=pdf_name, mimetype="application/pdf")
-        os.unlink(tmp_html_path)
-        # Clean up PDF after sending (deferred)
-        return response
+        return Response(
+            pdf_bytes,
+            mimetype="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={pdf_name}"},
+        )
     except Exception as e:
-        from flask import Response
+        # Fallback: return styled HTML
         html_name = make_download_name(filepath, article_path).replace(".md", ".html")
         return Response(html, mimetype="text/html",
                         headers={"Content-Disposition": f"attachment; filename={html_name}"})
