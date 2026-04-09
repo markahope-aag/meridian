@@ -335,8 +335,8 @@ def dashboard():
     except Exception:
         pass
 
-    # Synthesis running detection — check if any synthesis log entry is today
-    synth_running = pipeline.get("synthesize", "") == datetime.now().strftime("%Y-%m-%d")
+    # Synthesis running detection — check queue for running status
+    synth_running = synth_status.get("running", 0) > 0
 
     metrics = {
         "total_insights": total_insights,
