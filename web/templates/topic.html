@@ -24,15 +24,139 @@
 </div>
 {% endif %}
 
-<div class="card">
-    <h2>Layer 2 Fragments ({{ articles|length }})</h2>
-    {% for a in articles %}
-    <div class="list-item">
-        <div>
-            <a href="/article/{{ a.path }}">{{ a.title }}</a>
-            <div style="font-size: 11px; color: var(--text-muted);">{{ a.word_count }} words · {{ a.updated or a.created }}{% if a.client_source %} · {{ a.client_source }}{% endif %}</div>
+<div class="card" id="fragments-card">
+    <div class="fragments-header">
+        <h2>Layer 2 Fragments ({{ articles|length }})</h2>
+        <div class="fragments-controls">
+            <input
+                type="search"
+                id="fragment-search"
+                class="fragment-search"
+                placeholder="Filter within topic (title, client, text)…"
+                autocomplete="off"
+            />
+            <select id="fragment-sort" class="fragment-sort" aria-label="Sort fragments">
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="title-asc">Title A→Z</option>
+                <option value="title-desc">Title Z→A</option>
+                <option value="client">By client</option>
+                <option value="length">By length</option>
+            </select>
         </div>
     </div>
-    {% endfor %}
+
+    {% if clients_on_topic %}
+    <div class="client-chips" id="client-chips">
+        <button type="button" class="chip active" data-client="">All ({{ articles|length }})</button>
+        {% for c in clients_on_topic %}
+        <button type="button" class="chip" data-client="{{ c|lower }}">{{ c }}</button>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div id="fragment-match-count" class="fragment-match-count"></div>
+
+    <ul id="fragment-list" class="fragment-list">
+        {% for a in articles %}
+        <li class="fragment-item"
+            data-title="{{ a.title|lower }}"
+            data-client="{{ a.client_display|lower }}"
+            data-text="{{ (a.title + ' ' + a.client_display + ' ' + a.preview)|lower }}"
+            data-date="{{ a.sort_date }}"
+            data-words="{{ a.word_count }}">
+            <div class="fragment-head">
+                <a href="/article/{{ a.path }}" class="fragment-title">{{ a.title }}</a>
+                {% if a.client_display %}
+                <span class="fragment-client-tag">{{ a.client_display }}</span>
+                {% endif %}
+            </div>
+            {% if a.preview %}
+            <div class="fragment-preview">{{ a.preview }}</div>
+            {% endif %}
+            <div class="fragment-meta">
+                {{ a.word_count }} words
+                {% if a.sort_date %} · {{ a.sort_date }}{% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
 </div>
+
+<script>
+(function () {
+    const list = document.getElementById('fragment-list');
+    if (!list) return;
+    const items = Array.from(list.querySelectorAll('.fragment-item'));
+    const search = document.getElementById('fragment-search');
+    const sortSel = document.getElementById('fragment-sort');
+    const chips = document.querySelectorAll('#client-chips .chip');
+    const matchCount = document.getElementById('fragment-match-count');
+
+    let activeClient = '';
+    let query = '';
+
+    function applyFilter() {
+        const q = query.trim();
+        let visible = 0;
+        items.forEach((el) => {
+            const matchesClient = !activeClient || el.dataset.client === activeClient;
+            const matchesText = !q || el.dataset.text.indexOf(q) !== -1;
+            const show = matchesClient && matchesText;
+            el.style.display = show ? '' : 'none';
+            if (show) visible += 1;
+        });
+        if (matchCount) {
+            if (q || activeClient) {
+                matchCount.textContent =
+                    'Showing ' + visible + ' of ' + items.length + ' fragments';
+            } else {
+                matchCount.textContent = '';
+            }
+        }
+    }
+
+    function applySort(mode) {
+        const sorted = items.slice().sort((a, b) => {
+            switch (mode) {
+                case 'oldest':
+                    return (a.dataset.date || '').localeCompare(b.dataset.date || '');
+                case 'title-asc':
+                    return a.dataset.title.localeCompare(b.dataset.title);
+                case 'title-desc':
+                    return b.dataset.title.localeCompare(a.dataset.title);
+                case 'client':
+                    return (
+                        (a.dataset.client || '\uFFFF').localeCompare(b.dataset.client || '\uFFFF')
+                        || a.dataset.title.localeCompare(b.dataset.title)
+                    );
+                case 'length':
+                    return Number(b.dataset.words) - Number(a.dataset.words);
+                case 'newest':
+                default:
+                    return (b.dataset.date || '').localeCompare(a.dataset.date || '');
+            }
+        });
+        sorted.forEach((el) => list.appendChild(el));
+    }
+
+    if (search) {
+        search.addEventListener('input', (e) => {
+            query = e.target.value.toLowerCase();
+            applyFilter();
+        });
+    }
+    if (sortSel) {
+        sortSel.addEventListener('change', (e) => applySort(e.target.value));
+    }
+    chips.forEach((chip) => {
+        chip.addEventListener('click', () => {
+            chips.forEach((c) => c.classList.remove('active'));
+            chip.classList.add('active');
+            activeClient = chip.dataset.client || '';
+            applyFilter();
+        });
+    });
+})();
+</script>
 {% endblock %}

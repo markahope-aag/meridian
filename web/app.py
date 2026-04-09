@@ -76,12 +76,40 @@ def process_citations(text: str) -> tuple[str, list[dict]]:
     return processed, citations
 
 
-def build_sources_html(citations: list[dict]) -> str:
-    """Build footnote-style sources section."""
+def build_sources_html(
+    citations: list[dict],
+    topic_context: dict | None = None,
+) -> str:
+    """Build footnote-style citations section.
+
+    Called "Citations" (not "Sources") because it only shows fragments
+    actually cited inline in the synthesis body — not the full set of
+    fragments under the topic. When `topic_context` is provided, the
+    header includes a "N cited of M total fragments" framing and a link
+    to browse the full fragment list.
+
+    topic_context, if set, should contain:
+        slug: str
+        display_name: str
+        total_fragments: int
+    """
     if not citations:
         return ""
 
-    lines = ['<div class="sources-section">', "<h2>Sources</h2>", '<ol class="sources-list">']
+    header_lines = ['<div class="sources-section">', "<h2>Citations</h2>"]
+    if topic_context:
+        slug = topic_context.get("slug", "")
+        name = topic_context.get("display_name", slug)
+        total = topic_context.get("total_fragments", 0)
+        cited = len(citations)
+        header_lines.append(
+            f'<p class="sources-subhead">'
+            f'{cited} fragment{"" if cited == 1 else "s"} cited inline. '
+            f'<a href="/topic/{slug}">Browse all {total} fragments in {name} &rarr;</a>'
+            f"</p>"
+        )
+
+    lines = header_lines + ['<ol class="sources-list">']
     for cite in citations:
         lines.append(f'<li id="source-{cite["number"]}">')
         links = []
@@ -139,8 +167,13 @@ def _split_related_topics(body: str) -> tuple[str, str]:
     return body[: m.start()], body[m.start():]
 
 
-def render_markdown(body: str) -> str:
-    """Convert markdown body to HTML with citation footnotes and wikilinks."""
+def render_markdown(body: str, topic_context: dict | None = None) -> str:
+    """Convert markdown body to HTML with citation footnotes and wikilinks.
+
+    `topic_context` is an optional dict passed from view_article when the
+    article is a Level 3 synthesis. It lets the citations footer show
+    "N cited of M total" and link to the full fragment browser.
+    """
     # Step 1: Separate the Related Topics section so its wikilinks are not
     # mistaken for citations.
     body_before, related = _split_related_topics(body)
@@ -156,8 +189,8 @@ def render_markdown(body: str) -> str:
     md = get_md()
     article_html = md.convert(body_before + "\n\n" + related)
 
-    # Step 5: Append sources section (footnote-style).
-    sources_html = build_sources_html(citations)
+    # Step 5: Append citations section (footnote-style, topic-aware).
+    sources_html = build_sources_html(citations, topic_context=topic_context)
     return article_html + sources_html
 
 app = Flask(__name__)
@@ -166,8 +199,60 @@ MERIDIAN_ROOT = Path(os.environ.get("MERIDIAN_ROOT", "/meridian"))
 WIKI_DIR = MERIDIAN_ROOT / "wiki"
 RAW_DIR = MERIDIAN_ROOT / "raw"
 CAPTURE_DIR = MERIDIAN_ROOT / "capture"
+CLIENTS_YAML = MERIDIAN_ROOT / "clients.yaml"
+TOPICS_YAML = MERIDIAN_ROOT / "topics.yaml"
 RECEIVER_URL = os.environ.get("MERIDIAN_RECEIVER_URL", "http://localhost:8000")
 RECEIVER_TOKEN = os.environ.get("MERIDIAN_RECEIVER_TOKEN", "")
+
+
+# ---------------------------------------------------------------------------
+# Registry lookups — loaded once at startup, refreshed on demand via reload.
+# ---------------------------------------------------------------------------
+
+def _load_client_names() -> dict:
+    """Map client slug -> display name. Empty if clients.yaml is missing."""
+    if not CLIENTS_YAML.exists():
+        return {}
+    try:
+        data = yaml.safe_load(CLIENTS_YAML.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        return {}
+    lookup: dict[str, str] = {}
+    for entry in data.get("clients", []):
+        slug = (entry.get("slug") or "").strip()
+        name = (entry.get("name") or "").strip()
+        if slug and name:
+            lookup[slug] = name
+    return lookup
+
+
+def _load_topic_names() -> dict:
+    """Map topic slug -> display name. Falls back to title-cased slug."""
+    if not TOPICS_YAML.exists():
+        return {}
+    try:
+        data = yaml.safe_load(TOPICS_YAML.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        return {}
+    lookup: dict[str, str] = {}
+    for entry in data.get("topics", []):
+        slug = (entry.get("slug") or "").strip()
+        name = (entry.get("name") or "").strip()
+        if slug and name:
+            lookup[slug] = name
+    return lookup
+
+
+CLIENT_NAMES: dict = _load_client_names()
+TOPIC_NAMES: dict = _load_topic_names()
+
+
+def client_display_name(slug_or_name: str) -> str:
+    """Resolve a client slug to its display name, or return the input unchanged."""
+    if not slug_or_name:
+        return ""
+    key = slug_or_name.strip().lower()
+    return CLIENT_NAMES.get(key, slug_or_name)
 
 
 def receiver_headers():
@@ -444,6 +529,42 @@ def search():
     return render_template("search.html", query=query, results=results[:50])
 
 
+def _topic_context_for(filepath: Path) -> dict | None:
+    """If `filepath` lives under wiki/knowledge/<slug>/, return a context
+    dict with the slug, display name, and total fragment count.
+
+    Used for:
+      - Level 3 synthesis pages (`index.md`): threaded into the citations
+        footer so it can show "N of M fragments cited" and link to the
+        full topic browser.
+      - Level 2 fragment pages: used by the article template to render a
+        "← Back to <topic>" affordance so readers can hop to the rest of
+        the corpus on the same subject.
+    """
+    try:
+        rel = filepath.relative_to(WIKI_DIR / "knowledge")
+    except ValueError:
+        return None
+    parts = rel.parts
+    if len(parts) < 2:
+        return None
+    slug = parts[0]
+    topic_dir = WIKI_DIR / "knowledge" / slug
+    if not topic_dir.is_dir():
+        return None
+    total = sum(
+        1
+        for f in topic_dir.rglob("*.md")
+        if f.name not in ("_index.md", "index.md")
+    )
+    display_name = TOPIC_NAMES.get(slug, slug.replace("-", " ").title())
+    return {
+        "slug": slug,
+        "display_name": display_name,
+        "total_fragments": total,
+    }
+
+
 @app.route("/article/<path:article_path>")
 def view_article(article_path):
     filepath = MERIDIAN_ROOT / article_path
@@ -451,9 +572,26 @@ def view_article(article_path):
         return "Not found", 404
 
     article = read_article(filepath)
-    body_html = render_markdown(article["body"])
 
-    return render_template("article.html", article=article, body_html=body_html)
+    # A synthesis page (path ending in knowledge/<slug>/index.md) should
+    # have the citations section annotated with the full fragment count.
+    # A fragment page (anything else under knowledge/<slug>/) uses the
+    # same context to render a "Back to topic" banner.
+    topic_context = _topic_context_for(filepath)
+    is_synthesis = filepath.name == "index.md" and topic_context is not None
+
+    body_html = render_markdown(
+        article["body"],
+        topic_context=topic_context if is_synthesis else None,
+    )
+
+    return render_template(
+        "article.html",
+        article=article,
+        body_html=body_html,
+        topic_context=topic_context,
+        is_synthesis=is_synthesis,
+    )
 
 
 @app.route("/client/<slug>")
@@ -481,14 +619,43 @@ def view_client(slug):
                            articles=articles)
 
 
+def _fragment_preview(body: str, limit: int = 180) -> str:
+    """Extract a short, plain-text preview from a fragment body.
+
+    Strips markdown headers, frontmatter leftovers, and collapses
+    whitespace so the topic page can show a skimmable snippet under
+    each fragment link.
+    """
+    text = re.sub(r"^#+\s.*$", "", body, flags=re.MULTILINE)  # drop headers
+    text = re.sub(r"\[\[([^\]]+)\]\]", "", text)              # drop wikilinks
+    text = re.sub(r"\s+", " ", text).strip()
+    if len(text) <= limit:
+        return text
+    truncated = text[:limit].rsplit(" ", 1)[0]
+    return truncated + "…"
+
+
+def _enrich_fragment(article: dict) -> dict:
+    """Add derived fields for template rendering: client display name,
+    preview snippet, sortable date. Mutates and returns the dict."""
+    article["client_display"] = client_display_name(article.get("client_source", ""))
+    article["preview"] = _fragment_preview(article.get("body", ""))
+    # Unified sort key: prefer updated, fall back to created, fall back to empty
+    article["sort_date"] = (
+        article.get("updated") or article.get("created") or ""
+    )
+    return article
+
+
 @app.route("/topic/<slug>")
 def view_topic(slug):
     topic_dir = WIKI_DIR / "knowledge" / slug
     if not topic_dir.exists():
         return "Topic not found", 404
 
-    # Get proper topic name
-    topic_name = slug.replace("-", " ").title()
+    # Prefer the topics.yaml display name, then the Layer 3 title, then
+    # a title-cased slug as a last resort.
+    topic_name = TOPIC_NAMES.get(slug, slug.replace("-", " ").title())
 
     # Check for Layer 3 synthesis
     synthesis = None
@@ -498,20 +665,37 @@ def view_topic(slug):
         synthesis = read_article(index_file)
         if synthesis.get("frontmatter", {}).get("layer") == 3:
             topic_name = synthesis.get("title", topic_name)
-            synthesis_html = render_markdown(synthesis["body"])
+            topic_context = _topic_context_for(index_file)
+            synthesis_html = render_markdown(
+                synthesis["body"],
+                topic_context=topic_context,
+            )
         else:
             synthesis = None
 
-    # List Layer 2 articles
+    # List Layer 2 articles, enriched with preview + client display name.
+    # Sort newest-first by default — most people want the recent stuff.
     articles = []
     for f in sorted(topic_dir.rglob("*.md")):
         if f.name in ("_index.md", "index.md"):
             continue
-        articles.append(read_article(f))
+        articles.append(_enrich_fragment(read_article(f)))
+    articles.sort(key=lambda a: a.get("sort_date", ""), reverse=True)
 
-    return render_template("topic.html", slug=slug, topic_name=topic_name,
-                           articles=articles, synthesis=synthesis,
-                           synthesis_html=synthesis_html)
+    # Distinct client set for the filter chips, sorted alphabetically.
+    clients_on_topic = sorted(
+        {a["client_display"] for a in articles if a.get("client_display")}
+    )
+
+    return render_template(
+        "topic.html",
+        slug=slug,
+        topic_name=topic_name,
+        articles=articles,
+        synthesis=synthesis,
+        synthesis_html=synthesis_html,
+        clients_on_topic=clients_on_topic,
+    )
 
 
 @app.route("/ask", methods=["GET", "POST"])

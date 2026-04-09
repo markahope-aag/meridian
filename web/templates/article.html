@@ -1,6 +1,25 @@
 {% extends "base.html" %}
 {% block title %}{{ article.title }} — Meridian{% endblock %}
 {% block content %}
+{% if topic_context and not is_synthesis %}
+<div class="topic-backlink">
+    <a href="/topic/{{ topic_context.slug }}">&larr; {{ topic_context.display_name }}</a>
+    <span class="topic-backlink-meta">
+        This fragment is 1 of {{ topic_context.total_fragments }} under
+        <strong>{{ topic_context.display_name }}</strong>.
+        <a href="/topic/{{ topic_context.slug }}">Browse all &rarr;</a>
+    </span>
+</div>
+{% endif %}
+{% if is_synthesis and topic_context %}
+<div class="topic-backlink synthesis-banner">
+    <span class="topic-backlink-meta">
+        Layer 3 synthesis of
+        <strong>{{ topic_context.total_fragments }} fragments</strong>.
+        <a href="/topic/{{ topic_context.slug }}">Browse them all &rarr;</a>
+    </span>
+</div>
+{% endif %}
 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
     <div class="meta">
         <span>{{ article.path }}</span>
