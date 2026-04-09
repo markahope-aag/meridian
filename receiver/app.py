@@ -22,6 +22,7 @@ import json
 import logging
 import os
 import re
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -112,51 +113,94 @@ def _enforce_capture_size(text: str, source: str) -> tuple[dict, int] | None:
     )
 
 # ---------------------------------------------------------------------------
-# Async job tracking
+# Async job tracking — SQLite-backed so state survives gunicorn worker
+# restarts and is visible across the two workers. Replaces the previous
+# per-worker in-memory dict, which caused "job not found" on polls that
+# landed on a different worker than the one that created the job.
 # ---------------------------------------------------------------------------
 
-_jobs: dict[str, dict] = {}
-_jobs_lock = threading.Lock()
+JOBS_DB_PATH = Path(
+    os.environ.get("MERIDIAN_JOBS_DB", "/meridian/state/jobs.db")
+)
+_jobs_db_lock = threading.Lock()  # guards schema init; SQLite handles concurrent writes
+
+
+def _jobs_conn() -> sqlite3.Connection:
+    """Open a per-call SQLite connection.
+
+    SQLite connections are not safe to share across gunicorn worker
+    processes, so each call opens its own. WAL mode lets multiple
+    workers read and write concurrently without blocking each other.
+    """
+    JOBS_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(JOBS_DB_PATH), timeout=5.0, isolation_level=None)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA synchronous=NORMAL;")
+    return conn
+
+
+def _init_jobs_db() -> None:
+    """Create the jobs table if it doesn't exist. Idempotent."""
+    with _jobs_db_lock:
+        with _jobs_conn() as conn:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS jobs (
+                    id           TEXT PRIMARY KEY,
+                    type         TEXT NOT NULL,
+                    status       TEXT NOT NULL,
+                    started_at   TEXT NOT NULL,
+                    completed_at TEXT,
+                    result       TEXT,
+                    error        TEXT
+                )
+                """
+            )
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);")
+
+
+_init_jobs_db()
 
 
 def create_job(job_type: str) -> str:
     """Create a new background job, return its ID."""
     job_id = uuid.uuid4().hex[:12]
-    with _jobs_lock:
-        _jobs[job_id] = {
-            "id": job_id,
-            "type": job_type,
-            "status": "running",
-            "started_at": datetime.now(timezone.utc).isoformat(),
-            "completed_at": None,
-            "result": None,
-            "error": None,
-        }
+    with _jobs_conn() as conn:
+        conn.execute(
+            "INSERT INTO jobs (id, type, status, started_at) VALUES (?, ?, 'running', ?)",
+            (job_id, job_type, datetime.now(timezone.utc).isoformat()),
+        )
     return job_id
 
 
-def complete_job(job_id: str, result: str):
+def complete_job(job_id: str, result: str) -> None:
     """Mark a job as completed with its result."""
-    with _jobs_lock:
-        if job_id in _jobs:
-            _jobs[job_id]["status"] = "completed"
-            _jobs[job_id]["completed_at"] = datetime.now(timezone.utc).isoformat()
-            _jobs[job_id]["result"] = result
+    with _jobs_conn() as conn:
+        conn.execute(
+            "UPDATE jobs SET status='completed', completed_at=?, result=? WHERE id=?",
+            (datetime.now(timezone.utc).isoformat(), result, job_id),
+        )
 
 
-def fail_job(job_id: str, error: str):
+def fail_job(job_id: str, error: str) -> None:
     """Mark a job as failed."""
-    with _jobs_lock:
-        if job_id in _jobs:
-            _jobs[job_id]["status"] = "failed"
-            _jobs[job_id]["completed_at"] = datetime.now(timezone.utc).isoformat()
-            _jobs[job_id]["error"] = error
+    with _jobs_conn() as conn:
+        conn.execute(
+            "UPDATE jobs SET status='failed', completed_at=?, error=? WHERE id=?",
+            (datetime.now(timezone.utc).isoformat(), error, job_id),
+        )
 
 
 def get_job(job_id: str) -> dict | None:
-    """Get job status."""
-    with _jobs_lock:
-        return _jobs.get(job_id, {}).copy() or None
+    """Get job status by id, or None if not found."""
+    with _jobs_conn() as conn:
+        row = conn.execute(
+            "SELECT id, type, status, started_at, completed_at, result, error "
+            "FROM jobs WHERE id=?",
+            (job_id,),
+        ).fetchone()
+    return dict(row) if row else None
 
 
 def run_agent_async(job_id: str, args: list[str]):
