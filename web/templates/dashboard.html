@@ -6,27 +6,27 @@
 <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Content</div>
 <div class="stat-grid">
     <div class="stat-box">
-        <div class="number">{{ stats.wiki_total }}</div>
+        <div class="number">{{ '{:,}'.format(stats.wiki_total) }}</div>
         <div class="label">Wiki Articles</div>
     </div>
     <div class="stat-box">
-        <div class="number">{{ stats.client_folders }}</div>
+        <div class="number">{{ '{:,}'.format(stats.client_folders) }}</div>
         <div class="label">Clients</div>
     </div>
     <div class="stat-box">
-        <div class="number">{{ stats.knowledge_topics }}</div>
+        <div class="number">{{ '{:,}'.format(stats.knowledge_topics) }}</div>
         <div class="label">Knowledge Topics</div>
     </div>
     <div class="stat-box">
-        <div class="number">{{ stats.concepts }}</div>
+        <div class="number">{{ '{:,}'.format(stats.concepts) }}</div>
         <div class="label">Concepts</div>
     </div>
     <div class="stat-box">
-        <div class="number">{{ stats.raw }}</div>
+        <div class="number">{{ '{:,}'.format(stats.raw) }}</div>
         <div class="label">Raw Sources</div>
     </div>
     <div class="stat-box">
-        <div class="number">{{ stats.capture }}</div>
+        <div class="number">{{ '{:,}'.format(stats.capture) }}</div>
         <div class="label">Capture Queue</div>
     </div>
 </div>
@@ -34,7 +34,7 @@
 <div style="font-size: 11px; color: var(--text-muted); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">Knowledge Intelligence</div>
 <div class="stat-grid">
     <div class="stat-box">
-        <div class="number">{{ layer3_count }}</div>
+        <div class="number">{{ '{:,}'.format(layer3_count) }}</div>
         <div class="label">Layer 3 Synthesized</div>
     </div>
     <div class="stat-box">
@@ -46,11 +46,11 @@
         <div class="label">Client Insights</div>
     </div>
     <div class="stat-box">
-        <div class="number">{{ metrics.cross_client_topics }}</div>
+        <div class="number">{{ '{:,}'.format(metrics.cross_client_topics) }}</div>
         <div class="label">Cross-Client Topics</div>
     </div>
     <div class="stat-box">
-        <div class="number">{{ synth_status.get('pending', 0) }}</div>
+        <div class="number">{{ '{:,}'.format(synth_status.get('pending', 0)) }}</div>
         <div class="label">Queue Pending</div>
     </div>
     <div class="stat-box" style="{% if metrics.synth_running %}border-color: var(--green);{% endif %}">
