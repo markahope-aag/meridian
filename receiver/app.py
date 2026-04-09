@@ -38,6 +38,80 @@ app = Flask(__name__)
 log = logging.getLogger("meridian")
 
 # ---------------------------------------------------------------------------
+# Capture size cap
+# ---------------------------------------------------------------------------
+#
+# Meridian is a downstream sink: Sieve handles human review and should not be
+# forwarding giant files. Cap incoming capture payloads so corrupted or
+# pathologically large documents are rejected at the boundary with a clear
+# JSON error, rather than wedging the distill queue.
+#
+# Limits apply to:
+#   - /capture (generic)       : the `content` field
+#   - /capture/gdrive          : the markdown extracted from the drive file
+#   - /capture/fathom          : the transcript body
+#   - /capture/claude-session  : the session transcript
+#
+# The Flask-level MAX_CONTENT_LENGTH is a hard upper bound on the raw request
+# body; it catches truly absurd uploads before JSON parsing. Per-route checks
+# enforce the tighter text-size cap and return a clean envelope.
+
+MAX_CAPTURE_BYTES = 1_000_000  # 1 MB of text content per capture document
+MAX_REQUEST_BYTES = 2 * 1024 * 1024  # 2 MB of raw request body (JSON overhead)
+app.config["MAX_CONTENT_LENGTH"] = MAX_REQUEST_BYTES
+
+
+@app.errorhandler(413)
+def _too_large(_err):
+    """Return a JSON envelope instead of Flask's default HTML 413."""
+    return (
+        jsonify(
+            {
+                "status": "error",
+                "error": "payload_too_large",
+                "message": (
+                    f"Capture payload exceeds the {MAX_REQUEST_BYTES} byte request limit "
+                    f"or the {MAX_CAPTURE_BYTES} byte content limit. "
+                    "Shrink or split the document in Sieve before resending."
+                ),
+                "max_request_bytes": MAX_REQUEST_BYTES,
+                "max_capture_bytes": MAX_CAPTURE_BYTES,
+            }
+        ),
+        413,
+    )
+
+
+def _enforce_capture_size(text: str, source: str) -> tuple[dict, int] | None:
+    """Return a 413 JSON response if `text` exceeds the capture size cap.
+
+    Returns None when the text is within bounds.
+    """
+    size = len(text.encode("utf-8"))
+    if size <= MAX_CAPTURE_BYTES:
+        return None
+    log.warning(
+        "Rejecting oversized capture from %s: %d bytes (cap=%d)",
+        source,
+        size,
+        MAX_CAPTURE_BYTES,
+    )
+    return (
+        {
+            "status": "error",
+            "error": "payload_too_large",
+            "message": (
+                f"Capture content is {size} bytes; cap is {MAX_CAPTURE_BYTES}. "
+                "Shrink or split the document in Sieve before resending."
+            ),
+            "source": source,
+            "size_bytes": size,
+            "max_capture_bytes": MAX_CAPTURE_BYTES,
+        },
+        413,
+    )
+
+# ---------------------------------------------------------------------------
 # Async job tracking
 # ---------------------------------------------------------------------------
 
@@ -197,6 +271,11 @@ def capture_generic():
     source_type = data.get("source_type", "note")
     tags = data.get("tags", [])
 
+    oversized = _enforce_capture_size(content, source=f"/capture ({source_type})")
+    if oversized:
+        body, status = oversized
+        return jsonify(body), status
+
     frontmatter = yaml.dump({
         "title": title,
         "source_url": source_url,
@@ -318,6 +397,12 @@ def capture_fathom():
         sections.append(f"## Full Transcript\n\n" + "\n\n".join(lines) + "\n")
 
     md = "\n".join(sections)
+
+    oversized = _enforce_capture_size(md, source=f"/capture/fathom ({recording_id})")
+    if oversized:
+        body, status = oversized
+        body["recording_id"] = recording_id
+        return jsonify(body), status
 
     slug = slugify(title)
     filename = f"{meeting_date}-{slug}-{recording_id}.md"
@@ -467,6 +552,12 @@ def capture_claude_session():
         sections.append(f"### {role}\n\n{content}\n")
 
     md = "\n".join(sections)
+
+    oversized = _enforce_capture_size(md, source=f"/capture/claude-session ({project_name})")
+    if oversized:
+        body, status = oversized
+        body["project"] = project_name
+        return jsonify(body), status
 
     content_hash = hashlib.md5(md.encode()).hexdigest()[:6]
     filename = f"{session_date}-claude-session-{slugify(project_name)}-{content_hash}.md"
@@ -989,6 +1080,13 @@ def capture_gdrive():
 
     if not text:
         return jsonify({"status": "error", "error": "no text content extracted"}), 422
+
+    oversized = _enforce_capture_size(text, source=f"/capture/gdrive ({filename})")
+    if oversized:
+        body, status = oversized
+        body["file_id"] = file_id
+        body["filename"] = filename
+        return jsonify(body), status
 
     # Strip extension from title
     title = Path(filename).stem

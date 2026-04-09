@@ -73,18 +73,30 @@ def score_document(client: anthropic.Anthropic, content: str, config: dict) -> d
     return json.loads(text)
 
 
-def mark_processed(filepath: Path, decision: dict):
-    """Add distill metadata to the capture file's frontmatter."""
+def mark_processed(filepath: Path, decision: dict, error: str | None = None) -> None:
+    """Add distill metadata to the capture file's frontmatter.
+
+    When `error` is set, records a `distill_status: error` marker alongside
+    the error message so downstream tooling can tell scored items apart from
+    items that fell through unscored.
+    """
     content = filepath.read_text(encoding="utf-8")
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-    distill_block = (
-        f"distill_status: {decision['decision']}\n"
-        f"distill_date: \"{now}\"\n"
-        f"distill_score:\n"
-        f"  relevance: {decision['relevance']}\n"
-        f"  quality: {decision['quality']}\n"
-    )
+    if error:
+        distill_block = (
+            f"distill_status: error\n"
+            f"distill_date: \"{now}\"\n"
+            f"distill_error: {json.dumps(error)}\n"
+        )
+    else:
+        distill_block = (
+            f"distill_status: {decision['decision']}\n"
+            f"distill_date: \"{now}\"\n"
+            f"distill_score:\n"
+            f"  relevance: {decision['relevance']}\n"
+            f"  quality: {decision['quality']}\n"
+        )
 
     if content.startswith("---"):
         # Insert before closing ---
@@ -99,35 +111,83 @@ def mark_processed(filepath: Path, decision: dict):
     filepath.write_text(content, encoding="utf-8")
 
 
+# Provenance and dedup keys carried over from capture/ into raw/. These keys
+# are the source of truth for `find_gdrive_file` and equivalent dedup scans,
+# so they MUST survive normalization. Add new dedup keys here, not inline.
+PROVENANCE_KEYS: tuple[str, ...] = (
+    "source_url",
+    "source_type",
+    "gdrive_file_id",
+    "gdrive_folder",
+    "recording_id",
+    "share_url",
+    "session_id",
+    "project",
+    "meeting_date",
+    "owner",
+    "modified_at",
+    "word_count",
+    "attendees",
+)
+
+
+def _parse_frontmatter(content: str) -> tuple[dict, str]:
+    """Split a markdown doc into (frontmatter dict, body). Empty dict if none."""
+    if not content.startswith("---"):
+        return {}, content
+    parts = content.split("---", 2)
+    if len(parts) < 3:
+        return {}, content
+    try:
+        fm = yaml.safe_load(parts[1]) or {}
+    except yaml.YAMLError:
+        fm = {}
+    if not isinstance(fm, dict):
+        fm = {}
+    return fm, parts[2].lstrip("\n")
+
+
 def promote_to_raw(capture_path: Path, decision: dict) -> Path:
-    """Copy document to raw/ with normalized frontmatter."""
+    """Copy document to raw/ with normalized frontmatter.
+
+    Provenance / dedup fields (gdrive_file_id, recording_id, etc.) are carried
+    over from the capture file so that `find_gdrive_file`-style scans over
+    raw/ continue to work after the file has left capture/.
+    """
     RAW_DIR.mkdir(parents=True, exist_ok=True)
 
     content = capture_path.read_text(encoding="utf-8")
-
-    # Strip existing frontmatter to replace with normalized version
-    body = content
-    if content.startswith("---"):
-        parts = content.split("---", 2)
-        if len(parts) >= 3:
-            body = parts[2].strip()
-
-    fm = decision.get("frontmatter", {})
-    if not fm:
-        fm = {}
+    source_fm, body = _parse_frontmatter(content)
+    decision_fm = decision.get("frontmatter") or {}
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    raw_frontmatter = {
-        "title": fm.get("title", capture_path.stem),
-        "source_url": fm.get("source_url", ""),
-        "source_type": fm.get("source_type", "note"),
+    raw_frontmatter: dict = {
+        "title": source_fm.get("title") or decision_fm.get("title") or capture_path.stem,
+        "source_type": source_fm.get("source_type") or decision_fm.get("source_type") or "note",
+        "source_url": source_fm.get("source_url") or decision_fm.get("source_url", ""),
         "date_ingested": now,
         "compiled_at": "",
-        "tags": fm.get("tags", []),
-        "summary": fm.get("summary", ""),
+        "tags": source_fm.get("tags") or decision_fm.get("tags") or [],
+        "summary": source_fm.get("summary") or decision_fm.get("summary", ""),
     }
 
-    raw_content = "---\n" + yaml.dump(raw_frontmatter, default_flow_style=False, sort_keys=False).strip() + "\n---\n\n" + body + "\n"
+    # Carry over remaining provenance / dedup keys verbatim from the capture
+    # frontmatter. Only include keys that actually have values so the raw
+    # frontmatter stays readable.
+    for key in PROVENANCE_KEYS:
+        if key in raw_frontmatter:
+            continue
+        value = source_fm.get(key)
+        if value not in (None, "", [], {}):
+            raw_frontmatter[key] = value
+
+    raw_content = (
+        "---\n"
+        + yaml.dump(raw_frontmatter, default_flow_style=False, sort_keys=False).strip()
+        + "\n---\n\n"
+        + body.strip()
+        + "\n"
+    )
 
     # Use same filename
     raw_path = RAW_DIR / capture_path.name
@@ -140,13 +200,38 @@ def main():
     parser = argparse.ArgumentParser(description="Meridian Daily Distill")
     parser.add_argument("--file", help="Process a specific capture file")
     parser.add_argument("--approve", help="Approve a pending promotion")
+    parser.add_argument(
+        "--promote-all",
+        action="store_true",
+        help="Promote every file in capture/ to raw/ without scoring (recovery mode)",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Score without writing")
     args = parser.parse_args()
 
     config = load_config()
-    client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY from env
 
-    results = []
+    results: list[dict] = []
+
+    if args.promote_all:
+        # Recovery path: bypass scoring and push everything in capture/ to raw/.
+        # Use this when capture is wedged with legacy metadata or when scoring
+        # has been unavailable (e.g. LLM outage).
+        for path in sorted(CAPTURE_DIR.glob("*.md")):
+            try:
+                raw_path = promote_to_raw(path, {"frontmatter": None})
+                path.unlink()
+                results.append({
+                    "file": str(path),
+                    "action": "force_promoted",
+                    "raw_path": str(raw_path),
+                })
+            except Exception as e:
+                print(f"Failed to promote {path.name}: {e}", file=sys.stderr)
+                results.append({"file": str(path), "error": str(e)})
+        print(json.dumps({"status": "ok", "processed": len(results), "results": results}, indent=2))
+        return
+
+    client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY from env
 
     if args.approve:
         # Direct approval — promote without re-scoring
@@ -174,47 +259,47 @@ def main():
             print(f"Reviewing {filepath.name}...", file=sys.stderr)
             content = filepath.read_text(encoding="utf-8", errors="replace")
 
+            # Score the document. Failures are logged as metadata but never
+            # block promotion — Sieve (upstream) is the human review gate, so
+            # everything that reaches Meridian's capture/ should flow through.
+            decision: dict | None = None
+            score_error: str | None = None
             try:
                 decision = score_document(client, content, config)
             except Exception as e:
+                score_error = str(e)
                 print(f"Error scoring {filepath.name}: {e}", file=sys.stderr)
-                results.append({"file": str(filepath), "error": str(e)})
-                continue
+
+            if decision is None:
+                # Synthesize a minimal decision record so downstream code has
+                # consistent shape and the raw/ frontmatter carries the error.
+                decision = {
+                    "decision": "promote",
+                    "relevance": 0,
+                    "quality": 0,
+                    "reasoning": f"scoring_error: {score_error}",
+                    "error": score_error,
+                }
 
             result = {
                 "file": str(filepath),
-                "decision": decision["decision"],
-                "relevance": decision["relevance"],
-                "quality": decision["quality"],
+                "decision": decision.get("decision", "promote"),
+                "relevance": decision.get("relevance", 0),
+                "quality": decision.get("quality", 0),
                 "reasoning": decision.get("reasoning", ""),
             }
+            if score_error:
+                result["error"] = score_error
 
             if not args.dry_run:
-                mark_processed(filepath, decision)
+                mark_processed(filepath, decision, error=score_error)
 
-                # Use bootstrap threshold if wiki has < 20 articles
-                wiki_dir = ROOT / "wiki"
-                article_count = sum(1 for _ in wiki_dir.rglob("*.md")
-                                    if _.name not in ("_index.md", "_backlinks.md", "log.md"))
-                if article_count < config["compiler"]["bootstrap_threshold"]:
-                    auto_threshold = config["distill"].get("bootstrap_promote_threshold", 6)
-                else:
-                    auto_threshold = config["distill"]["auto_promote_threshold"]
-
-                if (decision["decision"] == "promote"
-                        and decision["relevance"] >= auto_threshold
-                        and decision["quality"] >= auto_threshold):
-                    # Auto-promote high-confidence items
-                    raw_path = promote_to_raw(filepath, decision)
-                    result["action"] = "auto_promoted"
-                    result["raw_path"] = str(raw_path)
-                    filepath.unlink()
-                elif decision["decision"] == "promote":
-                    # Needs approval — leave in capture/ with distill metadata
-                    result["action"] = "pending_approval"
-                else:
-                    result["action"] = "skipped"
-                    filepath.unlink()
+                # Always promote. Human review already happened in Sieve;
+                # Meridian's job is to ingest everything it receives.
+                raw_path = promote_to_raw(filepath, decision)
+                result["action"] = "promoted" if not score_error else "promoted_with_error"
+                result["raw_path"] = str(raw_path)
+                filepath.unlink()
 
             results.append(result)
 
