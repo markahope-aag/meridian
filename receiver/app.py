@@ -617,6 +617,37 @@ def lint():
 
 
 # ---------------------------------------------------------------------------
+# POST /watchdog — run the watchdog to detect and fix stuck items
+# ---------------------------------------------------------------------------
+
+@app.route("/watchdog", methods=["POST"])
+@require_auth
+def watchdog():
+    """Run the pipeline watchdog.
+
+    Body JSON:
+        dry_run: bool (optional) — report only, no actions
+    """
+    data = request.get_json(force=True) if request.data else {}
+    dry_run = data.get("dry_run", False)
+
+    args = [sys.executable, str(AGENTS_DIR / "watchdog.py")]
+    if dry_run:
+        args.append("--dry-run")
+
+    try:
+        result = subprocess.run(
+            args, capture_output=True, text=True, timeout=120,
+            cwd=str(MERIDIAN_ROOT),
+        )
+        if result.returncode != 0:
+            return jsonify({"error": "watchdog failed", "stderr": result.stderr}), 500
+        return jsonify({"status": "ok", "result": result.stdout})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ---------------------------------------------------------------------------
 # POST /synthesize — synthesize a single topic
 # ---------------------------------------------------------------------------
 
