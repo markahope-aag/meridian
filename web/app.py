@@ -237,14 +237,34 @@ def dashboard():
         recent_log = [{"date": d, "entry": e} for d, e in entries[-10:]]
         recent_log.reverse()
 
-    # Client list
+    # Client list — count topics each client contributed insights to
     clients = []
     clients_dir = WIKI_DIR / "clients" / "current"
     if clients_dir.exists():
         for d in sorted(clients_dir.iterdir()):
             if d.is_dir():
-                article_count = sum(1 for _ in d.glob("*.md") if _.name != "_index.md")
-                clients.append({"slug": d.name, "articles": article_count})
+                # Read _index.md and count "What We Learned" links
+                topic_count = 0
+                insight_count = 0
+                index_file = d / "_index.md"
+                if index_file.exists():
+                    try:
+                        content = index_file.read_text(encoding="utf-8", errors="replace")
+                        # Count wikilinks to knowledge/ topics
+                        topic_links = re.findall(r"\[\[knowledge/[^|\]]+", content)
+                        topic_count = len(set(topic_links))
+                        # Sum insight counts in parentheses: "(N insights)"
+                        insight_nums = re.findall(r"\((\d+)\s+insights?\)", content)
+                        insight_count = sum(int(n) for n in insight_nums)
+                    except Exception:
+                        pass
+                clients.append({
+                    "slug": d.name,
+                    "articles": topic_count,
+                    "insights": insight_count,
+                })
+        # Sort by insight count descending
+        clients.sort(key=lambda x: -x["insights"])
 
     # Knowledge topics with Layer 3 detection
     topics = []

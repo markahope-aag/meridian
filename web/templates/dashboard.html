@@ -90,8 +90,11 @@
         <h2>Clients ({{ clients|length }})</h2>
         {% for c in clients %}
         <div class="list-item">
-            <a href="/client/{{ c.slug }}">{{ c.slug }}</a>
-            <span class="count">{{ c.articles }}</span>
+            <div>
+                <a href="/client/{{ c.slug }}">{{ c.slug }}</a>
+                <span style="font-size: 11px; color: var(--text-muted); margin-left: 4px;">{{ c.articles }} topics</span>
+            </div>
+            <span class="count">{{ '{:,}'.format(c.insights) }}</span>
         </div>
         {% endfor %}
     </div>
