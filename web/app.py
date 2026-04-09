@@ -285,7 +285,9 @@ def dashboard():
     except Exception:
         pass
 
-    # Count Layer 3 articles
+    # Count Layer 3 articles, total insights, cross-client topics
+    total_insights = 0
+    cross_client_topics = 0
     knowledge_dir = WIKI_DIR / "knowledge"
     if knowledge_dir.exists():
         for idx in knowledge_dir.rglob("index.md"):
@@ -295,11 +297,60 @@ def dashboard():
                     layer3_count += 1
             except Exception:
                 pass
+        # Count insights in client-extractions files
+        for ext_file in knowledge_dir.rglob("client-extractions.md"):
+            try:
+                content = ext_file.read_text(encoding="utf-8", errors="replace")
+                # Count bullet items (each line starting with "- ")
+                insights = sum(1 for line in content.split("\n") if line.strip().startswith("- "))
+                total_insights += insights
+                # Check if multiple clients cited (distinct [[Name, date]] patterns)
+                import re as _re
+                clients_cited = set(_re.findall(r"\[\[([^,]+),", content))
+                if len(clients_cited) >= 3:
+                    cross_client_topics += 1
+            except Exception:
+                pass
+
+    # Synthesis coverage
+    synthesis_coverage = 0
+    if stats.get("knowledge_topics", 0) > 0:
+        synthesis_coverage = round(layer3_count / stats["knowledge_topics"] * 100)
+
+    # Pipeline freshness — find latest log entries by operation type
+    pipeline = {"capture": "", "distill": "", "compile": "", "synthesize": "", "lint": ""}
+    if log_path.exists():
+        log_content = log_path.read_text(encoding="utf-8", errors="replace")
+        for op in pipeline.keys():
+            matches = re.findall(rf"## \[(\d{{4}}-\d{{2}}-\d{{2}})\] {op}", log_content)
+            if matches:
+                pipeline[op] = max(matches)
+
+    # Active jobs from receiver
+    active_jobs = 0
+    try:
+        if RECEIVER_TOKEN:
+            resp = requests.get(f"{RECEIVER_URL}/jobs", headers=receiver_headers(), timeout=3)
+            # Endpoint may not exist — fallback gracefully
+    except Exception:
+        pass
+
+    # Synthesis running detection — check if any synthesis log entry is today
+    synth_running = pipeline.get("synthesize", "") == datetime.now().strftime("%Y-%m-%d")
+
+    metrics = {
+        "total_insights": total_insights,
+        "cross_client_topics": cross_client_topics,
+        "synthesis_coverage": synthesis_coverage,
+        "pipeline": pipeline,
+        "synth_running": synth_running,
+    }
 
     return render_template("dashboard.html",
                            stats=stats, recent_log=recent_log,
                            clients=clients, topics=topics,
-                           synth_status=synth_status, layer3_count=layer3_count)
+                           synth_status=synth_status, layer3_count=layer3_count,
+                           metrics=metrics)
 
 
 @app.route("/search")

@@ -3,6 +3,7 @@
 {% block content %}
 <h1 style="margin-bottom: 24px;">Dashboard</h1>
 
+<div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Content</div>
 <div class="stat-grid">
     <div class="stat-box">
         <div class="number">{{ stats.wiki_total }}</div>
@@ -28,13 +29,59 @@
         <div class="number">{{ stats.capture }}</div>
         <div class="label">Capture Queue</div>
     </div>
+</div>
+
+<div style="font-size: 11px; color: var(--text-muted); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">Knowledge Intelligence</div>
+<div class="stat-grid">
     <div class="stat-box">
         <div class="number">{{ layer3_count }}</div>
-        <div class="label">Layer 3 Articles</div>
+        <div class="label">Layer 3 Synthesized</div>
     </div>
     <div class="stat-box">
-        <div class="number">{{ synth_status.get('complete', 0) }}/{{ synth_status.get('total', '?') }}</div>
-        <div class="label">Synthesis Queue</div>
+        <div class="number">{{ metrics.synthesis_coverage }}%</div>
+        <div class="label">Synthesis Coverage</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(metrics.total_insights) }}</div>
+        <div class="label">Client Insights</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ metrics.cross_client_topics }}</div>
+        <div class="label">Cross-Client Topics</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ synth_status.get('pending', 0) }}</div>
+        <div class="label">Queue Pending</div>
+    </div>
+    <div class="stat-box" style="{% if metrics.synth_running %}border-color: var(--green);{% endif %}">
+        <div class="number" style="{% if metrics.synth_running %}color: var(--green);{% endif %}">
+            {% if metrics.synth_running %}&#9679;{% else %}&#9675;{% endif %}
+        </div>
+        <div class="label">Synthesis {% if metrics.synth_running %}Running{% else %}Idle{% endif %}</div>
+    </div>
+</div>
+
+<div style="font-size: 11px; color: var(--text-muted); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">Pipeline Freshness</div>
+<div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
+    <div class="stat-box">
+        <div style="font-size: 16px; font-weight: 600; color: var(--accent);">{{ metrics.pipeline.capture or '—' }}</div>
+        <div class="label">Last Capture</div>
+    </div>
+    <div class="stat-box">
+        <div style="font-size: 16px; font-weight: 600; color: var(--accent);">{{ metrics.pipeline.distill or '—' }}</div>
+        <div class="label">Last Distill</div>
+    </div>
+    <div class="stat-box">
+        <div style="font-size: 16px; font-weight: 600; color: var(--accent);">{{ metrics.pipeline.compile or '—' }}</div>
+        <div class="label">Last Compile</div>
+    </div>
+    <div class="stat-box">
+        <div style="font-size: 16px; font-weight: 600; color: var(--accent);">{{ metrics.pipeline.synthesize or '—' }}</div>
+        <div class="label">Last Synthesis</div>
+    </div>
+    <div class="stat-box">
+        <div style="font-size: 16px; font-weight: 600; color: var(--accent);">{{ metrics.pipeline.lint or '—' }}</div>
+        <div class="label">Last Lint</div>
     </div>
 </div>
 
