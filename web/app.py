@@ -66,7 +66,11 @@ def process_citations(text: str) -> tuple[str, list[dict]]:
             })
             counter[0] += 1
 
-        return f'<sup class="citation">[{num}]</sup>'
+        return (
+            f'<sup class="citation" id="cite-{num}">'
+            f'<a href="#source-{num}">[{num}]</a>'
+            f"</sup>"
+        )
 
     processed = re.sub(r"\[\[([^\]]+)\]\]", replace_citation, text)
     return processed, citations
@@ -87,6 +91,12 @@ def build_sources_html(citations: list[dict]) -> str:
                 slug = f"wiki/{slug}"
             links.append(f'<a href="/article/{slug}.md" class="source-link">{display}</a>')
         lines.append(" &middot; ".join(links))
+        # Back-link to the citation in the body so readers can return
+        # to where they were reading without scrolling.
+        lines.append(
+            f' <a href="#cite-{cite["number"]}" class="source-backref" '
+            f'aria-label="Back to citation {cite["number"]}">&#8617;</a>'
+        )
         lines.append("</li>")
     lines.append("</ol></div>")
     return "\n".join(lines)
