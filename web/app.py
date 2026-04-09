@@ -119,16 +119,44 @@ def convert_wikilinks(text: str) -> str:
     return re.sub(r"\[\[([^\]]+)\]\]", replace_link, text)
 
 
+def _split_related_topics(body: str) -> tuple[str, str]:
+    """Split the article body at the `## Related Topics` header.
+
+    Returns (body_before, related_topics_and_after). If the header is
+    missing, the whole body is treated as "before" and the second value
+    is empty. Case-insensitive match so a lowercase or mixed-case header
+    still splits correctly.
+
+    This exists because the Related Topics section is a bulleted list of
+    bare wikilinks like `[[wiki/knowledge/seo/index.md]]`. The citation
+    processor, which runs first, would otherwise turn each of those into
+    a numbered footnote (they contain `.md`), and the rendered article
+    would show a list of numbers with no text at the bottom.
+    """
+    m = re.search(r"(?mi)^##\s+Related\s+Topics\s*$", body)
+    if not m:
+        return body, ""
+    return body[: m.start()], body[m.start():]
+
+
 def render_markdown(body: str) -> str:
     """Convert markdown body to HTML with citation footnotes and wikilinks."""
-    # Step 1: Process citations (before wikilinks)
-    body, citations = process_citations(body)
-    # Step 2: Convert remaining wikilinks
-    body = convert_wikilinks(body)
-    # Step 3: Render markdown to HTML
+    # Step 1: Separate the Related Topics section so its wikilinks are not
+    # mistaken for citations.
+    body_before, related = _split_related_topics(body)
+
+    # Step 2: Process citations on the analytical body only.
+    body_before, citations = process_citations(body_before)
+
+    # Step 3: Convert wikilinks in both segments.
+    body_before = convert_wikilinks(body_before)
+    related = convert_wikilinks(related)
+
+    # Step 4: Render markdown to HTML.
     md = get_md()
-    article_html = md.convert(body)
-    # Step 4: Append sources section
+    article_html = md.convert(body_before + "\n\n" + related)
+
+    # Step 5: Append sources section (footnote-style).
     sources_html = build_sources_html(citations)
     return article_html + sources_html
 
