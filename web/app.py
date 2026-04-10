@@ -312,6 +312,8 @@ def get_stats() -> dict:
         "capture": 0,
         "knowledge_topics": 0,
         "client_folders": 0,
+        "industries": 0,
+        "industries_with_content": 0,
     }
     if WIKI_DIR.exists():
         stats["wiki_total"] = sum(1 for _ in WIKI_DIR.rglob("*.md"))
@@ -336,6 +338,20 @@ def get_stats() -> dict:
             former = clients_dir / "former"
             if former.exists():
                 stats["clients_former"] = sum(1 for d in former.iterdir() if d.is_dir())
+        # Industries dimension (third axis alongside clients + knowledge)
+        industries_dir = WIKI_DIR / "industries"
+        if industries_dir.exists():
+            industry_dirs = [d for d in industries_dir.iterdir() if d.is_dir()]
+            stats["industries"] = len(industry_dirs)
+            # "With content" = more than just PLACEHOLDER.md
+            stats["industries_with_content"] = sum(
+                1
+                for d in industry_dirs
+                if any(
+                    f.name not in ("PLACEHOLDER.md", "index.md")
+                    for f in d.glob("*.md")
+                )
+            )
     if RAW_DIR.exists():
         stats["raw"] = sum(1 for _ in RAW_DIR.glob("*.md") if _.name != "_index.md")
     if CAPTURE_DIR.exists():
@@ -416,6 +432,53 @@ def dashboard():
                 topics.append(topic_data)
         # Sort: Layer 3 first, then by article count
         topics.sort(key=lambda x: (not x["layer3"], -x["articles"]))
+
+    # Industries — third knowledge dimension
+    industries = []
+    industries_yaml_path = MERIDIAN_ROOT / "industries.yaml"
+    industry_name_by_slug: dict[str, str] = {}
+    if industries_yaml_path.exists():
+        try:
+            data = yaml.safe_load(industries_yaml_path.read_text(encoding="utf-8")) or {}
+            for entry in data.get("industries", []):
+                if isinstance(entry, dict) and entry.get("slug"):
+                    industry_name_by_slug[entry["slug"]] = entry.get("name", entry["slug"])
+        except yaml.YAMLError:
+            pass
+
+    industries_dir = WIKI_DIR / "industries"
+    if industries_dir.exists():
+        for d in sorted(industries_dir.iterdir()):
+            if not d.is_dir():
+                continue
+            real_fragments = [
+                f
+                for f in d.glob("*.md")
+                if f.name not in ("_index.md", "index.md", "PLACEHOLDER.md")
+            ]
+            is_placeholder = (
+                not real_fragments and (d / "PLACEHOLDER.md").exists()
+            )
+            industry = {
+                "slug": d.name,
+                "name": industry_name_by_slug.get(d.name, d.name.replace("-", " ").title()),
+                "fragment_count": len(real_fragments),
+                "layer3": False,
+                "placeholder": is_placeholder,
+            }
+            index_file = d / "index.md"
+            if index_file.exists():
+                try:
+                    content = index_file.read_text(encoding="utf-8", errors="replace")
+                    if "layer: 3" in content:
+                        industry["layer3"] = True
+                except Exception:
+                    pass
+            industries.append(industry)
+        # Sort: Layer 3 first, then by fragment count descending, placeholders last
+        industries.sort(
+            key=lambda x: (x["placeholder"], not x["layer3"], -x["fragment_count"])
+        )
 
     # Synthesis queue status
     synth_status = {"pending": 0, "running": 0, "complete": 0, "failed": 0}
@@ -522,7 +585,7 @@ def dashboard():
 
     return render_template("dashboard.html",
                            stats=stats, recent_log=recent_log,
-                           clients=clients, topics=topics,
+                           clients=clients, topics=topics, industries=industries,
                            synth_status=synth_status, layer3_count=layer3_count,
                            metrics=metrics)
 
@@ -676,6 +739,65 @@ def _enrich_fragment(article: dict) -> dict:
         article.get("updated") or article.get("created") or ""
     )
     return article
+
+
+@app.route("/industry/<slug>")
+def view_industry(slug):
+    """Industries are the third knowledge dimension alongside topics and
+    clients. Content rendering mirrors view_topic — Layer 3 synthesis
+    at the top, Layer 2 fragment list below, searchable and filterable."""
+    industry_dir = WIKI_DIR / "industries" / slug
+    if not industry_dir.exists():
+        return "Industry not found", 404
+
+    # Prefer industries.yaml display name
+    industries_yaml_path = MERIDIAN_ROOT / "industries.yaml"
+    industry_name = slug.replace("-", " ").title()
+    if industries_yaml_path.exists():
+        try:
+            data = yaml.safe_load(industries_yaml_path.read_text(encoding="utf-8")) or {}
+            for entry in data.get("industries", []):
+                if isinstance(entry, dict) and entry.get("slug") == slug:
+                    industry_name = entry.get("name") or industry_name
+                    break
+        except yaml.YAMLError:
+            pass
+
+    # Layer 3 synthesis (if present)
+    synthesis = None
+    synthesis_html = ""
+    index_file = industry_dir / "index.md"
+    if index_file.exists():
+        synthesis = read_article(index_file)
+        if synthesis.get("frontmatter", {}).get("layer") == 3:
+            industry_name = synthesis.get("title") or industry_name
+            synthesis_html = render_markdown(synthesis["body"])
+        else:
+            synthesis = None
+
+    # Layer 2 fragments
+    articles = []
+    for f in sorted(industry_dir.rglob("*.md")):
+        if f.name in ("_index.md", "index.md", "PLACEHOLDER.md"):
+            continue
+        articles.append(_enrich_fragment(read_article(f)))
+    articles.sort(key=lambda a: a.get("sort_date", ""), reverse=True)
+
+    clients_on_topic = sorted(
+        {a["client_display"] for a in articles if a.get("client_display")}
+    )
+
+    # Reuse the topic template — same shape, same rendering needs
+    return render_template(
+        "topic.html",
+        slug=slug,
+        topic_name=industry_name,
+        articles=articles,
+        synthesis=synthesis,
+        synthesis_html=synthesis_html,
+        clients_on_topic=clients_on_topic,
+        dimension="industry",
+    )
 
 
 @app.route("/topic/<slug>")

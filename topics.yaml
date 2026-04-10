@@ -302,36 +302,20 @@ categories:
     category: strategy
     aliases: ["market-expansion", "fintech-go-to-market", "product-launch", "product-launches", "product-positioning"]
 
-  # === INDUSTRY-SPECIFIC ===
-  - name: "Senior Living Marketing"
-    slug: senior-living
-    category: industry
-    aliases: ["senior-living-marketing", "assisted-living", "assisted-living-marketing", "retirement-community-marketing"]
-
-  - name: "Food & Beverage"
-    slug: food-beverage
-    category: industry
-    aliases: ["food-regulatory", "food-regulatory-compliance", "food-labeling", "fda-compliance", "fda-food-classification", "hemp-regulation", "dietary-supplements", "food-service", "cpg-strategy", "packaging-strategy", "packaging-sales", "packaging-verticals", "product-packaging"]
-
-  - name: "Nonprofit"
-    slug: nonprofit
-    category: industry
-    aliases: ["nonprofit-fundraising", "nonprofit-operations", "nonprofit-web-strategy", "capital-campaigns", "donation-campaigns", "grant-compliance", "grant-automation"]
-
+  # Vertical-specific topics (senior-living, food-beverage, nonprofit,
+  # elearning, saas) moved to industries.yaml as of 2026-04-10. Those
+  # are verticals, not functional capabilities — they belong in the
+  # industry dimension, not the topic dimension. The aliases from the
+  # old topic entries are preserved in industries.yaml under the same
+  # canonical slugs.
+  #
+  # B2B Marketing stays here because "marketing to B2B buyers" is a
+  # functional tactic (account-based-marketing, long sales cycles,
+  # procurement-committee targeting) rather than a vertical.
   - name: "B2B Marketing"
     slug: b2b-marketing
-    category: industry
-    aliases: ["b2b-sales", "b2b-services", "b2b-strategy", "b2g-sales"]
-
-  - name: "eLearning"
-    slug: elearning
-    category: industry
-    aliases: ["elearning-course-development", "elearning-design", "elearning-development", "course-development", "instructional-design", "instructional-tools", "learning-design", "learning-management-systems", "online-courses", "training-program-design", "articulate-360", "articulate-rise-360"]
-
-  - name: "SaaS"
-    slug: saas
-    category: industry
-    aliases: ["saas-development", "saas-pricing", "saas-product-development", "saas-product-strategy", "saas-sales-process", "saas-tools", "custom-app-development", "app-development", "product-development", "product-management", "product-operations", "product-strategy"]
+    category: strategy
+    aliases: ["b2b-sales", "b2b-strategy", "b2g-sales", "abm", "account-based-marketing"]
 
   # === COMPLIANCE & LEGAL ===
   - name: "Regulatory Compliance"

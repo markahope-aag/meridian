@@ -1,0 +1,165 @@
+# Meridian Industry Registry
+#
+# The third dimension of the knowledge system, alongside clients.yaml
+# and topics.yaml. Represents VERTICAL slices — "what we know about
+# working in industry X" — as distinct from topics (functional
+# capabilities) and clients (individual engagements).
+#
+# The compiler MUST match against this taxonomy before cross-filing
+# an insight into wiki/industries/<slug>/. New industries require
+# human approval — the compiler never silently creates a new folder.
+# New entries typically arrive via the dashboard's "taxonomy gap"
+# review queue, which surfaces clients and fragments that don't map
+# cleanly to any current industry.
+#
+# Each entry:
+#   name        — display name used in dashboard headers
+#   slug        — URL/directory slug (kebab-case, unique)
+#   description — one-sentence scope statement for the dimension
+#   aliases     — common variants the compiler should normalize to slug
+
+industries:
+
+  - name: "Healthcare"
+    slug: healthcare
+    description: "Medical practices, clinics, digital health, telehealth, and patient-facing health services. Includes HIPAA-bound workflows."
+    aliases:
+      - medical
+      - medical-practice
+      - clinic
+      - health-services
+      - digital-health
+      - telehealth
+      - patient-care
+
+  - name: "Senior Living"
+    slug: senior-living
+    description: "Assisted living, memory care, independent living, skilled nursing, and related senior services."
+    aliases:
+      - assisted-living
+      - memory-care
+      - independent-living
+      - skilled-nursing
+      - retirement-community
+      - elder-care
+
+  - name: "Nonprofit"
+    slug: nonprofit
+    description: "501(c)(3) organizations, charities, foundations, and mission-driven entities with donor + grant funding dynamics."
+    aliases:
+      - non-profit
+      - charity
+      - foundation
+      - ngo
+      - 501c3
+      - mission-driven
+
+  - name: "SaaS"
+    slug: saas
+    description: "Subscription software businesses, typically B2B, with recurring revenue and product-led growth motions."
+    aliases:
+      - software
+      - b2b-saas
+      - saas-platform
+      - subscription-software
+      - cloud-software
+
+  - name: "Food & Beverage"
+    slug: food-beverage
+    description: "CPG food and beverage brands, restaurants, breweries, distributors, and food-service operations."
+    aliases:
+      - food
+      - beverage
+      - cpg-food
+      - restaurant
+      - brewery
+      - food-service
+      - fnb
+
+  - name: "Legal Services"
+    slug: legal-services
+    description: "Law firms, legal tech, and attorney-marketing engagements. Includes estate planning, family law, litigation, and B2B legal."
+    aliases:
+      - law-firm
+      - attorney
+      - legal
+      - lawyer
+      - legal-tech
+      - litigation-support
+
+  - name: "B2B Services"
+    slug: b2b-services
+    description: "Professional and business services sold to other businesses — agencies, consultancies, and niche service providers without a vertical-specific classification."
+    aliases:
+      - professional-services
+      - business-services
+      - consulting
+      - agency
+      - advisory
+
+  - name: "eCommerce & Retail"
+    slug: ecommerce-retail
+    description: "Direct-to-consumer brands, multi-channel retailers, marketplaces, and physical stores with digital presence."
+    aliases:
+      - ecommerce
+      - retail
+      - dtc
+      - direct-to-consumer
+      - shopify-brand
+      - woocommerce-brand
+      - marketplace-seller
+      - brick-and-mortar
+
+  - name: "Financial Services"
+    slug: financial-services
+    description: "Banks, credit unions, financial advisors, insurance, fintech, investment firms, and ATM operators."
+    aliases:
+      - finance
+      - fintech
+      - banking
+      - credit-union
+      - financial-advisor
+      - insurance
+      - investment
+      - atm-operator
+
+  - name: "eLearning"
+    slug: elearning
+    description: "Online education platforms, course creators, corporate training, certification, and learning management systems."
+    aliases:
+      - e-learning
+      - online-learning
+      - edtech
+      - education
+      - online-education
+      - course-creator
+      - corporate-training
+      - lms
+
+  - name: "Manufacturing"
+    slug: manufacturing
+    description: "Industrial manufacturing, fabrication, stone/concrete/metalwork, custom production, and OEM suppliers."
+    aliases:
+      - industrial
+      - fabrication
+      - manufacturer
+      - production
+      - oem
+      - metalwork
+      - concrete
+      - stone
+
+  - name: "Construction & Home Services"
+    slug: construction-home-services
+    description: "General contractors, trades, home improvement, exterior renovation, roofing, HVAC, landscaping, and adjacent home-service categories."
+    aliases:
+      - construction
+      - home-services
+      - contractor
+      - general-contractor
+      - home-improvement
+      - roofing
+      - hvac
+      - landscaping
+      - exterior-renovation
+      - trades

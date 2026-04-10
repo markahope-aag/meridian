@@ -18,6 +18,10 @@
         <div class="label">Knowledge Topics</div>
     </div>
     <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(stats.industries) }}</div>
+        <div class="label">Industries</div>
+    </div>
+    <div class="stat-box">
         <div class="number">{{ '{:,}'.format(stats.concepts) }}</div>
         <div class="label">Concepts</div>
     </div>
@@ -118,6 +122,29 @@
             ... and {{ topics|length - 30 }} more
         </div>
         {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <h2>Industries ({{ industries|length }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Vertical slices — what we know about working in each industry, across all clients in that space.
+    </div>
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        {% for i in industries %}
+        <div class="stat-box" style="text-align: left; padding: 12px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">
+                <a href="/industry/{{ i.slug }}" style="color: var(--accent); text-decoration: none;">{{ i.name }}</a>
+                {% if i.layer3 %}
+                <span style="background: var(--green); color: #000; padding: 1px 8px; border-radius: 10px; font-size: 10px; margin-left: 6px; font-weight: 600;">L3</span>
+                {% endif %}
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+                {{ i.fragment_count }} fragments
+                {% if i.placeholder %} · <span style="color: var(--yellow);">placeholder</span>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
     </div>
 </div>
 
