@@ -1,0 +1,3310 @@
+{
+  "schema_version": 1,
+  "topic_slug": "seo",
+  "topic_name": "SEO",
+  "extracted_at": "2026-04-09T17:12:13Z",
+  "extract_prompt_sha": "b7ab5ab500eb",
+  "extract_model": "claude-haiku-4-5-20251001",
+  "fragment_count": 113,
+  "newest_fragment_mtime": 1775659144.7506845,
+  "claims": [
+    {
+      "claim": "Low-difficulty, informational keywords in niche service categories can yield #1 rankings quickly with a single well-crafted blog post",
+      "sources": [
+        "wiki/knowledge/seo/overhead-door-fire-rated-doors-content.md"
+      ],
+      "confidence": "high",
+      "evidence": "Overhead Door Madison achieved #1 rankings for 'Fire rating for garage door' and 'Do garage doors need to be fire rated?' with near-zero keyword difficulty"
+    },
+    {
+      "claim": "Long-form content (500+ words) tends to rank better than shorter content",
+      "sources": [
+        "wiki/knowledge/seo/new-dawn-specialty-page-seo-structure.md"
+      ],
+      "confidence": "medium",
+      "evidence": "Recommended target of 500+ words per specialty page as incremental SEO value"
+    },
+    {
+      "claim": "Domain Rating (DR) is a prerequisite for competitive ranking in high-difficulty niches",
+      "sources": [
+        "wiki/knowledge/seo/cordwainer-domain-rating-backlink-strategy.md",
+        "wiki/knowledge/seo/citrus-america-domain-rating-boost-strategy.md",
+        "wiki/knowledge/seo/bluepoint-reverse-atm-strategy.md"
+      ],
+      "confidence": "high",
+      "evidence": "Multiple clients (Cordwainer, Citrus America, BluePoint) approved paid backlink services to raise DR from 10-29 to 30-40+ range"
+    },
+    {
+      "claim": "AI tools (ChatGPT, Google AI, Perplexity) are increasingly important citation sources and can drive referral traffic",
+      "sources": [
+        "wiki/knowledge/seo/overhead-door-fire-rated-doors-content.md",
+        "wiki/knowledge/seo/ahs-ai-citations-strategy.md",
+        "wiki/knowledge/seo/citrus-america-domain-rating-boost-strategy.md"
+      ],
+      "confidence": "high",
+      "evidence": "Overhead Door blog received 5 ChatGPT citations; Madison Asbestos has 17 Google AI citations; Citrus America demonstrated AI Overview citations for product names"
+    },
+    {
+      "claim": "Structured FAQ content increases likelihood of AI citations and featured snippets",
+      "sources": [
+        "wiki/knowledge/seo/ahs-ai-citations-strategy.md",
+        "wiki/knowledge/seo/new-dawn-specialty-page-seo-structure.md"
+      ],
+      "confidence": "high",
+      "evidence": "Madison Asbestos strategy centers on adding FAQ sections to capture AI-generated snippets; New Dawn template requires FAQ sections on all specialty pages"
+    },
+    {
+      "claim": "High impressions with low CTR indicates rankings at positions 8-12 (below the fold) rather than top 5",
+      "sources": [
+        "wiki/knowledge/seo/citrus-america-low-ctr-high-impressions.md"
+      ],
+      "confidence": "high",
+      "evidence": "Citrus America case study: high impressions but low CTR traced to positions 10-12 on SERP"
+    },
+    {
+      "claim": "AI-powered search tools (Gemini, ChatGPT) are reducing organic Google search traffic as users shift discovery channels",
+      "sources": [
+        "wiki/knowledge/seo/papertube-organic-performance.md"
+      ],
+      "confidence": "high",
+      "evidence": "Paper Tube Co experiencing slow decline in organic traffic attributed to users starting searches on AI tools instead of Google"
+    },
+    {
+      "claim": "Content volume alone does not produce SEO results without proper keyword targeting and backlink profile",
+      "sources": [
+        "wiki/knowledge/seo/old-world-seo-audit-framework.md"
+      ],
+      "confidence": "high",
+      "evidence": "Old World brand published 4+ blog posts monthly with zero organic traffic and DR 0, while sister brand Doodla had DR 39 and 1,300 monthly visitors under same management"
+    },
+    {
+      "claim": "Blog posts should be optimized for ranking and traffic generation, not editorial polish or conversion-focused copy",
+      "sources": [
+        "wiki/knowledge/seo/blog-content-strategy-seo-vs-conversion.md"
+      ],
+      "confidence": "high",
+      "evidence": "BluePoint case study: over-editing blogs for style reduces Surfer SEO content scores and undermines ranking potential"
+    },
+    {
+      "claim": "Asymmetric's internal benchmark for acceptable website health score is 98 or higher",
+      "sources": [
+        "wiki/knowledge/seo/website-health-scoring.md"
+      ],
+      "confidence": "high",
+      "evidence": "Explicit statement: 'For us, anything below 98 is unacceptable'"
+    },
+    {
+      "claim": "Domain Authority of 40+ is Asymmetric's benchmark for competitive SEO performance",
+      "sources": [
+        "wiki/knowledge/seo/website-health-scoring.md"
+      ],
+      "confidence": "high",
+      "evidence": "Benchmark stated: 'Asymmetric reports no managed client sites with DA below 40'"
+    },
+    {
+      "claim": "Paid backlink services can raise Domain Rating 11-26 points within 30 days",
+      "sources": [
+        "wiki/knowledge/seo/aviary-seo-progress.md",
+        "wiki/knowledge/seo/citrus-america-domain-rating-boost-strategy.md"
+      ],
+      "confidence": "medium",
+      "evidence": "AviaryAI gained 11 DR points in short window; Citrus America vendor promised DR increase from 28 to 50+ within 30 days"
+    },
+    {
+      "claim": "Keyword difficulty near zero allows rapid ranking gains with minimal competition",
+      "sources": [
+        "wiki/knowledge/seo/overhead-door-fire-rated-doors-content.md"
+      ],
+      "confidence": "high",
+      "evidence": "Fire-rated door keywords had near-zero difficulty; single blog post achieved #1 rankings within weeks"
+    },
+    {
+      "claim": "On-page product page improvements (copy, image metadata) reinforce rankings for transactional queries",
+      "sources": [
+        "wiki/knowledge/seo/overhead-door-fire-rated-doors-content.md"
+      ],
+      "confidence": "medium",
+      "evidence": "Overhead Door: specialist updated product page copy and image metadata, reinforcing rankings for 'fire rated counter doors'"
+    },
+    {
+      "claim": "Gated lead magnet guides can serve as top-of-funnel lead capture and SEO authority signals",
+      "sources": [
+        "wiki/knowledge/seo/adava-care-wisconsin-guide-lead-magnet.md"
+      ],
+      "confidence": "medium",
+      "evidence": "Adava Care Wisconsin guide designed to capture prospect emails and signal content quality to Google"
+    },
+    {
+      "claim": "Webflow sites have structural limitations for SEO optimization compared to WordPress",
+      "sources": [
+        "wiki/knowledge/seo/aviary-seo-progress.md"
+      ],
+      "confidence": "medium",
+      "evidence": "AviaryAI on Webflow required GTM code injection workarounds; WordPress rebuild proposed as longer-term solution"
+    },
+    {
+      "claim": "Yoast SEO plugin installed but unused at page level results in poor keyword targeting and ranking performance",
+      "sources": [
+        "wiki/knowledge/seo/lamarie-product-page-optimization.md"
+      ],
+      "confidence": "medium",
+      "evidence": "LaMarie Beauty: Yoast installed but no focus keywords configured on product pages; service pages rank below homepage"
+    },
+    {
+      "claim": "Local business schema limited to homepage provides insufficient geographic context for service page rankings",
+      "sources": [
+        "wiki/knowledge/seo/lamarie-product-page-optimization.md"
+      ],
+      "confidence": "medium",
+      "evidence": "LaMarie Beauty: location signals only on homepage; service pages carry no geographic context"
+    },
+    {
+      "claim": "Keyword targeting misdirection (content published to wrong domain) results in zero organic performance",
+      "sources": [
+        "wiki/knowledge/seo/old-world-seo-audit-framework.md"
+      ],
+      "confidence": "high",
+      "evidence": "Old World case: content intended for Old World brand was being posted to Doodla instead, causing Old World to have zero SEO value"
+    },
+    {
+      "claim": "High-growth keyword clusters (1000% YoY growth) represent significant near-term content opportunities",
+      "sources": [
+        "wiki/knowledge/seo/aviary-organic-keyword-strategy.md"
+      ],
+      "confidence": "medium",
+      "evidence": "AviaryAI: 'Loan servicing' and 'loan payment reminder' keywords up 1000% YoY, directly aligned with Collections use case"
+    },
+    {
+      "claim": "Comparison and alternative blog posts are low-cost, high-intent SEO opportunities",
+      "sources": [
+        "wiki/knowledge/seo/aviary-organic-keyword-strategy.md"
+      ],
+      "confidence": "medium",
+      "evidence": "AviaryAI: 'Glia alternative' / 'Glia vs. competitors' identified as high-intent opportunity with Glia at 40,500 brand searches"
+    },
+    {
+      "claim": "Informational traffic (70% of mix) is expected and acceptable; target is 70% commercial/transactional",
+      "sources": [
+        "wiki/knowledge/seo/website-health-scoring.md"
+      ],
+      "confidence": "medium",
+      "evidence": "Asymmetric benchmark: ~70% commercial or transactional traffic; 95% informational is a red flag"
+    },
+    {
+      "claim": "Rapid declines in top-10 keyword rankings (weeks to months) signal algorithm penalty, crawl errors, or content quality issues",
+      "sources": [
+        "wiki/knowledge/seo/website-health-scoring.md"
+      ],
+      "confidence": "medium",
+      "evidence": "A3 Environmental dropped from 367 to 130 top-10 keywords (65% decline) in short window"
+    },
+    {
+      "claim": "Publishing content when domain authority is higher increases ranking potential and organic reach",
+      "sources": [
+        "wiki/knowledge/seo/cordwainer-blog-publishing-strategy.md"
+      ],
+      "confidence": "medium",
+      "evidence": "Cordwainer deliberately held blog publication until DR improved to maximize SEO value of each post"
+    },
+    {
+      "claim": "Surfer SEO content score of 80+ is a proxy for ranking potential against current top-ranking articles",
+      "sources": [
+        "wiki/knowledge/seo/blog-content-strategy-seo-vs-conversion.md"
+      ],
+      "confidence": "medium",
+      "evidence": "BluePoint blogs drafted using Surfer SEO targeting 80+ content score; heavy editing reduces score and undermines ranking"
+    },
+    {
+      "claim": "Organic traffic volume without keyword alignment produces near-zero business value",
+      "sources": [
+        "wiki/knowledge/seo/seo-traffic-quality-vs-volume.md"
+      ],
+      "confidence": "high",
+      "evidence": "Anthemium case: traffic grew significantly but inquiries were predominantly out-of-budget due to 'long-term care' keyword mismatch"
+    },
+    {
+      "claim": "Domain Rating is logarithmic; moving from DR 8\u219230 is meaningful, but 30\u219255 requires substantially more effort",
+      "sources": [
+        "wiki/knowledge/seo/domain-rating-backlink-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Pages with fewer than ~300 words of text fall below Google's indexing threshold and are excluded from search results",
+      "sources": [
+        "wiki/knowledge/seo/aviary-thin-content-indexing.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "On-page copy and image optimization alone can move a keyword from unfindable to #2 ranking without new pages or link building",
+      "sources": [
+        "wiki/knowledge/seo/overhead-door-garage-doors-madison-ranking.md"
+      ],
+      "confidence": "high",
+      "evidence": "Overhead Door jumped 'garage doors Madison' from unfindable to #2 through copy rewrite and image alt text optimization"
+    },
+    {
+      "claim": "FAQ sections with minimum 5 items are required for AI-generated citation pickup (Google AI Overviews, featured snippets)",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-pmax-landing-page-faqs.md"
+      ],
+      "confidence": "high",
+      "evidence": "BluePoint PMAX: 'No less than five, just because we do want to get picked up on those citations'"
+    },
+    {
+      "claim": "Domain Rating gains are exponential, not linear; moving from DR 2\u219239 represents a qualitatively different authority level",
+      "sources": [
+        "wiki/knowledge/seo/adava-care-domain-rating-breakthrough.md"
+      ],
+      "confidence": "high",
+      "evidence": "Adava Care: 'Going from 2 to 39 is more than just plus 37. It's really like an exponential jump upwards.'"
+    },
+    {
+      "claim": "Blog content in assisted living/memory care vertical is primarily an SEO vehicle for search engines, not a readership play",
+      "sources": [
+        "wiki/knowledge/seo/adava-care-blog-strategy-keyword-targeting.md"
+      ],
+      "confidence": "high",
+      "evidence": "Mark Hope: 'Nobody's going to read them, the truth of the matter. What we want to do is take the keywords we want to get on your website and write articles that are keyword-rich.'"
+    },
+    {
+      "claim": "Informational traffic comprises 70\u201380% of typical organic traffic mix; only 10\u201320% is transactional/commercial intent",
+      "sources": [
+        "wiki/knowledge/seo/search-intent-types-informational-transactional.md"
+      ],
+      "confidence": "medium",
+      "evidence": "Described as normal distribution; high informational volume builds domain authority that supports transactional rankings"
+    },
+    {
+      "claim": "Targeting wrong terminology (e.g., 'cashless ATM' vs. 'reverse ATM') attracts irrelevant traffic and confuses prospects",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-reverse-atm-keyword-strategy.md"
+      ],
+      "confidence": "high",
+      "evidence": "BluePoint: 'cashless ATM' refers to completely different equipment; targeting it risks confusing prospects"
+    },
+    {
+      "claim": "A site with DR 8 publishing new content faces a compounding problem: content won't rank organically, so won't be discovered, so won't earn backlinks",
+      "sources": [
+        "wiki/knowledge/seo/domain-rating-backlink-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Paid social promotion ($100\u2013$200) of high-quality long-form content (2000+ words) can generate initial traffic that earns backlinks organically",
+      "sources": [
+        "wiki/knowledge/seo/domain-rating-backlink-strategy.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Service pages with thin content (~200 words) generate almost no organic traffic; expansion to 800\u20131000+ words is required",
+      "sources": [
+        "wiki/knowledge/seo/exterior-renovations-service-page-optimization.md"
+      ],
+      "confidence": "high",
+      "evidence": "Exterior Renovations: service pages at ~200 words generated zero traffic; target is 800\u20131000+ words"
+    },
+    {
+      "claim": "Local keyword saturation (including city name in H1, meta title, opening paragraph) improves local search rankings",
+      "sources": [
+        "wiki/knowledge/seo/exterior-renovations-service-page-optimization.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Broken pages (404 errors) on 21% of a site suppress Domain Authority and signal poor site maintenance to Google",
+      "sources": [
+        "wiki/knowledge/seo/inextechnologies-domain-authority-audit.md"
+      ],
+      "confidence": "high",
+      "evidence": "Inextechnologies: 55 broken pages (21% of site) directly contributed to DA 7 rating"
+    },
+    {
+      "claim": "A site ranking primarily for informational keywords (not commercial/transactional) has minimal lead generation potential",
+      "sources": [
+        "wiki/knowledge/seo/inextechnologies-domain-authority-audit.md"
+      ],
+      "confidence": "high",
+      "evidence": "Inextechnologies: 43 keywords in top 10, almost all informational intent; minimal commercial/transactional presence"
+    },
+    {
+      "claim": "Organic traffic growth of 6x and top-10 keyword rankings growth of 4x is achievable in 7 months with consistent content production and technical SEO",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-seo-performance-feb-2026.md"
+      ],
+      "confidence": "high",
+      "evidence": "BluePoint ATM: Aug 2025 (110 visitors/mo, 48 top-10 keywords) \u2192 Feb 2026 (639 visitors/mo, 208 top-10 keywords)"
+    },
+    {
+      "claim": "AI citation visits are an emerging traffic channel worth monitoring; BluePoint received 43 AI citation visits in 30 days",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-seo-performance-feb-2026.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Domain Rating of 42 is excellent for a site at this stage of development",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-seo-performance-feb-2026.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "A content acceleration window of 2\u20133 months following a DR breakthrough allows new content to rank faster and higher",
+      "sources": [
+        "wiki/knowledge/seo/adava-care-domain-rating-breakthrough.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Keyword cannibalization (two pages competing for same keyword) reduces ranking potential; keywords should be distributed across pages",
+      "sources": [
+        "wiki/knowledge/seo/seamless-keyword-strategy-roofing.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Low-competition keywords in Google Ads Keyword Planner indicate ranking potential; high volume + low competition = fastest ranking",
+      "sources": [
+        "wiki/knowledge/seo/seamless-keyword-strategy-roofing.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Branded search volume remains low for new product categories (e.g., reverse ATMs); non-branded traffic dominates early-stage SEO",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-seo-performance-feb-2026.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Ranking primarily for branded terms caps organic growth; non-branded, top-of-funnel keywords represent higher-value opportunities",
+      "sources": [
+        "wiki/knowledge/seo/quarra-branded-to-non-branded-expansion.md"
+      ],
+      "confidence": "high",
+      "evidence": "Quarra Stone: early SEO wins from branded terms, but sustainable lead generation requires non-branded keyword expansion"
+    },
+    {
+      "claim": "Modest link-building investment (~$200) can meaningfully shift domain authority for local-market clients with niche audiences",
+      "sources": [
+        "wiki/knowledge/seo/cordwainer-domain-rating-improvement.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "AI search tools prefer to surface answers from pages that already contain well-formed question-and-answer pairs",
+      "sources": [
+        "wiki/knowledge/seo/ahs-service-page-optimization.md"
+      ],
+      "confidence": "high",
+      "evidence": "Mark Hope: 'The AI is lazy, right? It doesn't want to have to come up with an answer. It basically looks for somebody who's already answered the question.'"
+    },
+    {
+      "claim": "Factual errors in blog content (e.g., incorrect product claims, technical inaccuracies) should be flagged during review; stylistic preferences should not",
+      "sources": [
+        "wiki/knowledge/seo/search-intent-types-informational-transactional.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Domain Rating below 30 is a foundational weakness that creates a compounding disadvantage in organic search",
+      "sources": [
+        "wiki/knowledge/seo/index.md",
+        "wiki/knowledge/seo/domain-rank-authority.md",
+        "wiki/knowledge/seo/bluepoint-organic-growth.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "A site with health score of 100 but low Domain Rating will have flat organic keyword rankings despite clean technical foundations",
+      "sources": [
+        "wiki/knowledge/seo/index.md",
+        "wiki/knowledge/seo/overhead-door-domain-rating-project.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Pages with fewer than 200 words of text fall below Google's threshold for indexing and are treated as thin content",
+      "sources": [
+        "wiki/knowledge/seo/aviary-keyword-research-navigation.md",
+        "wiki/knowledge/seo/ai-search-visibility.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "AI search tools (ChatGPT, Perplexity, Google AI Overviews) preferentially cite pages with structured FAQ sections",
+      "sources": [
+        "wiki/knowledge/seo/overhead-door-ai-citations.md",
+        "wiki/knowledge/seo/quarra-organic-traffic-recovery.md",
+        "wiki/knowledge/seo/overhead-door-repair-page-optimization.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Overhead Door Madison gained 6 Google AI citations and 3 Gemini citations after adding FAQs to homepage and blog posts",
+      "sources": [
+        "wiki/knowledge/seo/overhead-door-ai-citations.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Organic traffic dropped 60% in six weeks at PaperTube due to crawler access issues",
+      "sources": [
+        "wiki/knowledge/seo/papertube-health-score-recovery.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Ahrefs crawls smaller/lower-traffic sites approximately once per month, meaning Domain Rating results may not be visible in dashboard for ~30 days after backlink delivery",
+      "sources": [
+        "wiki/knowledge/seo/domain-rating-backlinking-service.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "AI-assisted SEO automation handles meta titles, meta descriptions, schema injection, and target keyword assignment; heading structure (H1/H2/H3) cannot be safely automated",
+      "sources": [
+        "wiki/knowledge/seo/ai-seo-automation-75-80-percent.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Reynolds site had 27 missing meta titles and 7 missing meta descriptions fixed across 56 pages in under two minutes using AI automation",
+      "sources": [
+        "wiki/knowledge/seo/ai-seo-automation-75-80-percent.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Competitors in AI voice agent space (Glia, Posh, Interface) rank primarily for generic banking keywords and have not meaningfully targeted use-case-specific keywords",
+      "sources": [
+        "wiki/knowledge/seo/aviary-keyword-research-navigation.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "A site ranking at position 8-11 for high-intent keywords has high impressions but near-zero clicks due to low page position",
+      "sources": [
+        "wiki/knowledge/seo/high-intent-keyword-ranking-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Citrus America ranks #1 for 'commercial citrus juicer' (350 monthly searches) but #37 for 'cardboard tubes' (2,400 monthly searches) with keyword difficulty of 2",
+      "sources": [
+        "wiki/knowledge/seo/papertube-health-score-recovery.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Domain Rating of 30+ is a meaningful threshold; no marked performance benefit from continuing to chase higher DR above 30",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-organic-growth.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "A backlinking service vendor guarantees Domain Rating improvement to target level (e.g., DR 50) within 30 days with 12-month restoration guarantee",
+      "sources": [
+        "wiki/knowledge/seo/domain-rating-backlinking-service.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BluePoint ATM's organic traffic doubled month-over-month with site health score reaching 100",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-organic-growth.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "AviaryAI's Domain Rating grew from 6 to 18 with 101 referring domains acquired",
+      "sources": [
+        "wiki/knowledge/seo/aviary-domain-authority-backlink-project.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Park Capital had Domain Rank of 6 with only 4 keywords ranking and ~5 monthly organic visits",
+      "sources": [
+        "wiki/knowledge/seo/park-capital-domain-rank-recovery.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "When a high-volume keyword attracts a misaligned audience in paid search, organic content is more cost-effective than paid ads",
+      "sources": [
+        "wiki/knowledge/seo/adava-care-nursing-home-keyword-strategy.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Quarra Stone's organic traffic dip is attributed primarily to content staleness rather than technical or authority issues",
+      "sources": [
+        "wiki/knowledge/seo/quarra-organic-traffic-recovery.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Dedicated contractor-specific landing pages can rank permanently for high-value trade-specific search terms (e.g., 'asbestos testing for plumbers Madison')",
+      "sources": [
+        "wiki/knowledge/seo/ahs-contractor-pages-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "AI-powered search tools (ChatGPT, Perplexity, Google AI Overviews) pull answers directly from indexed web pages rather than generating novel content",
+      "sources": [
+        "wiki/knowledge/seo/content-strategy-for-ai-search.md",
+        "wiki/knowledge/seo/ai-snippet-capture-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "FAQ sections on blog posts are the primary mechanism for capturing AI snippet appearances",
+      "sources": [
+        "wiki/knowledge/seo/ai-snippet-capture-strategy.md",
+        "wiki/knowledge/seo/quarra-stone-performance-metrics.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BluePoint ATM achieved 26 AI snippet appearances in roughly five months, primarily driven by FAQ sections added to blog posts",
+      "sources": [
+        "wiki/knowledge/seo/ai-snippet-capture-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Domain Rating of 40 is a reasonable mid-term target for small-to-mid-size local or regional businesses entering a competitive SEO program",
+      "sources": [
+        "wiki/knowledge/seo/domain-rating-benchmarking.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "AI search tools tend to pull answers from pages that have high domain authority (target: 40+), contain the exact question being asked, and provide a direct, structured answer immediately following the question",
+      "sources": [
+        "wiki/knowledge/seo/papertube-skyscraper-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Topical authority clusters (pillar pages + supporting articles with bidirectional internal links) signal to both search engines and AI models that a site is authoritative on a topic",
+      "sources": [
+        "wiki/knowledge/seo/content-strategy-for-ai-search.md",
+        "wiki/knowledge/seo/papertube-skyscraper-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Traditional SEO content organized around topics is losing ground to answer-oriented, Q&A-formatted content that AI tools can surface directly",
+      "sources": [
+        "wiki/knowledge/seo/content-strategy-for-ai-search.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Ascend Analytics' branded traffic share of 62% is unhealthy; a healthy benchmark is <20% branded with 80%+ coming from non-branded discovery searches",
+      "sources": [
+        "wiki/knowledge/seo/ascend-analytics-ai-search-positioning.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "AI-powered search is reshaping SEO such that ranking in the top 3 is now the standard, because LLMs pull cited sources almost exclusively from top-ranked results",
+      "sources": [
+        "wiki/knowledge/seo/ascend-analytics-ai-search-positioning.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Advintro's Domain Authority of 5 with ~60 referring domains is significantly below benchmark; target is >30 DA with ~6,000 referring domains",
+      "sources": [
+        "wiki/knowledge/seo/advintro-domain-authority-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Wix platform reads as a small-business tool to sophisticated buyers and is flagged as a credibility signal problem for enterprise-level clients",
+      "sources": [
+        "wiki/knowledge/seo/advintro-domain-authority-strategy.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Blog content length is dictated by content score targets (80+), not editorial preference; shorter posts will score lower and rank lower",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-blog-strategy-surfer-process.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BluePoint ATM's blog CTRs range from 15\u201370%, significantly outperforming the B2B financial services benchmark of 3\u20136%",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-blog-strategy-surfer-process.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Skaalen's organic search traffic was up 35% month-over-month in March 2026",
+      "sources": [
+        "wiki/knowledge/seo/skaalen-ai-search-visibility.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "AHS's organic traffic fully recovered following a September 2025 Google core update that penalized low-quality and AI-generated content, validating content quality",
+      "sources": [
+        "wiki/knowledge/seo/ahs-domain-rating-growth.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "AHS's Domain Rating is projected to jump to the 40\u201350 range in the near term via a paid link-building service",
+      "sources": [
+        "wiki/knowledge/seo/ahs-domain-rating-growth.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Quarra Stone's Domain Rating increased 3 points to 34; gains at higher numbers are significantly harder to achieve, making a 3-point jump meaningful",
+      "sources": [
+        "wiki/knowledge/seo/quarra-stone-performance-metrics.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Quarra Stone achieved 2 AI citations (Google's AI Overview / SGE reference links) driven by FAQ sections in blog posts",
+      "sources": [
+        "wiki/knowledge/seo/quarra-stone-performance-metrics.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Flynn Audio's higher Domain Rating benefits the site in two compounding ways: it improves organic search rankings directly and lowers Google Ads cost-per-click",
+      "sources": [
+        "wiki/knowledge/seo/flynn-audio-domain-rating-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Keyword research using Google Keyword Planner serves dual functions: SEO content strategy and Google Ads targeting",
+      "sources": [
+        "wiki/knowledge/seo/new-dawn-shine-keyword-research.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Seamless Building Systems' core message 'Extend the Life of Your Roof' should thread through all five service areas and provide both a brand narrative and an SEO anchor",
+      "sources": [
+        "wiki/knowledge/seo/seamless-service-page-content-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Service pages should have a minimum word count of 1,000 words and target keywords relevant to their service type",
+      "sources": [
+        "wiki/knowledge/seo/seamless-service-page-content-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Skaalen's non-branded search visibility is weak; 'assisted living in Stoughton' currently ranks at position 9.3 with a target of 5.0",
+      "sources": [
+        "wiki/knowledge/seo/skaalen-q1-okr-non-branded-visibility.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "High-impression, low-click terms like 'memory care community' represent a content gap where impressions exist but the page or meta content isn't compelling enough to convert to clicks",
+      "sources": [
+        "wiki/knowledge/seo/skaalen-q1-okr-non-branded-visibility.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Heading structure (H1/H2/H3) cannot be safely automated via API because manipulating Elementor components via API reliably breaks page layouts",
+      "sources": [
+        "wiki/knowledge/seo/developer-sitemap-target-keywords-process.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "AI-assisted SEO tooling can automate 75\u201380% of on-page SEO tasks (meta titles, meta descriptions, schema injection) via the WordPress API",
+      "sources": [
+        "wiki/knowledge/seo/developer-sitemap-target-keywords-process.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Capturing baseline metrics on day one transforms subjective progress into demonstrable, visual proof and is critical for impatient clients",
+      "sources": [
+        "wiki/knowledge/seo/baseline-benchmarking.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Security headers audit (securityheaders.com) provides a quick win to show clients; many sites start with an 'F' rating, fixable in under an hour",
+      "sources": [
+        "wiki/knowledge/seo/baseline-benchmarking.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Trachte's Smart Lock FAQs are live on site and serve as the template for subsequent FAQ rollouts",
+      "sources": [
+        "wiki/knowledge/seo/trachte-faq-content-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Paper Tube Co's current domain rating sits at 31; the SEO content strategy is designed to push that above 40",
+      "sources": [
+        "wiki/knowledge/seo/papertube-skyscraper-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Pillar content should be 3,500\u20134,000 words; supporting content should be 1,500\u20132,000 words",
+      "sources": [
+        "wiki/knowledge/seo/papertube-skyscraper-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Target 2,200+ words for primary blog posts and service-area content to support AI search optimization",
+      "sources": [
+        "wiki/knowledge/seo/content-strategy-for-ai-search.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Prioritize keywords with search volume of 200\u2013300 searches/month and keyword difficulty (KD) below 30 for achievable ranking in niche B2B industries",
+      "sources": [
+        "wiki/knowledge/seo/content-strategy-for-ai-search.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "The goal is to shift keyword intent distribution from 95% informational to ~30% informational and ~70% commercial/transactional",
+      "sources": [
+        "wiki/knowledge/seo/content-strategy-for-ai-search.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "AHS's website was described as 'small' and 'shallow' \u2014 lacking the content volume needed to rank well in organic search or surface in AI-generated answers",
+      "sources": [
+        "wiki/knowledge/seo/ahs-blog-content-expansion.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "AHS is planning approximately 44 new blog topics organized by audience segment (homeowners, schools, professionals, commercial properties) through mid-2026",
+      "sources": [
+        "wiki/knowledge/seo/ahs-blog-content-expansion.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Keyword cannibalization suppresses rankings across all competing pages",
+      "sources": [
+        "wiki/knowledge/seo/axley-family-law-page-restructure.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Restructuring pages to target distinct, non-overlapping intents resolves cannibalization",
+      "sources": [
+        "wiki/knowledge/seo/axley-family-law-page-restructure.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Ahrefs Health Score improved from ~65% to 98% in 2025 for Axley",
+      "sources": [
+        "wiki/knowledge/seo/axley-family-law-page-restructure.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BluePoint ATM achieved 40% period-over-period organic visitor growth",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-organic-growth-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "No measurable benefit observed between Domain Rating 30 and 50 for B2B use cases",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-organic-growth-strategy.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Surfer SEO auto-optimize can improve article scores from 24 to 76 in a single pass",
+      "sources": [
+        "wiki/knowledge/seo/surfer-seo-content-optimization-workflow.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Existing articles ranking 15-30 are faster to improve than new content",
+      "sources": [
+        "wiki/knowledge/seo/surfer-seo-content-optimization-workflow.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Social amplification of existing content ($50 budget) can generate 2,000-4,000 impressions and trigger Google ranking improvements",
+      "sources": [
+        "wiki/knowledge/seo/compliance-store-domain-authority-boost.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Low domain authority creates a vicious cycle: low traffic \u2192 low ranking \u2192 lower traffic",
+      "sources": [
+        "wiki/knowledge/seo/compliance-store-domain-authority-boost.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Keyword research frequently surfaces counterintuitive findings (e.g., 'spring repair' 720 searches vs 'garage door service' 480)",
+      "sources": [
+        "wiki/knowledge/seo/overhead-door-website-copy-overhaul.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Homepage with fewer than 300-400 words is typically insufficient for indexing",
+      "sources": [
+        "wiki/knowledge/seo/thin-content-diagnosis.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "JavaScript-heavy designs frequently present near-zero crawlable text to search engines",
+      "sources": [
+        "wiki/knowledge/seo/thin-content-diagnosis.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Thin content diagnosis shows: DR <15, keywords ranked <50, flat traffic 12+ months, zero AI citations",
+      "sources": [
+        "wiki/knowledge/seo/thin-content-diagnosis.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "AHS increased Google AI Overview citations from ~23 to 40+ through FAQ additions",
+      "sources": [
+        "wiki/knowledge/seo/ahs-organic-growth-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "AHS moved 'vermiculite insulation asbestos' from position 58 to #1",
+      "sources": [
+        "wiki/knowledge/seo/ahs-organic-growth-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "FAQ sections are the likely source of Google AI Overview citations",
+      "sources": [
+        "wiki/knowledge/seo/ahs-organic-growth-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Cureline ranks for zero commercial-intent keywords despite 22 years in business",
+      "sources": [
+        "wiki/knowledge/seo/cureline-website-audit.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "87% of Cureline's traffic lands on homepage, indicating poor internal linking and service-page invisibility",
+      "sources": [
+        "wiki/knowledge/seo/cureline-website-audit.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Quarra Stone achieved 178% organic traffic growth in 2025",
+      "sources": [
+        "wiki/knowledge/seo/quarra-website-performance-2025.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Quarra Stone increased backlinks from ~1,300 to ~2,300 referring domains (+77%)",
+      "sources": [
+        "wiki/knowledge/seo/quarra-website-performance-2025.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Blog posts with Q&A sections at the bottom drive Google Gemini/AI citations",
+      "sources": [
+        "wiki/knowledge/seo/quarra-website-performance-2025.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Reducing total indexed pages while improving quality outperforms larger sets of weaker pages",
+      "sources": [
+        "wiki/knowledge/seo/quarra-website-performance-2025.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Google ad spend and organic performance are correlated in practice",
+      "sources": [
+        "wiki/knowledge/seo/quarra-website-performance-2025.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "State pages establish topical authority and serve as hubs in hub-and-spoke content model",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-local-seo-expansion.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Ahrefs Site Explorer keyword efficiency gap (keywords ranked vs traffic received) reveals untapped potential",
+      "sources": [
+        "wiki/knowledge/seo/ahrefs-site-explorer-analysis.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Average ranking position of ~16 (bottom of page 2) is just outside the money zone where clicks happen",
+      "sources": [
+        "wiki/knowledge/seo/ahrefs-site-explorer-analysis.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Surfer content score of 80+ is calibrated to outrank best-performing competitor articles",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-blog-strategy-surfer-optimization.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Blog length is dictated by Surfer's scoring algorithm, not stylistic choice",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-blog-strategy-surfer-optimization.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Blogs are top-of-funnel SEO traffic drivers with ~70-80% informational intent visitors",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-blog-strategy-surfer-optimization.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Domain Rating scale is exponential; gains become progressively more meaningful at higher values",
+      "sources": [
+        "wiki/knowledge/seo/ahs-domain-rating-boost.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Exterior Renovations has organic visibility score of 8/100 despite heavy paid media spend",
+      "sources": [
+        "wiki/knowledge/seo/exterior-renovations-organic-opportunity.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "'Exterior Renovations' is a Blue Ocean keyword with ~2,900 monthly impressions available",
+      "sources": [
+        "wiki/knowledge/seo/exterior-renovations-organic-opportunity.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Aviary has 188 pages indexed but organic traffic flat at 10-12 clicks/day due to content gap",
+      "sources": [
+        "wiki/knowledge/seo/aviary-content-gap.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Aviary's Search Console queries dominated by brand name; no rankings for service/vertical terms",
+      "sources": [
+        "wiki/knowledge/seo/aviary-content-gap.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "MGMT3D (Blue Ops) had DR 10, 10 ranked keywords, ~90 organic visits/month despite 175 employees and 10+ years in business",
+      "sources": [
+        "wiki/knowledge/seo/thin-content-diagnosis.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Domain Rating below 30 significantly impairs organic visibility and ranking potential for local/regional businesses",
+      "sources": [
+        "wiki/knowledge/seo/domain-rating-boost-service.md",
+        "wiki/knowledge/seo/domain-rating-improvement.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "A Domain Rating of 30 is considered a solid foundation for small-to-medium businesses",
+      "sources": [
+        "wiki/knowledge/seo/domain-rating-boost-service.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Domain Rating improvements lift organic rankings across every keyword a site competes for, not just individual pages",
+      "sources": [
+        "wiki/knowledge/seo/domain-rating-improvement.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Ahrefs health scores of 98-100 are typical for Asymmetric's well-maintained client sites",
+      "sources": [
+        "wiki/knowledge/seo/blastwave-site-health-diagnosis.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "A health score of 10/100 indicates catastrophic site condition with broken internal links, missing page titles, and structural defects",
+      "sources": [
+        "wiki/knowledge/seo/blastwave-site-health-diagnosis.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Organic traffic volumes are declining across the board due to AI-powered search tools, but remaining traffic tends to be higher-intent",
+      "sources": [
+        "wiki/knowledge/seo/ai-search-impact-on-traditional-seo.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "AI search tools pull answers from indexed web content rather than fabricating them, making Q&A-formatted content more likely to be cited",
+      "sources": [
+        "wiki/knowledge/seo/ai-search-impact-on-traditional-seo.md",
+        "wiki/knowledge/seo/aviary-content-strategy-ai-snippets.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Articles with explicit FAQ sections are disproportionately surfaced as AI snippets",
+      "sources": [
+        "wiki/knowledge/seo/aviary-content-strategy-ai-snippets.md",
+        "wiki/knowledge/seo/adava-care-location-page-optimization.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Location pages that are content-thin limit Google's ability to rank them for local intent searches",
+      "sources": [
+        "wiki/knowledge/seo/adava-care-location-page-optimization.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Consolidating location content under a single navigation item helps Google understand the canonical source for location information",
+      "sources": [
+        "wiki/knowledge/seo/axley-family-law-criminal-pi-content-strategy.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Long-form content (2,200+ words minimum) is indexed more meaningfully than short-form content (300-word blogs)",
+      "sources": [
+        "wiki/knowledge/seo/aviary-content-strategy-ai-snippets.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Google's first page captures the overwhelming majority of clicks, with position #1 receiving roughly 60% of traffic",
+      "sources": [
+        "wiki/knowledge/seo/blastwave-site-health-diagnosis.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Positions below rank 10 are effectively invisible for organic discovery",
+      "sources": [
+        "wiki/knowledge/seo/blastwave-site-health-diagnosis.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Branded traffic dominance (>80%) indicates a site is invisible to new customer acquisition searches",
+      "sources": [
+        "wiki/knowledge/seo/client-extractions.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Target ratio for organic traffic is approximately 70% non-branded to 30% branded",
+      "sources": [
+        "wiki/knowledge/seo/client-extractions.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Recovering previously-ranked keywords that have dropped is more efficient than targeting entirely new keywords",
+      "sources": [
+        "wiki/knowledge/seo/client-extractions.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Domain Rating increases create time-sensitive content ranking opportunities; blogging cadence should be temporarily increased immediately after DR improvements",
+      "sources": [
+        "wiki/knowledge/seo/client-extractions.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Boosting high-performing organic content via paid social immediately after publication can accelerate indexing and signal authority to Google",
+      "sources": [
+        "wiki/knowledge/seo/client-extractions.md"
+      ],
+      "confidence": "low"
+    },
+    {
+      "claim": "SEO results require extended measurement windows; 6 weeks post-launch shows different patterns than 3-6 months",
+      "sources": [
+        "wiki/knowledge/seo/client-extractions.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Backlink building and keyword recovery efforts can run concurrently rather than sequentially",
+      "sources": [
+        "wiki/knowledge/seo/client-extractions.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Competitive gap analysis (identifying keywords where competitors rank but your site does not) provides data-driven content calendar strategy",
+      "sources": [
+        "wiki/knowledge/seo/client-extractions.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Broad commercial keywords may attract unqualified prospects; content-based organic strategies can capture intent-aligned traffic while filtering out misaligned segments",
+      "sources": [
+        "wiki/knowledge/seo/client-extractions.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Organic pages losing traffic over time ('content decay') represent high-ROI refresh opportunities when combined with re-indexing efforts",
+      "sources": [
+        "wiki/knowledge/seo/client-extractions.md"
+      ],
+      "confidence": "low"
+    },
+    {
+      "claim": "High average search position (rank 34) for non-branded queries indicates significant untapped organic growth potential",
+      "sources": [
+        "wiki/knowledge/seo/client-extractions.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "A $250 one-time backlink service can raise Domain Rating from 0 to 30+ with a one-year monitoring guarantee",
+      "sources": [
+        "wiki/knowledge/seo/domain-rating-boost-service.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Asymmetric recommends proactively pitching DR improvement services to any client with domain rating below 40",
+      "sources": [
+        "wiki/knowledge/seo/domain-rating-improvement.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "AI citation counts are now trackable in Ahrefs alongside traditional keyword rankings",
+      "sources": [
+        "wiki/knowledge/seo/ai-search-impact-on-traditional-seo.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Asymmetric's own site generates roughly a third of its traffic from AI snippets, attributed largely to FAQ formatting",
+      "sources": [
+        "wiki/knowledge/seo/adava-care-location-page-optimization.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Google's 'People Also Ask' boxes and AI-generated answers pull heavily from well-structured FAQ content",
+      "sources": [
+        "wiki/knowledge/seo/adava-care-location-page-optimization.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Technical SEO work reaches diminishing returns quickly on low-DR sites; content alone cannot compensate for weak backlink profile in competitive local service markets",
+      "sources": [
+        "wiki/knowledge/seo/overhead-door-domain-rating-project.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "A 100% Ahrefs website audit score with flat organic keyword counts indicates authority and backlink profile, not on-page health, are the primary bottleneck",
+      "sources": [
+        "wiki/knowledge/seo/overhead-door-domain-rating-project.md"
+      ],
+      "confidence": "high"
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Paid backlink services ($200-250/year) are used across multiple clients to raise Domain Rating from 10-29 to 30-40+ range",
+      "sources": [
+        "wiki/knowledge/seo/cordwainer-domain-rating-backlink-strategy.md",
+        "wiki/knowledge/seo/citrus-america-domain-rating-boost-strategy.md",
+        "wiki/knowledge/seo/bluepoint-reverse-atm-strategy.md",
+        "wiki/knowledge/seo/exterior-renovations-domain-rating-recovery.md"
+      ],
+      "client_contexts": [
+        "Cordwainer Memory Care",
+        "Citrus America",
+        "BluePoint ATM",
+        "Exterior Renovations"
+      ]
+    },
+    {
+      "pattern": "AI citations (Google AI, ChatGPT, Perplexity) are tracked as a success metric alongside traditional organic rankings",
+      "sources": [
+        "wiki/knowledge/seo/overhead-door-fire-rated-doors-content.md",
+        "wiki/knowledge/seo/ahs-ai-citations-strategy.md",
+        "wiki/knowledge/seo/citrus-america-domain-rating-boost-strategy.md"
+      ],
+      "client_contexts": [
+        "Overhead Door Madison",
+        "Madison Asbestos",
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "Structured FAQ sections are added to pages to improve AI citation likelihood and capture long-tail keyword variations",
+      "sources": [
+        "wiki/knowledge/seo/ahs-ai-citations-strategy.md",
+        "wiki/knowledge/seo/new-dawn-specialty-page-seo-structure.md",
+        "wiki/knowledge/seo/citrus-america-domain-rating-boost-strategy.md"
+      ],
+      "client_contexts": [
+        "Madison Asbestos",
+        "A New Dawn Therapy",
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "Low Domain Rating (DR 0-20) is a critical blocker that requires backlink acquisition before content strategy can succeed",
+      "sources": [
+        "wiki/knowledge/seo/cordwainer-domain-rating-backlink-strategy.md",
+        "wiki/knowledge/seo/old-world-seo-audit-framework.md",
+        "wiki/knowledge/seo/exterior-renovations-domain-rating-recovery.md"
+      ],
+      "client_contexts": [
+        "Cordwainer Memory Care",
+        "Old World",
+        "Exterior Renovations"
+      ]
+    },
+    {
+      "pattern": "Keyword targeting misdirection (wrong domain, wrong intent) is a recurring failure mode that requires diagnostic audit before remediation",
+      "sources": [
+        "wiki/knowledge/seo/old-world-seo-audit-framework.md",
+        "wiki/knowledge/seo/lamarie-product-page-optimization.md"
+      ],
+      "client_contexts": [
+        "Old World",
+        "LaMarie Beauty"
+      ]
+    },
+    {
+      "pattern": "Technical SEO health (98+ score) is necessary but not sufficient for organic traffic; keyword targeting and backlinks are also required",
+      "sources": [
+        "wiki/knowledge/seo/old-world-seo-audit-framework.md",
+        "wiki/knowledge/seo/lamarie-product-page-optimization.md",
+        "wiki/knowledge/seo/website-health-scoring.md"
+      ],
+      "client_contexts": [
+        "Old World",
+        "LaMarie Beauty",
+        "A3 Environmental"
+      ]
+    },
+    {
+      "pattern": "Informational content (FAQs, guides, educational posts) supports SEO authority and AI inclusion but should link back to service/transactional pages",
+      "sources": [
+        "wiki/knowledge/seo/sbs-seo-strategy.md",
+        "wiki/knowledge/seo/blog-content-strategy-seo-vs-conversion.md"
+      ],
+      "client_contexts": [
+        "SBSWI",
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Commercial and transactional intent keywords are prioritized over informational keywords for content production and ad spend",
+      "sources": [
+        "wiki/knowledge/seo/sbs-seo-strategy.md",
+        "wiki/knowledge/seo/aviary-organic-keyword-strategy.md"
+      ],
+      "client_contexts": [
+        "SBSWI",
+        "AviaryAI"
+      ]
+    },
+    {
+      "pattern": "Gated lead magnets (PDFs, guides) are used as top-of-funnel SEO assets to capture emails and signal content authority",
+      "sources": [
+        "wiki/knowledge/seo/adava-care-wisconsin-guide-lead-magnet.md"
+      ],
+      "client_contexts": [
+        "Adava Care"
+      ]
+    },
+    {
+      "pattern": "Conversion tracking setup (form submissions, click-to-call, click-to-email) is foundational to measuring SEO and paid ad effectiveness",
+      "sources": [
+        "wiki/knowledge/seo/new-dawn-shine-conversion-tracking.md"
+      ],
+      "client_contexts": [
+        "A New Dawn Therapy",
+        "Shine Marketing"
+      ]
+    },
+    {
+      "pattern": "Specialty/service pages benefit from templated structure (H1, subhead, CTA, body, FAQ) to ensure consistent SEO optimization across pages",
+      "sources": [
+        "wiki/knowledge/seo/new-dawn-specialty-page-seo-structure.md"
+      ],
+      "client_contexts": [
+        "A New Dawn Therapy"
+      ]
+    },
+    {
+      "pattern": "Keyword difficulty analysis is used to identify quick wins (low-difficulty terms) vs. long-term targets (high-difficulty terms)",
+      "sources": [
+        "wiki/knowledge/seo/overhead-door-fire-rated-doors-content.md",
+        "wiki/knowledge/seo/aviary-organic-keyword-strategy.md"
+      ],
+      "client_contexts": [
+        "Overhead Door Madison",
+        "AviaryAI"
+      ]
+    },
+    {
+      "pattern": "Organic click volume growth (10x, 100x) is tracked as a key success metric alongside rankings and impressions",
+      "sources": [
+        "wiki/knowledge/seo/aviary-seo-progress.md"
+      ],
+      "client_contexts": [
+        "AviaryAI"
+      ]
+    },
+    {
+      "pattern": "Ahrefs competitor monitoring is set up to track Domain Rating, backlinks, and keyword positions of local/category competitors",
+      "sources": [
+        "wiki/knowledge/seo/exterior-renovations-domain-rating-recovery.md"
+      ],
+      "client_contexts": [
+        "Exterior Renovations"
+      ]
+    },
+    {
+      "pattern": "Strategic keyword pivots (e.g., from broad ATM terms to Reverse ATM terms) are driven by product focus and target buyer intent",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-reverse-atm-strategy.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Blog content is evaluated on Surfer SEO content score (target 80+) rather than editorial quality or brand voice",
+      "sources": [
+        "wiki/knowledge/seo/blog-content-strategy-seo-vs-conversion.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Landing page optimization (headline, CTA, friction removal) is run in parallel with ranking improvements to capture conversion upside",
+      "sources": [
+        "wiki/knowledge/seo/citrus-america-low-ctr-high-impressions.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "AI-driven search adoption is treated as a structural threat requiring content strategy adaptation (FAQ, Q&A, structured data)",
+      "sources": [
+        "wiki/knowledge/seo/papertube-organic-performance.md",
+        "wiki/knowledge/seo/citrus-america-domain-rating-boost-strategy.md"
+      ],
+      "client_contexts": [
+        "Paper Tube Co",
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "Domain Rating is the primary lever for organic search performance; low DR suppresses rankings regardless of content quality",
+      "sources": [
+        "wiki/knowledge/seo/domain-rating-backlink-strategy.md",
+        "wiki/knowledge/seo/inextechnologies-domain-authority-audit.md",
+        "wiki/knowledge/seo/bluepoint-domain-rating-growth.md"
+      ],
+      "client_contexts": [
+        "Blue Sky Capital",
+        "Inextechnologies",
+        "BluePoint ATM",
+        "Adava Care",
+        "Cordwainer"
+      ]
+    },
+    {
+      "pattern": "Service pages with thin content generate minimal organic traffic; expansion to 800\u20131000+ words with local keyword saturation is standard remediation",
+      "sources": [
+        "wiki/knowledge/seo/exterior-renovations-service-page-optimization.md",
+        "wiki/knowledge/seo/ahs-service-page-optimization.md"
+      ],
+      "client_contexts": [
+        "Exterior Renovations",
+        "Madison Asbestos & Hazardous Services"
+      ]
+    },
+    {
+      "pattern": "FAQ sections are critical for both traditional search rankings and AI-driven citation pickup; minimum 5 FAQs required for AI eligibility",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-pmax-landing-page-faqs.md",
+        "wiki/knowledge/seo/adava-care-blog-strategy-keyword-targeting.md",
+        "wiki/knowledge/seo/ahs-service-page-optimization.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM",
+        "Adava Care",
+        "Madison Asbestos & Hazardous Services"
+      ]
+    },
+    {
+      "pattern": "Consistent blog content production (4\u20135 posts/month during acceleration windows) drives measurable keyword ranking and traffic growth",
+      "sources": [
+        "wiki/knowledge/seo/adava-care-domain-rating-breakthrough.md",
+        "wiki/knowledge/seo/bluepoint-seo-performance-feb-2026.md",
+        "wiki/knowledge/seo/overhead-door-blog-calendar.md"
+      ],
+      "client_contexts": [
+        "Adava Care",
+        "BluePoint ATM",
+        "Overhead Door Madison"
+      ]
+    },
+    {
+      "pattern": "Keyword mismatch (targeting high-volume keywords misaligned with business offering) produces inflated traffic metrics with stagnant lead quality",
+      "sources": [
+        "wiki/knowledge/seo/seo-traffic-quality-vs-volume.md",
+        "wiki/knowledge/seo/bluepoint-reverse-atm-keyword-strategy.md"
+      ],
+      "client_contexts": [
+        "Anthemium Senior Lifestyles",
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "On-page SEO improvements (copy optimization, image alt text, metadata) can produce significant ranking gains without new pages or link building",
+      "sources": [
+        "wiki/knowledge/seo/overhead-door-garage-doors-madison-ranking.md",
+        "wiki/knowledge/seo/seo-improvements-strategy.md"
+      ],
+      "client_contexts": [
+        "Overhead Door Madison",
+        "Adawa Care"
+      ]
+    },
+    {
+      "pattern": "Technical SEO issues (broken pages, crawl errors, thin content) directly suppress Domain Authority and organic visibility",
+      "sources": [
+        "wiki/knowledge/seo/inextechnologies-domain-authority-audit.md",
+        "wiki/knowledge/seo/aviary-thin-content-indexing.md"
+      ],
+      "client_contexts": [
+        "Inextechnologies",
+        "AviaryAI"
+      ]
+    },
+    {
+      "pattern": "Early-stage SEO success comes from branded keywords; sustainable growth requires non-branded, top-of-funnel keyword expansion",
+      "sources": [
+        "wiki/knowledge/seo/quarra-branded-to-non-branded-expansion.md",
+        "wiki/knowledge/seo/bluepoint-seo-performance-feb-2026.md"
+      ],
+      "client_contexts": [
+        "Quarra Stone",
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Keyword research via Google Ads Keyword Planner identifies high-volume, low-competition opportunities; these should be distributed across pages to avoid cannibalization",
+      "sources": [
+        "wiki/knowledge/seo/seamless-keyword-strategy-roofing.md"
+      ],
+      "client_contexts": [
+        "Seamless Building Systems"
+      ]
+    },
+    {
+      "pattern": "Ahrefs monitoring is standard for tracking site health, organic traffic trends, and keyword performance; baseline metrics are most meaningful post-launch",
+      "sources": [
+        "wiki/knowledge/seo/new-dawn-ahrefs-monitoring.md",
+        "wiki/knowledge/seo/bluepoint-seo-performance-feb-2026.md"
+      ],
+      "client_contexts": [
+        "A New Dawn",
+        "Shine",
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Backlink creation runs in parallel with keyword recovery and on-page optimization to strengthen domain authority",
+      "sources": [
+        "wiki/knowledge/seo/seo-improvements-strategy.md",
+        "wiki/knowledge/seo/domain-rating-backlink-strategy.md"
+      ],
+      "client_contexts": [
+        "Adawa Care",
+        "Blue Sky Capital"
+      ]
+    },
+    {
+      "pattern": "Local modifiers (city, region names) in H1, meta title, and opening paragraph significantly improve local search rankings",
+      "sources": [
+        "wiki/knowledge/seo/exterior-renovations-service-page-optimization.md",
+        "wiki/knowledge/seo/overhead-door-garage-doors-madison-ranking.md"
+      ],
+      "client_contexts": [
+        "Exterior Renovations",
+        "Overhead Door Madison"
+      ]
+    },
+    {
+      "pattern": "AI citation visits are emerging as a measurable traffic channel; sites with strong FAQ content and technical depth receive more AI citations",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-seo-performance-feb-2026.md",
+        "wiki/knowledge/seo/ahs-service-page-optimization.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM",
+        "Madison Asbestos & Hazardous Services"
+      ]
+    },
+    {
+      "pattern": "Informational blog content builds domain authority that supports ranking for higher-value transactional/commercial keywords",
+      "sources": [
+        "wiki/knowledge/seo/search-intent-types-informational-transactional.md",
+        "wiki/knowledge/seo/adava-care-blog-strategy-keyword-targeting.md"
+      ],
+      "client_contexts": [
+        "Adava Care",
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Content review workflows should focus on factual accuracy and product claims, not stylistic preferences or length",
+      "sources": [
+        "wiki/knowledge/seo/search-intent-types-informational-transactional.md",
+        "wiki/knowledge/seo/ahs-service-page-optimization.md"
+      ],
+      "client_contexts": [
+        "Adava Care",
+        "Madison Asbestos & Hazardous Services"
+      ]
+    },
+    {
+      "pattern": "Low Domain Rating (below 30) is the binding constraint limiting SEO performance across multiple client types",
+      "sources": [
+        "wiki/knowledge/seo/index.md",
+        "wiki/knowledge/seo/park-capital-domain-rank-recovery.md",
+        "wiki/knowledge/seo/old-world-domain-rating-improvement.md",
+        "wiki/knowledge/seo/aviary-domain-authority-backlink-project.md"
+      ],
+      "client_contexts": [
+        "Park Capital",
+        "Old World",
+        "AviaryAI",
+        "Adabacare",
+        "Capital Bank"
+      ]
+    },
+    {
+      "pattern": "Thin content (under 300 words) suppresses indexing and ranking regardless of other SEO efforts",
+      "sources": [
+        "wiki/knowledge/seo/aviary-keyword-research-navigation.md",
+        "wiki/knowledge/seo/ai-search-visibility.md",
+        "wiki/knowledge/seo/overhead-door-repair-page-optimization.md"
+      ],
+      "client_contexts": [
+        "AviaryAI",
+        "MGMT3D",
+        "Overhead Door Madison"
+      ]
+    },
+    {
+      "pattern": "FAQ sections drive AI search citations (ChatGPT, Google AI Overviews, Gemini) when formatted as explicit Q&A",
+      "sources": [
+        "wiki/knowledge/seo/overhead-door-ai-citations.md",
+        "wiki/knowledge/seo/quarra-organic-traffic-recovery.md",
+        "wiki/knowledge/seo/overhead-door-repair-page-optimization.md"
+      ],
+      "client_contexts": [
+        "Overhead Door Madison",
+        "Quarra Stone"
+      ]
+    },
+    {
+      "pattern": "Crawler access issues (robots.txt, Shopify app conflicts, password protection) cause dramatic organic traffic drops (60%+ in weeks)",
+      "sources": [
+        "wiki/knowledge/seo/papertube-health-score-recovery.md",
+        "wiki/knowledge/seo/index.md"
+      ],
+      "client_contexts": [
+        "PaperTube"
+      ]
+    },
+    {
+      "pattern": "Sites ranking in positions 8-11 for high-intent keywords have high impressions but near-zero clicks and are effectively invisible to buyers",
+      "sources": [
+        "wiki/knowledge/seo/high-intent-keyword-ranking-strategy.md",
+        "wiki/knowledge/seo/papertube-health-score-recovery.md"
+      ],
+      "client_contexts": [
+        "Citrus America",
+        "PaperTube"
+      ]
+    },
+    {
+      "pattern": "Competitors in B2B/fintech spaces rank primarily for generic terms and neglect use-case-specific keywords, creating first-mover opportunities",
+      "sources": [
+        "wiki/knowledge/seo/aviary-keyword-research-navigation.md"
+      ],
+      "client_contexts": [
+        "AviaryAI"
+      ]
+    },
+    {
+      "pattern": "Technical SEO health (98+ score) is necessary but insufficient without domain authority; it clears the floor but does not raise the ceiling",
+      "sources": [
+        "wiki/knowledge/seo/index.md",
+        "wiki/knowledge/seo/bluepoint-organic-growth.md"
+      ],
+      "client_contexts": [
+        "Reynolds",
+        "Axley",
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "New sites and sites with low domain authority benefit from backlink services to establish baseline authority before content investments",
+      "sources": [
+        "wiki/knowledge/seo/domain-rating-improvement-service.md",
+        "wiki/knowledge/seo/old-world-domain-rating-improvement.md",
+        "wiki/knowledge/seo/aviary-domain-authority-backlink-project.md"
+      ],
+      "client_contexts": [
+        "Adabacare",
+        "Old World",
+        "AviaryAI",
+        "Capital Bank"
+      ]
+    },
+    {
+      "pattern": "Organic keyword research reveals gaps between what sites currently rank for and what high-volume buyer keywords exist in the market",
+      "sources": [
+        "wiki/knowledge/seo/high-intent-keyword-ranking-strategy.md",
+        "wiki/knowledge/seo/papertube-health-score-recovery.md",
+        "wiki/knowledge/seo/aviary-keyword-research-navigation.md"
+      ],
+      "client_contexts": [
+        "Citrus America",
+        "PaperTube",
+        "AviaryAI"
+      ]
+    },
+    {
+      "pattern": "Service-based businesses (therapy, financial advisory, local services) benefit from location-specific and use-case-specific keyword targeting",
+      "sources": [
+        "wiki/knowledge/seo/new-dawn-website-seo-strategy.md",
+        "wiki/knowledge/seo/park-capital-domain-rank-recovery.md",
+        "wiki/knowledge/seo/overhead-door-repair-page-optimization.md"
+      ],
+      "client_contexts": [
+        "New Dawn",
+        "Park Capital",
+        "Overhead Door Madison"
+      ]
+    },
+    {
+      "pattern": "FAQ sections are consistently used as the primary mechanism for capturing AI snippet appearances and improving search visibility across multiple clients",
+      "sources": [
+        "wiki/knowledge/seo/ai-snippet-capture-strategy.md",
+        "wiki/knowledge/seo/quarra-stone-performance-metrics.md",
+        "wiki/knowledge/seo/papertube-skyscraper-strategy.md",
+        "wiki/knowledge/seo/trachte-faq-content-strategy.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM",
+        "Quarra Stone",
+        "Paper Tube Co",
+        "Trachte"
+      ]
+    },
+    {
+      "pattern": "Domain Rating targets of 40+ are consistently recommended as a meaningful threshold for competitive SEO and AI search visibility",
+      "sources": [
+        "wiki/knowledge/seo/domain-rating-benchmarking.md",
+        "wiki/knowledge/seo/papertube-skyscraper-strategy.md",
+        "wiki/knowledge/seo/advintro-domain-authority-strategy.md"
+      ],
+      "client_contexts": [
+        "Advintro",
+        "Paper Tube Co",
+        "Quarra Stone"
+      ]
+    },
+    {
+      "pattern": "Content clusters with pillar pages and supporting articles linked bidirectionally are recommended to build topical authority",
+      "sources": [
+        "wiki/knowledge/seo/content-strategy-for-ai-search.md",
+        "wiki/knowledge/seo/papertube-skyscraper-strategy.md",
+        "wiki/knowledge/seo/ahs-contractor-pages-strategy.md"
+      ],
+      "client_contexts": [
+        "Paper Tube Co",
+        "AHS"
+      ]
+    },
+    {
+      "pattern": "AI-powered search tools are reshaping SEO strategy, requiring answer-oriented Q&A content rather than topic-based content",
+      "sources": [
+        "wiki/knowledge/seo/content-strategy-for-ai-search.md",
+        "wiki/knowledge/seo/ascend-analytics-ai-search-positioning.md",
+        "wiki/knowledge/seo/skaalen-ai-search-visibility.md"
+      ],
+      "client_contexts": [
+        "Ascend Analytics",
+        "Skaalen",
+        "Paper Tube Co"
+      ]
+    },
+    {
+      "pattern": "Branded search traffic dominance (>50%) is identified as a problem indicating the site is functioning as a destination for existing customers rather than an acquisition channel",
+      "sources": [
+        "wiki/knowledge/seo/ascend-analytics-ai-search-positioning.md",
+        "wiki/knowledge/seo/skaalen-q1-okr-non-branded-visibility.md"
+      ],
+      "client_contexts": [
+        "Ascend Analytics",
+        "Skaalen"
+      ]
+    },
+    {
+      "pattern": "Blog content expansion is used as a two-pronged strategy: location/service pages capture geo-specific searches while blog posts capture informational and awareness searches",
+      "sources": [
+        "wiki/knowledge/seo/ahs-blog-content-expansion.md",
+        "wiki/knowledge/seo/ahs-contractor-pages-strategy.md"
+      ],
+      "client_contexts": [
+        "AHS"
+      ]
+    },
+    {
+      "pattern": "Keyword research using Google Keyword Planner serves as the foundation for both SEO content strategy and Google Ads campaign targeting",
+      "sources": [
+        "wiki/knowledge/seo/new-dawn-shine-keyword-research.md"
+      ],
+      "client_contexts": [
+        "A New Dawn Therapy",
+        "Shine Marketing"
+      ]
+    },
+    {
+      "pattern": "Service page content should be structured consistently with a unifying message or value proposition threaded through all pages",
+      "sources": [
+        "wiki/knowledge/seo/seamless-service-page-content-strategy.md"
+      ],
+      "client_contexts": [
+        "Seamless Building Systems"
+      ]
+    },
+    {
+      "pattern": "Baseline metrics (Domain Rating, site health score, Google Search Console data, security headers) should be captured on day one of engagement to demonstrate progress",
+      "sources": [
+        "wiki/knowledge/seo/baseline-benchmarking.md"
+      ],
+      "client_contexts": [
+        "General practice"
+      ]
+    },
+    {
+      "pattern": "Paid link-building services are considered as an option to accelerate Domain Rating growth when organic progress is stalling",
+      "sources": [
+        "wiki/knowledge/seo/quarra-stone-performance-metrics.md",
+        "wiki/knowledge/seo/ahs-domain-rating-growth.md"
+      ],
+      "client_contexts": [
+        "Quarra Stone",
+        "AHS"
+      ]
+    },
+    {
+      "pattern": "FAQ sections drive Google AI Overview citations and improve ranking potential",
+      "sources": [
+        "wiki/knowledge/seo/ahs-organic-growth-strategy.md",
+        "wiki/knowledge/seo/quarra-website-performance-2025.md",
+        "wiki/knowledge/seo/overhead-door-website-copy-overhaul.md"
+      ],
+      "client_contexts": [
+        "AHS",
+        "Quarra Stone",
+        "Overhead Door Madison"
+      ]
+    },
+    {
+      "pattern": "Optimizing existing underperforming content (positions 15-30) yields faster ROI than creating new content",
+      "sources": [
+        "wiki/knowledge/seo/surfer-seo-content-optimization-workflow.md",
+        "wiki/knowledge/seo/ahrefs-site-explorer-analysis.md"
+      ],
+      "client_contexts": [
+        "Cordwainer",
+        "Multiple"
+      ]
+    },
+    {
+      "pattern": "Low domain authority creates self-reinforcing cycle requiring external intervention (paid social, backlink building)",
+      "sources": [
+        "wiki/knowledge/seo/compliance-store-domain-authority-boost.md",
+        "wiki/knowledge/seo/ahs-domain-rating-boost.md",
+        "wiki/knowledge/seo/reynolds-domain-rating-project.md"
+      ],
+      "client_contexts": [
+        "Compliance Store",
+        "AHS",
+        "Reynolds"
+      ]
+    },
+    {
+      "pattern": "Thin content (homepage <300 words, JavaScript-heavy design) is common root cause of poor organic performance",
+      "sources": [
+        "wiki/knowledge/seo/thin-content-diagnosis.md",
+        "wiki/knowledge/seo/aviary-content-gap.md",
+        "wiki/knowledge/seo/cureline-website-audit.md"
+      ],
+      "client_contexts": [
+        "MGMT3D/Blue Ops",
+        "Aviary",
+        "Cureline"
+      ]
+    },
+    {
+      "pattern": "Keyword research reveals counterintuitive primary keywords that differ from intuitive assumptions",
+      "sources": [
+        "wiki/knowledge/seo/overhead-door-website-copy-overhaul.md",
+        "wiki/knowledge/seo/quarra-stone-design-assist-seo.md"
+      ],
+      "client_contexts": [
+        "Overhead Door Madison",
+        "Quarra Stone"
+      ]
+    },
+    {
+      "pattern": "Geographic/location-based content (state pages, city pages, location pages) scales organic visibility for service businesses",
+      "sources": [
+        "wiki/knowledge/seo/bluepoint-local-seo-expansion.md",
+        "wiki/knowledge/seo/bluepoint-organic-growth-strategy.md",
+        "wiki/knowledge/seo/ahs-organic-growth-strategy.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM",
+        "AHS"
+      ]
+    },
+    {
+      "pattern": "Consolidating competing pages into single authoritative pages with subsections outperforms multi-page fragmentation",
+      "sources": [
+        "wiki/knowledge/seo/axley-family-law-page-restructure.md",
+        "wiki/knowledge/seo/quarra-website-performance-2025.md"
+      ],
+      "client_contexts": [
+        "Axley",
+        "Quarra Stone"
+      ]
+    },
+    {
+      "pattern": "Social media amplification of existing content ($50-100 budget) generates traffic signals that trigger organic ranking improvements",
+      "sources": [
+        "wiki/knowledge/seo/compliance-store-domain-authority-boost.md",
+        "wiki/knowledge/seo/aviary-content-gap.md"
+      ],
+      "client_contexts": [
+        "Compliance Store",
+        "Aviary"
+      ]
+    },
+    {
+      "pattern": "Ahrefs Site Explorer analysis reveals specific, quantifiable outreach hooks (stagnation, keyword efficiency gaps, money zone opportunities)",
+      "sources": [
+        "wiki/knowledge/seo/ahrefs-site-explorer-analysis.md"
+      ],
+      "client_contexts": [
+        "Twisted Alchemy",
+        "Multiple prospects"
+      ]
+    },
+    {
+      "pattern": "Domain Rating improvements (DR 20s \u2192 30+) require one-time backlink investment ($200-250) with 12-month guarantee",
+      "sources": [
+        "wiki/knowledge/seo/ahs-domain-rating-boost.md",
+        "wiki/knowledge/seo/reynolds-domain-rating-project.md"
+      ],
+      "client_contexts": [
+        "AHS",
+        "Reynolds"
+      ]
+    },
+    {
+      "pattern": "Homepage traffic concentration (>80%) indicates poor service-page visibility and weak internal linking",
+      "sources": [
+        "wiki/knowledge/seo/cureline-website-audit.md"
+      ],
+      "client_contexts": [
+        "Cureline"
+      ]
+    },
+    {
+      "pattern": "Surfer SEO auto-optimization is faster and higher-ROI than writing new blog content from scratch",
+      "sources": [
+        "wiki/knowledge/seo/surfer-seo-content-optimization-workflow.md",
+        "wiki/knowledge/seo/bluepoint-blog-strategy-surfer-optimization.md"
+      ],
+      "client_contexts": [
+        "Cordwainer",
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Domain Rating improvement is a high-ROI upsell opportunity across multiple client types when on-page SEO work is complete",
+      "sources": [
+        "wiki/knowledge/seo/domain-rating-boost-service.md",
+        "wiki/knowledge/seo/domain-rating-improvement.md",
+        "wiki/knowledge/seo/skaalen-domain-rating-boost.md",
+        "wiki/knowledge/seo/overhead-door-domain-rating-project.md"
+      ],
+      "client_contexts": [
+        "Shine",
+        "Skaalen",
+        "Overhead Door",
+        "Reynolds",
+        "Capitol Bank"
+      ]
+    },
+    {
+      "pattern": "Location pages are a high-priority SEO lever for local service businesses but require substantial content expansion beyond amenity descriptions",
+      "sources": [
+        "wiki/knowledge/seo/adava-care-location-page-optimization.md",
+        "wiki/knowledge/seo/axley-family-law-criminal-pi-content-strategy.md"
+      ],
+      "client_contexts": [
+        "Adava Care",
+        "Axley"
+      ]
+    },
+    {
+      "pattern": "FAQ integration is a priority across practice areas and content types to add depth and improve both traditional and AI search visibility",
+      "sources": [
+        "wiki/knowledge/seo/axley-family-law-criminal-pi-content-strategy.md",
+        "wiki/knowledge/seo/adava-care-location-page-optimization.md",
+        "wiki/knowledge/seo/aviary-content-strategy-ai-snippets.md"
+      ],
+      "client_contexts": [
+        "Axley",
+        "Adava Care",
+        "Aviary"
+      ]
+    },
+    {
+      "pattern": "AI-optimized content (AIO) with Q&A formatting is becoming a core SEO strategy alongside traditional keyword optimization",
+      "sources": [
+        "wiki/knowledge/seo/ai-search-impact-on-traditional-seo.md",
+        "wiki/knowledge/seo/aviary-content-strategy-ai-snippets.md",
+        "wiki/knowledge/seo/papertube-seo-aio-content-strategy.md"
+      ],
+      "client_contexts": [
+        "Aviary",
+        "PaperTube",
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "Ahrefs is the standard monitoring tool across all clients for tracking health score, domain rating, keyword rankings, and backlink profile",
+      "sources": [
+        "wiki/knowledge/seo/shine-ahrefs-monitoring.md",
+        "wiki/knowledge/seo/domain-rating-improvement.md",
+        "wiki/knowledge/seo/blastwave-site-health-diagnosis.md",
+        "wiki/knowledge/seo/citrus-america-organic-performance.md"
+      ],
+      "client_contexts": [
+        "Shine",
+        "A New Dawn",
+        "Capitol Bank",
+        "BlastWave",
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "Keyword counts are declining industry-wide across all tracked competitors, but actual ranking positions and organic traffic remain stable or improve",
+      "sources": [
+        "wiki/knowledge/seo/citrus-america-organic-performance.md",
+        "wiki/knowledge/seo/ai-search-impact-on-traditional-seo.md"
+      ],
+      "client_contexts": [
+        "Citrus America",
+        "ZoomO",
+        "ZoomX",
+        "JuicerNet",
+        "Webstron Store"
+      ]
+    },
+    {
+      "pattern": "Instant indexing, LinkedIn amplification, and email distribution are used to seed early traffic to new content and accelerate ranking velocity",
+      "sources": [
+        "wiki/knowledge/seo/aviary-content-strategy-ai-snippets.md"
+      ],
+      "client_contexts": [
+        "Aviary"
+      ]
+    },
+    {
+      "pattern": "Low Domain Rating (below 30) is a common baseline for new or small business clients, requiring targeted backlink acquisition before content strategies can be fully effective",
+      "sources": [
+        "wiki/knowledge/seo/domain-rating-boost-service.md",
+        "wiki/knowledge/seo/blastwave-site-health-diagnosis.md",
+        "wiki/knowledge/seo/aviary-content-strategy-ai-snippets.md"
+      ],
+      "client_contexts": [
+        "Shine",
+        "BlastWave",
+        "Aviary"
+      ]
+    },
+    {
+      "pattern": "PPC-to-SEO pivot strategies prioritize location pages and content expansion to reduce reliance on expensive paid acquisition",
+      "sources": [
+        "wiki/knowledge/seo/adava-care-location-page-optimization.md",
+        "wiki/knowledge/seo/axley-family-law-criminal-pi-content-strategy.md"
+      ],
+      "client_contexts": [
+        "Adava Care",
+        "Axley"
+      ]
+    },
+    {
+      "pattern": "AI citation tracking (Google Gemini, ChatGPT, Perplexity) is emerging as a measurable new metric alongside traditional keyword rankings",
+      "sources": [
+        "wiki/knowledge/seo/citrus-america-organic-performance.md",
+        "wiki/knowledge/seo/ai-search-impact-on-traditional-seo.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ]
+    }
+  ],
+  "contradictions": [
+    {
+      "claim_a": "LaMarie Beauty site health improved from 21 to 99, organic keyword count trending up, referring domains trending up, pages crawled up 278%",
+      "source_a": "wiki/knowledge/seo/lamarie-product-page-optimization.md",
+      "claim_b": "LaMarie Beauty product pages lack target keywords and location-specific metadata, causing poor search rankings for core service queries",
+      "source_b": "wiki/knowledge/seo/lamarie-product-page-optimization.md",
+      "resolution": "Not a contradiction \u2014 both are true simultaneously. Technical health improved but page-level keyword targeting was never implemented. Health score reflects crawlability and indexation; keyword targeting reflects on-page SEO optimization."
+    },
+    {
+      "claim_a": "A3 Environmental has health score of 77/100 with duplicate plugins and structural issues",
+      "source_a": "wiki/knowledge/seo/website-health-scoring.md",
+      "claim_b": "Asymmetric benchmark for acceptable health score is 98 or higher",
+      "source_b": "wiki/knowledge/seo/website-health-scoring.md",
+      "resolution": "Not a contradiction \u2014 A3 Environmental is below benchmark and flagged for remediation."
+    },
+    {
+      "claim_a": "Blog content should be evaluated as a readership play with editorial quality standards",
+      "source_a": "Implied in client feedback across multiple engagements",
+      "claim_b": "Blog content is primarily an SEO vehicle for search engines, not readers; evaluation should focus on keyword rankings and organic traffic, not pageviews or tone",
+      "source_b": "wiki/knowledge/seo/adava-care-blog-strategy-keyword-targeting.md",
+      "resolution": "The contradiction reflects a client expectation vs. agency best practice. Clients often evaluate blogs as brand journalism; the correct frame is SEO delivery mechanism."
+    },
+    {
+      "claim_a": "Targeting 'cashless ATM' keyword will capture buyers who don't know the correct terminology",
+      "source_a": "wiki/knowledge/seo/bluepoint-reverse-atm-keyword-strategy.md",
+      "claim_b": "Creating content about 'cashless ATM' is confusing because it describes a completely different product that BluePoint does not sell",
+      "source_b": "wiki/knowledge/seo/bluepoint-reverse-atm-keyword-strategy.md",
+      "resolution": "Not a true contradiction; the strategy resolves it: target 'cashless ATM' in paid search (top-of-funnel awareness) but do not create organic content about it. Redirect to 'reverse ATM' in content."
+    },
+    {
+      "claim_a": "ChatGPT citations dropped at Overhead Door Madison after platform update",
+      "source_a": "wiki/knowledge/seo/overhead-door-ai-citations.md",
+      "claim_b": "FAQ sections reliably drive AI search citations across platforms",
+      "source_b": "wiki/knowledge/seo/overhead-door-ai-citations.md",
+      "note": "Not a true contradiction; the article notes ChatGPT tightened citation criteria platform-wide, while Google and Gemini trends remained positive. FAQ strategy still works but platform behavior varies."
+    },
+    {
+      "claim_a": "Advintro deliberately maintains low web visibility because RIAs are sourced through direct relationships, not inbound search, and a small sales team cannot handle large inbound volume",
+      "source_a": "wiki/knowledge/seo/advintro-domain-authority-strategy.md",
+      "claim_b": "AAG proposed performance guarantees to improve Advintro's Domain Authority to >30 within 60 days and organic traffic 3\u00d7 current baseline",
+      "source_b": "wiki/knowledge/seo/advintro-domain-authority-strategy.md",
+      "note": "These are not strictly contradictory but represent tension between Advintro's deliberate low-visibility strategy and AAG's proposed improvements. The article acknowledges this context, suggesting any digital presence work must be designed to attract the right audience (fintechs) while managing RIA inbound carefully."
+    },
+    {
+      "claim_a": "No measurable benefit observed between Domain Rating 30 and 50 for BluePoint ATM's use case",
+      "source_a": "wiki/knowledge/seo/bluepoint-organic-growth-strategy.md",
+      "claim_b": "Domain Rating is foundational to keyword ranking potential and should be improved from low baseline to 30+",
+      "source_b": "wiki/knowledge/seo/ahs-domain-rating-boost.md",
+      "resolution": "Not necessarily contradictory \u2014 both claims can be true: DR improvements matter up to a threshold (30), but gains beyond 30 show diminishing returns for smaller B2B businesses. The threshold may vary by business type."
+    },
+    {
+      "claim_a": "Organic traffic volumes are declining across the board due to AI-powered search tools",
+      "source_a": "wiki/knowledge/seo/ai-search-impact-on-traditional-seo.md",
+      "claim_b": "Citrus America's organic traffic is roughly flat and trending up steadily in ranking positions",
+      "source_b": "wiki/knowledge/seo/citrus-america-organic-performance.md",
+      "resolution": "Not necessarily contradictory \u2014 the decline is industry-wide, but well-optimized sites like Citrus America can maintain or grow traffic while competitors decline. The pattern is relative decline, not absolute."
+    }
+  ],
+  "exceptions": [
+    {
+      "general_rule": "Domain Rating of 40+ is required for competitive ranking in high-difficulty niches",
+      "exception": "LaMarie Beauty ranks #1 for 'Lip Flip Madison' and #3 for 'Lip Filler Madison' despite no metadata optimization and low domain authority",
+      "context": "Local med spa with low competition for branded/location-specific terms",
+      "source": "wiki/knowledge/seo/lamarie-keyword-ranking-analysis.md"
+    },
+    {
+      "general_rule": "Blog posts should be optimized for ranking and traffic, not editorial polish",
+      "exception": "Client review process (Overhead Door Madison) involved Jeff and John reviewing blog drafts for accuracy and brand alignment before publication",
+      "context": "High-stakes content where factual accuracy and brand voice are critical (fire safety regulations)",
+      "source": "wiki/knowledge/seo/overhead-door-fire-rated-doors-content.md"
+    },
+    {
+      "general_rule": "Informational traffic is low-value and should be minimized",
+      "exception": "Informational content is intentionally produced to support SEO authority and AI inclusion, with expectation that it will link back to transactional pages",
+      "context": "B2B and service businesses where educational content builds trust and topical authority",
+      "source": "wiki/knowledge/seo/sbs-seo-strategy.md"
+    },
+    {
+      "general_rule": "High impressions with low CTR indicates rankings at positions 8-12 requiring ranking improvement",
+      "exception": "High impressions with low CTR can also indicate weak title tags, meta descriptions, or SERP snippet quality at any position",
+      "context": "AviaryAI case: high impressions for 'Outbound Voice AI' but zero clicks despite potentially higher positions",
+      "source": "wiki/knowledge/seo/aviary-seo-progress.md"
+    },
+    {
+      "general_rule": "Content volume alone does not produce SEO results",
+      "exception": "Overhead Door Madison achieved #1 rankings with a single blog post due to near-zero keyword difficulty and low competitive landscape",
+      "context": "Niche service categories with underserved technical/regulatory topics",
+      "source": "wiki/knowledge/seo/overhead-door-fire-rated-doors-content.md"
+    },
+    {
+      "general_rule": "Paid backlink services are necessary to raise Domain Rating",
+      "exception": "AviaryAI gained 11 DR points in short window without explicit mention of paid backlink service; gains attributed to backlink and authority growth",
+      "context": "Early-stage company with strong content and technical SEO foundation",
+      "source": "wiki/knowledge/seo/aviary-seo-progress.md"
+    },
+    {
+      "general_rule": "Organic traffic volume is a primary success metric for SEO campaigns",
+      "exception": "Traffic volume without keyword alignment produces near-zero business value; Anthemium received significant traffic growth but near-zero qualified leads",
+      "context": "Memory care / senior living vertical where keyword intent mismatch is common",
+      "source": "wiki/knowledge/seo/seo-traffic-quality-vs-volume.md"
+    },
+    {
+      "general_rule": "New content published at low Domain Rating will not rank organically without external promotion",
+      "exception": "Overhead Door jumped 'garage doors Madison' to #2 ranking through on-page optimization alone, without new pages or link building",
+      "context": "Homepage with existing domain authority; on-page signals were severely neglected",
+      "source": "wiki/knowledge/seo/overhead-door-garage-doors-madison-ranking.md"
+    },
+    {
+      "general_rule": "Branded search terms are low-value for lead generation",
+      "exception": "For local/niche markets with low addressable audience, branded rankings may represent a meaningful portion of total traffic",
+      "context": "Cordwainer (South Shore memory care); Quarra Stone (niche B2B)",
+      "source": "wiki/knowledge/seo/cordwainer-domain-rating-improvement.md, wiki/knowledge/seo/quarra-branded-to-non-branded-expansion.md"
+    },
+    {
+      "general_rule": "Domain Rating improvements require sustained backlink-building effort over months",
+      "exception": "Adava Care achieved DR jump from 2\u219239 in a single period, described as exponential rather than linear",
+      "context": "Likely driven by a single high-authority backlink or algorithmic shift; exact mechanism not detailed",
+      "source": "wiki/knowledge/seo/adava-care-domain-rating-breakthrough.md"
+    },
+    {
+      "general_rule": "Thin content (under 300 words) is always an indexing blocker",
+      "exception": "AviaryAI's homepage is intentionally kept thin and off-limits for restructuring; other pages are fair game",
+      "context": "Homepage prioritizes product messaging over SEO; design-first approach",
+      "source": "wiki/knowledge/seo/aviary-thin-content-indexing.md"
+    },
+    {
+      "general_rule": "Keyword research should target high-volume, low-competition terms",
+      "exception": "Seamless Roofing assigned 'roofers' (broad, high-volume) to homepage despite lower specificity",
+      "context": "Homepage carries most domain authority; broad terms are appropriate for homepage even if less specific",
+      "source": "wiki/knowledge/seo/seamless-keyword-strategy-roofing.md"
+    },
+    {
+      "general_rule": "High-volume keywords should always be targeted for paid and organic search",
+      "exception": "Adava Care explicitly decided NOT to bid on 'nursing home' keyword in Google Ads despite competitors bidding and 2,300 monthly searches",
+      "context": "The keyword attracted misaligned audience (higher-acuity care seekers) that didn't match Adava Care's assisted living positioning; organic content strategy chosen instead",
+      "source": "wiki/knowledge/seo/adava-care-nursing-home-keyword-strategy.md"
+    },
+    {
+      "general_rule": "Domain Rating above 30 should be continuously improved",
+      "exception": "BluePoint ATM treats DR 30 as a meaningful threshold; no marked performance benefit from pushing DR higher (30 vs. 40 vs. 50 shows no measurable difference)",
+      "context": "Once DR clears 30, effort shifts away from backlink chasing toward content and keyword targeting",
+      "source": "wiki/knowledge/seo/bluepoint-organic-growth.md"
+    },
+    {
+      "general_rule": "AI automation can handle most on-page SEO tasks",
+      "exception": "Heading structure (H1/H2/H3) cannot be safely automated; attempts to manipulate Elementor components via API cause site breakage",
+      "context": "WordPress/Elementor sites; requires developer intervention at build time",
+      "source": "wiki/knowledge/seo/ai-seo-automation-75-80-percent.md"
+    },
+    {
+      "general_rule": "Branded search traffic should be <20% with 80%+ coming from non-branded discovery searches",
+      "exception": "Advintro deliberately maintains low web visibility and relationship-first sourcing, making branded traffic dominance intentional rather than a problem",
+      "context": "Relationship-first B2B business model (fintech/RIA introductions)",
+      "source": "wiki/knowledge/seo/advintro-domain-authority-strategy.md"
+    },
+    {
+      "general_rule": "Higher Domain Rating is always beneficial for SEO and paid media efficiency",
+      "exception": "Quarra Stone's organic progress is strong enough to hold off on a paid link-building service ($250 to guarantee DR above 40); decision deferred pending organic progress trajectory",
+      "context": "Organic progress is sufficient; paid boost not yet justified",
+      "source": "wiki/knowledge/seo/quarra-stone-performance-metrics.md"
+    },
+    {
+      "general_rule": "Blog content should be reviewed for stylistic quality and editorial polish",
+      "exception": "BluePoint ATM's process was streamlined to focus exclusively on factual errors; stylistic rewrites and tone adjustments are skipped to reduce publishing delays",
+      "context": "High-volume blog publishing where velocity matters more than prose quality for SEO performance",
+      "source": "wiki/knowledge/seo/bluepoint-blog-strategy-surfer-process.md"
+    },
+    {
+      "general_rule": "Keyword difficulty (KD) below 30 is the target for achievable ranking",
+      "exception": "Flynn Audio's CPC of $3.39 is elevated above the general target of ~$1.00 but defensible for high-value project-based services where a single converted lead can represent thousands of dollars",
+      "context": "High-value B2B services where ROI math favors elevated CPC",
+      "source": "wiki/knowledge/seo/quarra-stone-performance-metrics.md"
+    },
+    {
+      "general_rule": "Blogs are top-of-funnel traffic drivers with low conversion intent",
+      "exception": "BluePoint ATM blog strategy explicitly targets SEO ranking as primary objective, not direct conversion",
+      "context": "B2B service business with long sales cycle",
+      "source": "wiki/knowledge/seo/bluepoint-blog-strategy-surfer-optimization.md"
+    },
+    {
+      "general_rule": "Increasing indexed pages improves SEO performance",
+      "exception": "Quarra Stone deliberately reduced total indexed pages while improving quality, resulting in better overall performance",
+      "context": "Quality-over-quantity consolidation strategy",
+      "source": "wiki/knowledge/seo/quarra-website-performance-2025.md"
+    },
+    {
+      "general_rule": "New content takes time to index and build authority",
+      "exception": "Existing underperforming articles can be optimized to outrank competitors in under an hour using Surfer",
+      "context": "Content optimization vs. new content creation",
+      "source": "wiki/knowledge/seo/surfer-seo-content-optimization-workflow.md"
+    },
+    {
+      "general_rule": "Referral partner programs drive contractor engagement",
+      "exception": "AHS explicitly paused referral program angle in favor of problem-solving information resource positioning",
+      "context": "Tracking complexity and attribution challenges",
+      "source": "wiki/knowledge/seo/ahs-contractor-pages-organic-strategy.md"
+    },
+    {
+      "general_rule": "Domain Rating below 40 should trigger a DR improvement recommendation",
+      "exception": "Skaalen has a DR of 12 but a health score of 100 and a 300-person waitlist, indicating strong marketing effectiveness despite low DR",
+      "context": "Senior living facility with strong local brand recognition and lead generation",
+      "source": "wiki/knowledge/seo/skaalen-domain-rating-boost.md"
+    },
+    {
+      "general_rule": "Organic traffic should be 70% non-branded to 30% branded",
+      "exception": "Citrus America has 84% non-branded traffic, well above the target ratio",
+      "context": "Strong product-focused brand with high commercial intent keywords",
+      "source": "wiki/knowledge/seo/citrus-america-organic-performance.md"
+    },
+    {
+      "general_rule": "Low Domain Rating sites should prioritize backlink acquisition before content strategies",
+      "exception": "BlastWave's catastrophic health score (10/100) requires technical SEO cleanup before backlink work will be effective",
+      "context": "Site with severe structural defects and broken internal links",
+      "source": "wiki/knowledge/seo/blastwave-site-health-diagnosis.md"
+    }
+  ],
+  "evidence": [
+    {
+      "metric": "24 new keywords added to ranking profile in single month",
+      "context": "After publishing fire-rated doors blog and on-page product page improvements",
+      "client": "Overhead Door Madison",
+      "source": "wiki/knowledge/seo/overhead-door-fire-rated-doors-content.md"
+    },
+    {
+      "metric": "5 ChatGPT citations noted at time of review",
+      "context": "Fire-rated doors blog content appearing in AI responses",
+      "client": "Overhead Door Madison",
+      "source": "wiki/knowledge/seo/overhead-door-fire-rated-doors-content.md"
+    },
+    {
+      "metric": "~$7 per click estimated CPC for fire-rated door keywords",
+      "context": "Making organic ranking particularly valuable for low-difficulty terms",
+      "client": "Overhead Door Madison",
+      "source": "wiki/knowledge/seo/overhead-door-fire-rated-doors-content.md"
+    },
+    {
+      "metric": "Domain Rating increased from 10 to 18 (+11 points) in short window",
+      "context": "After backlink acquisition and authority growth initiatives",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/seo/aviary-seo-progress.md"
+    },
+    {
+      "metric": "Weekly clicks increased from 13 to 124 (10x growth)",
+      "context": "As of 2026-03-18, reflecting organic discovery growth",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/seo/aviary-seo-progress.md"
+    },
+    {
+      "metric": "177 impressions, 0 clicks for 'Outbound Voice AI'",
+      "context": "High-impression query not converting to clicks; indicates weak SERP snippet quality",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/seo/aviary-seo-progress.md"
+    },
+    {
+      "metric": "7.5% CTR on 4,700 Google Ads impressions",
+      "context": "Healthy ad performance indicating good targeting and copy",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/seo/aviary-seo-progress.md"
+    },
+    {
+      "metric": "SEO Health Score of 98",
+      "context": "Reflects consistent error remediation and clean technical foundation",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/seo/aviary-seo-progress.md"
+    },
+    {
+      "metric": "~2,200 monthly organic sessions",
+      "context": "Healthy for company size; low branded traffic share indicates earned discovery",
+      "client": "Paper Tube Co",
+      "source": "wiki/knowledge/seo/papertube-organic-performance.md"
+    },
+    {
+      "metric": "174 keywords in positions 1-3, 182 keywords in positions 4-10",
+      "context": "Total 356 tracked keyword positions; room to grow branded search",
+      "client": "Paper Tube Co",
+      "source": "wiki/knowledge/seo/papertube-organic-performance.md"
+    },
+    {
+      "metric": "17 AI citations on Google AI, 0 on ChatGPT",
+      "context": "Baseline for Madison Asbestos; expected to grow with FAQ implementation",
+      "client": "Madison Asbestos",
+      "source": "wiki/knowledge/seo/ahs-ai-citations-strategy.md"
+    },
+    {
+      "metric": "Domain Rating of 0, 0 organic keywords, 18 total monthly visitors",
+      "context": "Despite 4+ blog posts and 2 recipes published monthly",
+      "client": "Old World",
+      "source": "wiki/knowledge/seo/old-world-seo-audit-framework.md"
+    },
+    {
+      "metric": "Sister brand (Doodla) has DR 39 and 1,300 organic monthly visitors",
+      "context": "Under same agency management; reveals content misdirection issue",
+      "client": "Old World / Doodla",
+      "source": "wiki/knowledge/seo/old-world-seo-audit-framework.md"
+    },
+    {
+      "metric": "Domain Rating dropped from 28 to low range; competitors at 25+",
+      "context": "Critical gap requiring backlink service to recover",
+      "client": "Exterior Renovations",
+      "source": "wiki/knowledge/seo/exterior-renovations-domain-rating-recovery.md"
+    },
+    {
+      "metric": "DR of 2 against competitors scoring 25+",
+      "context": "Infinity Roofing at 25, Exteriors Company at 4",
+      "client": "Exterior Renovations",
+      "source": "wiki/knowledge/seo/exterior-renovations-domain-rating-recovery.md"
+    },
+    {
+      "metric": "9 keywords in top 3, 15 keywords in top 10 (24 total top-10 keywords)",
+      "context": "Despite no meta titles, descriptions, or target keywords configured",
+      "client": "LaMarie Beauty",
+      "source": "wiki/knowledge/seo/lamarie-keyword-ranking-analysis.md"
+    },
+    {
+      "metric": "#1 ranking for 'Lip Flip Madison', #3 for 'Lip Filler Madison'",
+      "context": "Local med spa with low competition for branded/location terms",
+      "client": "LaMarie Beauty",
+      "source": "wiki/knowledge/seo/lamarie-keyword-ranking-analysis.md"
+    },
+    {
+      "metric": "Site health improved from 21 to 99",
+      "context": "Technical SEO remediation completed; page-level optimization pending",
+      "client": "LaMarie Beauty",
+      "source": "wiki/knowledge/seo/lamarie-product-page-optimization.md"
+    },
+    {
+      "metric": "Organic keyword count trending up, referring domains trending up, pages crawled up 278%",
+      "context": "Positive macro-level indicators despite page-level keyword targeting gaps",
+      "client": "LaMarie Beauty",
+      "source": "wiki/knowledge/seo/lamarie-product-page-optimization.md"
+    },
+    {
+      "metric": "Domain Rating of 29 (target >40)",
+      "context": "Insufficient to compete against established players in ATM/cashless kiosk space",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/seo/bluepoint-reverse-atm-strategy.md"
+    },
+    {
+      "metric": "Loan servicing keywords up 1000% YoY",
+      "context": "Driven by macroeconomic conditions; high-growth opportunity for AviaryAI Collections use case",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/seo/aviary-organic-keyword-strategy.md"
+    },
+    {
+      "metric": "Glia brand search volume ~40,500 searches",
+      "context": "Comparison/alternative blog post identified as low-cost, high-intent opportunity",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/seo/aviary-organic-keyword-strategy.md"
+    },
+    {
+      "metric": "A3 Environmental dropped from 367 to 130 top-10 keywords (65% decline)",
+      "context": "Rapid decline signaling algorithm penalty, crawl errors, or content quality issues",
+      "client": "A3 Environmental",
+      "source": "wiki/knowledge/seo/website-health-scoring.md"
+    },
+    {
+      "metric": "A3 Environmental DA of 20 despite being 10-year-old, 30-person firm",
+      "context": "Unacceptable for company age and size; Asymmetric's own site at DA 55",
+      "client": "A3 Environmental",
+      "source": "wiki/knowledge/seo/website-health-scoring.md"
+    },
+    {
+      "metric": "A3 Environmental health score of 77/100",
+      "context": "Below Asymmetric benchmark of 98; indicates crawl and indexation problems",
+      "client": "A3 Environmental",
+      "source": "wiki/knowledge/seo/website-health-scoring.md"
+    },
+    {
+      "metric": "Citrus America approved $250/year backlink service to raise DR above 40 within 30 days",
+      "context": "Vendor comparable results: one client DR 0\u219251, another +26 points in same window",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/seo/citrus-america-domain-rating-boost-strategy.md"
+    },
+    {
+      "metric": "Google AI Overview for 'best commercial juicer for grocery store' cited Citrus America's 8000SB ATS by name",
+      "context": "Confirmed existing SEO work being picked up by AI systems",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/seo/citrus-america-domain-rating-boost-strategy.md"
+    },
+    {
+      "metric": "Cordwainer Domain Rating target: 10 \u2192 30+ within 30 days",
+      "context": "Prerequisite for competitive ranking in memory care niche",
+      "client": "Cordwainer Memory Care",
+      "source": "wiki/knowledge/seo/cordwainer-domain-rating-backlink-strategy.md"
+    },
+    {
+      "metric": "Cordwainer baseline: 64 backlinks, 131 tracked keywords, site health 99",
+      "context": "Technical SEO complete; primary lever is backlink acquisition",
+      "client": "Cordwainer Memory Care",
+      "source": "wiki/knowledge/seo/cordwainer-domain-rating-backlink-strategy.md"
+    },
+    {
+      "metric": "5 blog posts drafted and ready for client review (Cordwainer)",
+      "context": "Publication held pending DR improvement (~30 days) to maximize SEO value",
+      "client": "Cordwainer Memory Care",
+      "source": "wiki/knowledge/seo/cordwainer-blog-publishing-strategy.md"
+    },
+    {
+      "metric": "Organic traffic grew significantly (April 2025 onward) but conversion rate remained near zero",
+      "context": "Keyword mismatch: 'long-term care' attracted nursing home / Medicare seekers, not private-pay memory care prospects",
+      "client": "Anthemium Senior Lifestyles",
+      "source": "wiki/knowledge/seo/seo-traffic-quality-vs-volume.md"
+    },
+    {
+      "metric": "Jumped from unfindable to #2 ranking for 'garage doors Madison'",
+      "context": "Through on-page copy improvements and image optimization only; no new pages or link building",
+      "client": "Overhead Door Madison",
+      "source": "wiki/knowledge/seo/overhead-door-garage-doors-madison-ranking.md"
+    },
+    {
+      "metric": "+24 new keywords gained in 30-day window following ranking improvement",
+      "context": "Concurrent with 'garage doors Madison' #2 ranking; traffic spike visible by mid-December 2025",
+      "client": "Overhead Door Madison",
+      "source": "wiki/knowledge/seo/overhead-door-garage-doors-madison-ranking.md"
+    },
+    {
+      "metric": "Domain Rating 8 with ~235 backlinks vs. competitor DR 55 with ~17,600 backlinks",
+      "context": "Blue Sky Capital ranked #1 for brand name but #23 for 'forklift lease' (4 visits/30 days)",
+      "client": "Blue Sky Capital",
+      "source": "wiki/knowledge/seo/domain-rating-backlink-strategy.md"
+    },
+    {
+      "metric": "Service pages at ~200 words generated almost no organic traffic",
+      "context": "Target expansion to 800\u20131000+ words with local keyword saturation",
+      "client": "Exterior Renovations",
+      "source": "wiki/knowledge/seo/exterior-renovations-service-page-optimization.md"
+    },
+    {
+      "metric": "Domain Authority 7 (vs. 40\u201360 benchmark for established B2B); 55 broken pages (21% of site); ~94 organic visitors/month (~3/day)",
+      "context": "Pre-sales audit; 43 keywords in top 10, almost all informational intent",
+      "client": "Inextechnologies",
+      "source": "wiki/knowledge/seo/inextechnologies-domain-authority-audit.md"
+    },
+    {
+      "metric": "Domain Rating growth from 29 to 34 in one month (~5\u20137 points); Site Health Score 99%",
+      "context": "Tracking toward DR 40 target; growth rate of 5\u20137 points/month is meaningful",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/seo/bluepoint-domain-rating-growth.md"
+    },
+    {
+      "metric": "Organic traffic +6x (110 \u2192 639 visitors/month); Top-10 keywords +4x (48 \u2192 208) in 7 months",
+      "context": "Aug 2025 \u2192 Feb 2026; Site Health 100%, DR 42, 43 AI citation visits in 30 days",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/seo/bluepoint-seo-performance-feb-2026.md"
+    },
+    {
+      "metric": "Domain Rating jumped from 2 to 39",
+      "context": "Described as exponential, not linear; creates window for content acceleration (4\u20135 posts/month for 2\u20133 months)",
+      "client": "Adava Care",
+      "source": "wiki/knowledge/seo/adava-care-domain-rating-breakthrough.md"
+    },
+    {
+      "metric": "Domain Rating 33 (stable, down 1 pt); Average position 13.2 (page 2); Organic traffic up month-over-month",
+      "context": "Primarily branded rankings; non-branded keyword expansion is strategic priority",
+      "client": "Quarra Stone",
+      "source": "wiki/knowledge/seo/quarra-branded-to-non-branded-expansion.md"
+    },
+    {
+      "metric": "~5 organic visits/month; only 2 indexed keywords",
+      "context": "Root cause: thin content (fewer than 200 words); pages below Google's indexing threshold",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/seo/aviary-thin-content-indexing.md"
+    },
+    {
+      "metric": "43 AI citation visits in 30 days",
+      "context": "Emerging traffic channel; likely driven by FAQ density and technical content depth",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/seo/bluepoint-seo-performance-feb-2026.md"
+    },
+    {
+      "metric": "Keyword 'garage doors Madison' carries ~$7 estimated cost-per-click",
+      "context": "High commercial value; organic placement has significant paid-equivalent value",
+      "client": "Overhead Door Madison",
+      "source": "wiki/knowledge/seo/overhead-door-garage-doors-madison-ranking.md"
+    },
+    {
+      "metric": "Site Health Score 100%; A+ security header rating; all conversion tags and analytics confirmed working",
+      "context": "No remaining technical issues blocking indexation or ranking",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/seo/bluepoint-seo-performance-feb-2026.md"
+    },
+    {
+      "metric": "~$200 link-building investment to push DR from current level to 30\u201340 range",
+      "context": "Tactical intervention for local-market client with niche audience; complements on-site SEO work",
+      "client": "Cordwainer",
+      "source": "wiki/knowledge/seo/cordwainer-domain-rating-improvement.md"
+    },
+    {
+      "metric": "Domain Rating increased from 6 to 18 with 101 referring domains acquired",
+      "context": "AviaryAI domain authority growth over engagement period",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/seo/aviary-domain-authority-backlink-project.md"
+    },
+    {
+      "metric": "Organic traffic dropped 60% in six weeks (from ~5,300 to ~2,000 clicks/month)",
+      "context": "Crawler access blockage on Shopify site",
+      "client": "PaperTube",
+      "source": "wiki/knowledge/seo/papertube-health-score-recovery.md"
+    },
+    {
+      "metric": "27 missing meta titles and 7 missing meta descriptions fixed across 56 pages in under two minutes",
+      "context": "AI-assisted SEO automation result",
+      "client": "Reynolds",
+      "source": "wiki/knowledge/seo/ai-seo-automation-75-80-percent.md"
+    },
+    {
+      "metric": "Overhead Door Madison gained 6 Google AI citations and 3 Gemini citations",
+      "context": "After adding FAQs to homepage and blog posts",
+      "client": "Overhead Door Madison",
+      "source": "wiki/knowledge/seo/overhead-door-ai-citations.md"
+    },
+    {
+      "metric": "Overhead Door Madison ranked #6 for 'garage door repair Madison' (goal: #1-2)",
+      "context": "Service page optimization in progress",
+      "client": "Overhead Door Madison",
+      "source": "wiki/knowledge/seo/overhead-door-repair-page-optimization.md"
+    },
+    {
+      "metric": "BluePoint ATM organic traffic doubled month-over-month; total visitors reached 1,600 (+40% MoM)",
+      "context": "State page content strategy and backlink monitoring",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/seo/bluepoint-organic-growth.md"
+    },
+    {
+      "metric": "Park Capital had Domain Rank of 6 with only 4 keywords ranking and ~5 monthly organic visits",
+      "context": "Baseline metrics for recovery case study",
+      "client": "Park Capital",
+      "source": "wiki/knowledge/seo/park-capital-domain-rank-recovery.md"
+    },
+    {
+      "metric": "AviaryAI organic traffic ~5 visits/month with 2 indexed keywords",
+      "context": "Root cause: pages contain fewer than 200 words (below Google indexing threshold)",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/seo/aviary-keyword-research-navigation.md"
+    },
+    {
+      "metric": "PaperTube ranks #1 for 'paper tube packaging' (350 searches/month) but #37 for 'cardboard tubes' (2,400 searches/month, KD: 2)",
+      "context": "Keyword targeting mismatch; high-volume term well within reach",
+      "client": "PaperTube",
+      "source": "wiki/knowledge/seo/papertube-health-score-recovery.md"
+    },
+    {
+      "metric": "Quarra Stone's Domain Rating stable at 33 with backlinks increasing",
+      "context": "Organic traffic dip attributed to content staleness, not authority issues",
+      "client": "Quarra Stone",
+      "source": "wiki/knowledge/seo/quarra-organic-traffic-recovery.md"
+    },
+    {
+      "metric": "Capital Bank backlinking service order: $1,500 premium tier targeting DR 50",
+      "context": "Placed October 2025; delivery expected ~November 7, 2025",
+      "client": "Capital Bank",
+      "source": "wiki/knowledge/seo/domain-rating-backlinking-service.md"
+    },
+    {
+      "metric": "Adabacare upsold domain rating improvement service at $250 when DR was at 2",
+      "context": "October 2025; identified as foundational gap limiting content ROI",
+      "client": "Adabacare",
+      "source": "wiki/knowledge/seo/domain-rating-improvement-service.md"
+    },
+    {
+      "metric": "Overhead Door Madison appeared 8 times in ChatGPT results and 4 times in Google AI lineup",
+      "context": "Driven by blog content published in late 2025",
+      "client": "Overhead Door Madison",
+      "source": "wiki/knowledge/seo/overhead-door-repair-page-optimization.md"
+    },
+    {
+      "metric": "Ahrefs crawls smaller/lower-traffic sites approximately once per month",
+      "context": "Domain Rating results may not be visible for ~30 days after backlink delivery",
+      "client": "General",
+      "source": "wiki/knowledge/seo/domain-rating-backlinking-service.md"
+    },
+    {
+      "metric": "Backlinking service markup applied in practice: ~20-25% (e.g., $375 on $1,500 order)",
+      "context": "Pricing structure for backlinking vendor",
+      "client": "General",
+      "source": "wiki/knowledge/seo/domain-rating-backlinking-service.md"
+    },
+    {
+      "metric": "BluePoint ATM achieved 26 AI snippet appearances in roughly five months",
+      "context": "Driven primarily by FAQ sections added to blog posts",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/seo/ai-snippet-capture-strategy.md"
+    },
+    {
+      "metric": "BluePoint ATM's blog CTRs range from 15\u201370%",
+      "context": "Significantly outperforming the B2B financial services benchmark of 3\u20136%",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/seo/bluepoint-blog-strategy-surfer-process.md"
+    },
+    {
+      "metric": "Skaalen's organic search traffic was up 35% month-over-month in March 2026",
+      "context": "Alongside strong branded keyword performance and long-tail informational query traffic",
+      "client": "Skaalen",
+      "source": "wiki/knowledge/seo/skaalen-ai-search-visibility.md"
+    },
+    {
+      "metric": "Quarra Stone's Domain Rating increased 3 points to 34",
+      "context": "Organic progress is strong; decision deferred on paid link-building service",
+      "client": "Quarra Stone",
+      "source": "wiki/knowledge/seo/quarra-stone-performance-metrics.md"
+    },
+    {
+      "metric": "Quarra Stone achieved 2 AI citations (Google's AI Overview / SGE reference links)",
+      "context": "FAQ sections in blog posts are the mechanism driving this; more citations expected as content volume grows",
+      "client": "Quarra Stone",
+      "source": "wiki/knowledge/seo/quarra-stone-performance-metrics.md"
+    },
+    {
+      "metric": "Quarra Stone's organic traffic is trending up; organic keyword count is temporarily down",
+      "context": "Attributed to a Google indexing cycle, not a content or strategy issue",
+      "client": "Quarra Stone",
+      "source": "wiki/knowledge/seo/quarra-stone-performance-metrics.md"
+    },
+    {
+      "metric": "Quarra Stone's average position sits around 21 overall; highly variable by keyword",
+      "context": "Branded searches like 'Quarra Stone' rank much higher than category terms like 'Vaws Quartzite'",
+      "client": "Quarra Stone",
+      "source": "wiki/knowledge/seo/quarra-stone-performance-metrics.md"
+    },
+    {
+      "metric": "Quarra Stone's ad CTR is ~5%, at or above the internal benchmark",
+      "context": "CPC of $3.39 is elevated but acceptable given high project values",
+      "client": "Quarra Stone",
+      "source": "wiki/knowledge/seo/quarra-stone-performance-metrics.md"
+    },
+    {
+      "metric": "Ascend Analytics ranks for ~1,700 keywords vs. Wood Mackenzie's ~23,000",
+      "context": "Indicates Ascend is invisible during early research phase of buyer journey",
+      "client": "Ascend Analytics",
+      "source": "wiki/knowledge/seo/ascend-analytics-ai-search-positioning.md"
+    },
+    {
+      "metric": "Ascend Analytics' branded traffic share is 62%",
+      "context": "Healthy benchmark is <20% branded with 80%+ from non-branded discovery",
+      "client": "Ascend Analytics",
+      "source": "wiki/knowledge/seo/ascend-analytics-ai-search-positioning.md"
+    },
+    {
+      "metric": "Ascend Analytics' monthly organic visits are ~1,135",
+      "context": "At 2% conversion rate yields roughly 23 qualified leads/month \u2014 a structural cap without growing non-branded traffic",
+      "client": "Ascend Analytics",
+      "source": "wiki/knowledge/seo/ascend-analytics-ai-search-positioning.md"
+    },
+    {
+      "metric": "Advintro's Domain Authority is 5 with ~60 referring domains",
+      "context": "Benchmark / target is >30 DA with ~6,000 referring domains",
+      "client": "Advintro",
+      "source": "wiki/knowledge/seo/advintro-domain-authority-strategy.md"
+    },
+    {
+      "metric": "Advintro ranks for 1 keyword with ~1 visitor/day organic traffic",
+      "context": "Effectively zero AI citation visibility",
+      "client": "Advintro",
+      "source": "wiki/knowledge/seo/advintro-domain-authority-strategy.md"
+    },
+    {
+      "metric": "Skaalen's 'assisted living in Stoughton' currently ranks at position 9.3 with a target of 5.0",
+      "context": "High-impression, low-click term representing a content gap",
+      "client": "Skaalen",
+      "source": "wiki/knowledge/seo/skaalen-q1-okr-non-branded-visibility.md"
+    },
+    {
+      "metric": "AHS's organic traffic fully recovered following September 2025 Google core update",
+      "context": "Validates content quality and that the site was not targeted by the penalty",
+      "client": "AHS",
+      "source": "wiki/knowledge/seo/ahs-domain-rating-growth.md"
+    },
+    {
+      "metric": "AHS's Domain Rating is projected to jump to the 40\u201350 range via paid link-building service",
+      "context": "Currently at a temporarily suppressed value due to the link-building process",
+      "client": "AHS",
+      "source": "wiki/knowledge/seo/ahs-domain-rating-growth.md"
+    },
+    {
+      "metric": "AHS content is appearing in Google AI Overviews",
+      "context": "Indicates strong semantic page structure and content authority",
+      "client": "AHS",
+      "source": "wiki/knowledge/seo/ahs-domain-rating-growth.md"
+    },
+    {
+      "metric": "Paper Tube Co's current domain rating is 31",
+      "context": "SEO content strategy designed to push above 40",
+      "client": "Paper Tube Co",
+      "source": "wiki/knowledge/seo/papertube-skyscraper-strategy.md"
+    },
+    {
+      "metric": "Flynn Audio's CPC is $3.39",
+      "context": "Preferred target is ~$1.00; elevated but acceptable given high project values",
+      "client": "Flynn Audio",
+      "source": "wiki/knowledge/seo/quarra-stone-performance-metrics.md"
+    },
+    {
+      "metric": "Bluepoint reached DR 29 without a premium link-building service",
+      "context": "Solid progress toward the DR 40 target",
+      "client": "Bluepoint",
+      "source": "wiki/knowledge/seo/domain-rating-benchmarking.md"
+    },
+    {
+      "metric": "Citrus moved from DR 24 to DR 27 (+3) in a single reporting period",
+      "context": "Indicates the link-building program is working",
+      "client": "Citrus",
+      "source": "wiki/knowledge/seo/domain-rating-benchmarking.md"
+    },
+    {
+      "metric": "Ahrefs Health Score improved from ~65% to 98%",
+      "context": "Axley Family Law site-wide optimization in 2025",
+      "client": "Axley",
+      "source": "wiki/knowledge/seo/axley-family-law-page-restructure.md"
+    },
+    {
+      "metric": "Monthly organic visitors increased ~40% period-over-period",
+      "context": "BluePoint ATM organic growth through state pages and content investment",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/seo/bluepoint-organic-growth-strategy.md"
+    },
+    {
+      "metric": "Tracked keywords doubled (~2\u00d7)",
+      "context": "BluePoint ATM organic keyword growth",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/seo/bluepoint-organic-growth-strategy.md"
+    },
+    {
+      "metric": "Site health score achieved 100 (perfect)",
+      "context": "BluePoint ATM technical SEO optimization",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/seo/bluepoint-organic-growth-strategy.md"
+    },
+    {
+      "metric": "Surfer content score improved from 24 to 76 in single pass",
+      "context": "Cordwainer 'Sundowning' article auto-optimization",
+      "client": "Cordwainer",
+      "source": "wiki/knowledge/seo/surfer-seo-content-optimization-workflow.md"
+    },
+    {
+      "metric": "$50 social media budget generates 2,000-4,000 impressions",
+      "context": "Compliance Store social amplification tactic",
+      "client": "Compliance Store",
+      "source": "wiki/knowledge/seo/compliance-store-domain-authority-boost.md"
+    },
+    {
+      "metric": "Spring repair keyword: 720 monthly searches vs. garage door service: 480",
+      "context": "Overhead Door Madison keyword research revealing counterintuitive primary keyword",
+      "client": "Overhead Door Madison",
+      "source": "wiki/knowledge/seo/overhead-door-website-copy-overhaul.md"
+    },
+    {
+      "metric": "Organic traffic increased 178%",
+      "context": "Quarra Stone 2025 SEO results",
+      "client": "Quarra Stone",
+      "source": "wiki/knowledge/seo/quarra-website-performance-2025.md"
+    },
+    {
+      "metric": "Keywords in top 3: 21; Keywords in top 10: 52; Keywords ranked (any position): 73",
+      "context": "Quarra Stone keyword ranking distribution",
+      "client": "Quarra Stone",
+      "source": "wiki/knowledge/seo/quarra-website-performance-2025.md"
+    },
+    {
+      "metric": "Backlinks increased from ~1,300 to ~2,300 referring domains (+77%)",
+      "context": "Quarra Stone backlink growth",
+      "client": "Quarra Stone",
+      "source": "wiki/knowledge/seo/quarra-website-performance-2025.md"
+    },
+    {
+      "metric": "Google AI Overview citations increased from ~23 to 40+ (+17 in last month)",
+      "context": "AHS organic growth through FAQ additions",
+      "client": "AHS",
+      "source": "wiki/knowledge/seo/ahs-organic-growth-strategy.md"
+    },
+    {
+      "metric": "Moved 'vermiculite insulation asbestos' from position 58 to #1",
+      "context": "AHS keyword ranking improvement",
+      "client": "AHS",
+      "source": "wiki/knowledge/seo/ahs-organic-growth-strategy.md"
+    },
+    {
+      "metric": "Organic keywords ranked increased from ~43 to ~115",
+      "context": "AHS organic growth",
+      "client": "AHS",
+      "source": "wiki/knowledge/seo/ahs-organic-growth-strategy.md"
+    },
+    {
+      "metric": "Monthly organic visits: 49; Domain rank: 35; Backlinks: ~1,000; Keywords ranked: 36",
+      "context": "Cureline baseline metrics showing low visibility",
+      "client": "Cureline",
+      "source": "wiki/knowledge/seo/cureline-website-audit.md"
+    },
+    {
+      "metric": "87% of traffic lands on homepage",
+      "context": "Cureline traffic concentration indicating poor service-page visibility",
+      "client": "Cureline",
+      "source": "wiki/knowledge/seo/cureline-website-audit.md"
+    },
+    {
+      "metric": "Organic visibility score: 8/100",
+      "context": "Exterior Renovations baseline X-Ray analysis",
+      "client": "Exterior Renovations",
+      "source": "wiki/knowledge/seo/exterior-renovations-organic-opportunity.md"
+    },
+    {
+      "metric": "'Exterior Renovations' Blue Ocean keyword: ~2,900 monthly impressions available",
+      "context": "Exterior Renovations opportunity sizing",
+      "client": "Exterior Renovations",
+      "source": "wiki/knowledge/seo/exterior-renovations-organic-opportunity.md"
+    },
+    {
+      "metric": "Organic clicks/day: 10-12 (flat); Impressions: 250-300/day (flat since December)",
+      "context": "Aviary organic stagnation despite 188 indexed pages",
+      "client": "Aviary",
+      "source": "wiki/knowledge/seo/aviary-content-gap.md"
+    },
+    {
+      "metric": "DR 10, 10 ranked keywords, ~90 organic visits/month flat over two years",
+      "context": "MGMT3D/Blue Ops thin content diagnosis example",
+      "client": "MGMT3D/Blue Ops",
+      "source": "wiki/knowledge/seo/thin-content-diagnosis.md"
+    },
+    {
+      "metric": "BluePoint ATM: 10 state pages live, next 10 drafted",
+      "context": "State pages rollout progress",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/seo/bluepoint-organic-growth-strategy.md"
+    },
+    {
+      "metric": "Adavacare census grew from 65% to 80% over engagement period (~0.3 residents/building/month)",
+      "context": "Adavacare PPC performance baseline",
+      "client": "Adavacare",
+      "source": "wiki/knowledge/seo/adavacare-30-60-90-content-plan.md"
+    },
+    {
+      "metric": "Adavacare PPC LTV:CAC modeled at ~300x with payback period under one month",
+      "context": "Adavacare PPC efficiency",
+      "client": "Adavacare",
+      "source": "wiki/knowledge/seo/adavacare-30-60-90-content-plan.md"
+    },
+    {
+      "metric": "Domain Rating benchmark: 26-30 = competitive local/regional business (~1,000 organic visits/month)",
+      "context": "Ahrefs Domain Rating scale",
+      "client": "General reference",
+      "source": "wiki/knowledge/seo/domain-rating-boost-service.md"
+    },
+    {
+      "metric": "Domain Rating benchmark: 50+ = large, established companies",
+      "context": "Ahrefs Domain Rating scale",
+      "client": "General reference",
+      "source": "wiki/knowledge/seo/domain-rating-boost-service.md"
+    },
+    {
+      "metric": "Domain Rating benchmark: 60-80+ = enterprise/national brands (e.g., Walmart-scale)",
+      "context": "Ahrefs Domain Rating scale",
+      "client": "General reference",
+      "source": "wiki/knowledge/seo/domain-rating-boost-service.md"
+    },
+    {
+      "metric": "BlastWave health score: 10/100 (catastrophic)",
+      "context": "Technical SEO audit prior to BD pitch",
+      "client": "BlastWave",
+      "source": "wiki/knowledge/seo/blastwave-site-health-diagnosis.md"
+    },
+    {
+      "metric": "BlastWave Domain Rating: 26/100",
+      "context": "Baseline measurement",
+      "client": "BlastWave",
+      "source": "wiki/knowledge/seo/blastwave-site-health-diagnosis.md"
+    },
+    {
+      "metric": "BlastWave organic traffic: ~70 visitors/month",
+      "context": "Baseline measurement",
+      "client": "BlastWave",
+      "source": "wiki/knowledge/seo/blastwave-site-health-diagnosis.md"
+    },
+    {
+      "metric": "BlastWave keyword rankings: OT network security (~9), Zero trust (~83-93), Air gap systems (~61), multiple terms not ranking",
+      "context": "Baseline keyword position analysis",
+      "client": "BlastWave",
+      "source": "wiki/knowledge/seo/blastwave-site-health-diagnosis.md"
+    },
+    {
+      "metric": "Adava Care average search position for non-branded queries: 34",
+      "context": "Baseline measurement indicating significant untapped organic growth potential",
+      "client": "Adava Care",
+      "source": "wiki/knowledge/seo/adava-care-location-page-optimization.md"
+    },
+    {
+      "metric": "Skaalen Domain Rating: 12 (target: 30)",
+      "context": "Senior living facility baseline",
+      "client": "Skaalen",
+      "source": "wiki/knowledge/seo/skaalen-domain-rating-boost.md"
+    },
+    {
+      "metric": "Skaalen health score: 100",
+      "context": "Technical SEO health despite low DR",
+      "client": "Skaalen",
+      "source": "wiki/knowledge/seo/skaalen-domain-rating-boost.md"
+    },
+    {
+      "metric": "Skaalen waitlist: 300 people",
+      "context": "Evidence of strong marketing effectiveness",
+      "client": "Skaalen",
+      "source": "wiki/knowledge/seo/skaalen-domain-rating-boost.md"
+    },
+    {
+      "metric": "Capitol Bank Domain Rating: 28 (down from prior measurement)",
+      "context": "Baseline measurement; DR can fluctuate independently of rankings",
+      "client": "Capitol Bank",
+      "source": "wiki/knowledge/seo/domain-rating-improvement.md"
+    },
+    {
+      "metric": "Overhead Door Ahrefs audit score: 100%",
+      "context": "Technical SEO cleanup complete; organic performance flat",
+      "client": "Overhead Door",
+      "source": "wiki/knowledge/seo/overhead-door-domain-rating-project.md"
+    },
+    {
+      "metric": "Reynolds Ahrefs audit score: 100%",
+      "context": "Technical SEO cleanup complete; organic performance flat",
+      "client": "Reynolds",
+      "source": "wiki/knowledge/seo/overhead-door-domain-rating-project.md"
+    },
+    {
+      "metric": "Aviary Domain Authority: 6",
+      "context": "Baseline measurement for new engagement",
+      "client": "Aviary",
+      "source": "wiki/knowledge/seo/aviary-content-strategy-ai-snippets.md"
+    },
+    {
+      "metric": "Aviary organic keywords: 34",
+      "context": "Baseline measurement",
+      "client": "Aviary",
+      "source": "wiki/knowledge/seo/aviary-content-strategy-ai-snippets.md"
+    },
+    {
+      "metric": "Aviary AI snippet presence: None",
+      "context": "Baseline measurement",
+      "client": "Aviary",
+      "source": "wiki/knowledge/seo/aviary-content-strategy-ai-snippets.md"
+    },
+    {
+      "metric": "Citrus America health score: 100 (up from 98)",
+      "context": "October 2025 measurement",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/seo/citrus-america-organic-performance.md"
+    },
+    {
+      "metric": "Citrus America organic traffic: roughly flat month-over-month",
+      "context": "October 2025 measurement",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/seo/citrus-america-organic-performance.md"
+    },
+    {
+      "metric": "Citrus America organic positions: trending up steadily for ~12 months",
+      "context": "October 2025 measurement",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/seo/citrus-america-organic-performance.md"
+    },
+    {
+      "metric": "Citrus America keyword count: down (industry-wide pattern)",
+      "context": "October 2025 measurement",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/seo/citrus-america-organic-performance.md"
+    },
+    {
+      "metric": "Citrus America branded vs. non-branded: 84% non-branded",
+      "context": "October 2025 measurement; target is \u226430% branded",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/seo/citrus-america-organic-performance.md"
+    },
+    {
+      "metric": "Citrus America Google Gemini citations: 19",
+      "context": "AI search visibility tracking",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/seo/citrus-america-organic-performance.md"
+    },
+    {
+      "metric": "Citrus America ChatGPT citations: 4",
+      "context": "AI search visibility tracking",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/seo/citrus-america-organic-performance.md"
+    },
+    {
+      "metric": "Citrus America Perplexity citations: 0",
+      "context": "AI search visibility tracking",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/seo/citrus-america-organic-performance.md"
+    },
+    {
+      "metric": "ZoomO organic traffic trend: down ~10% (~2,000 visits)",
+      "context": "Competitor benchmarking",
+      "client": "Citrus America (competitor)",
+      "source": "wiki/knowledge/seo/citrus-america-organic-performance.md"
+    },
+    {
+      "metric": "ZoomX organic traffic trend: up ~5%",
+      "context": "Competitor benchmarking",
+      "client": "Citrus America (competitor)",
+      "source": "wiki/knowledge/seo/citrus-america-organic-performance.md"
+    },
+    {
+      "metric": "Webstron Store organic traffic trend: down ~45,000 visits",
+      "context": "Competitor benchmarking",
+      "client": "Citrus America (competitor)",
+      "source": "wiki/knowledge/seo/citrus-america-organic-performance.md"
+    },
+    {
+      "metric": "Google first page position #1 receives roughly 60% of traffic",
+      "context": "Organic search behavior benchmark",
+      "client": "General reference",
+      "source": "wiki/knowledge/seo/blastwave-site-health-diagnosis.md"
+    },
+    {
+      "metric": "Positions below rank 10 generate near-zero organic visits",
+      "context": "Organic search behavior benchmark",
+      "client": "General reference",
+      "source": "wiki/knowledge/seo/blastwave-site-health-diagnosis.md"
+    },
+    {
+      "metric": "Domain Rating boost service cost: $250 one-time fee",
+      "context": "Service pricing",
+      "client": "General offering",
+      "source": "wiki/knowledge/seo/domain-rating-boost-service.md"
+    },
+    {
+      "metric": "Domain Rating boost service monitoring period: 1 year post-boost",
+      "context": "Service terms",
+      "client": "General offering",
+      "source": "wiki/knowledge/seo/domain-rating-boost-service.md"
+    },
+    {
+      "metric": "Shine Domain Rating: 0 (baseline for new engagement)",
+      "context": "November 2025 engagement kickoff",
+      "client": "Shine",
+      "source": "wiki/knowledge/seo/domain-rating-boost-service.md"
+    },
+    {
+      "metric": "Shine Domain Rating boost approved by Katie Geiser after reviewing competitor benchmarks",
+      "context": "Client approval for $250 service",
+      "client": "Shine",
+      "source": "wiki/knowledge/seo/domain-rating-boost-service.md"
+    },
+    {
+      "metric": "Overhead Door and Reynolds domain rating: described as 'terrible' in context of comparable client",
+      "context": "March 2026 performance review",
+      "client": "Overhead Door, Reynolds",
+      "source": "wiki/knowledge/seo/overhead-door-domain-rating-project.md"
+    },
+    {
+      "metric": "Overhead Door and Reynolds approved spend: $200 per client for domain rating project",
+      "context": "March 2026 decision",
+      "client": "Overhead Door, Reynolds",
+      "source": "wiki/knowledge/seo/overhead-door-domain-rating-project.md"
+    },
+    {
+      "metric": "Aviary target Domain Authority: >30 within 60 days of engagement start",
+      "context": "SEO strategy goal",
+      "client": "Aviary",
+      "source": "wiki/knowledge/seo/aviary-content-strategy-ai-snippets.md"
+    },
+    {
+      "metric": "Aviary content cadence target: 1-2 long-form articles per week (months 1-3)",
+      "context": "Phase 1 content strategy",
+      "client": "Aviary",
+      "source": "wiki/knowledge/seo/aviary-content-strategy-ai-snippets.md"
+    },
+    {
+      "metric": "Aviary article minimum length: 2,200+ words",
+      "context": "Content quality standard",
+      "client": "Aviary",
+      "source": "wiki/knowledge/seo/aviary-content-strategy-ai-snippets.md"
+    },
+    {
+      "metric": "Aviary LinkedIn post amplification budget: ~$100 per article",
+      "context": "Content distribution tactic",
+      "client": "Aviary",
+      "source": "wiki/knowledge/seo/aviary-content-strategy-ai-snippets.md"
+    },
+    {
+      "metric": "Asymmetric's own site generates roughly a third of its traffic from AI snippets",
+      "context": "Internal performance benchmark",
+      "client": "Asymmetric (internal)",
+      "source": "wiki/knowledge/seo/adava-care-location-page-optimization.md"
+    },
+    {
+      "metric": "One comparable client gained 5+ additional AI citations on Google in a single month using Q&A content approach",
+      "context": "Evidence of AIO strategy effectiveness",
+      "client": "Comparable to PaperTube",
+      "source": "wiki/knowledge/seo/papertube-seo-aio-content-strategy.md"
+    }
+  ],
+  "client_mentions": [
+    "A New Dawn",
+    "A New Dawn Therapy",
+    "A3 Environmental",
+    "AHS (Madison Asbestos & Hazardous Services)",
+    "Adabacare",
+    "Adava Care",
+    "Adavacare",
+    "Advanced Health & Safety (AHS)",
+    "Advintro",
+    "Anthemium Senior Lifestyles",
+    "Ascend Analytics",
+    "Asymmetric Applications Group",
+    "Aviary",
+    "AviaryAI",
+    "Axley",
+    "Balm Tech",
+    "BlastWave",
+    "Blue Sky Capital",
+    "BluePoint ATM",
+    "Bluepoint",
+    "Breville",
+    "Cambio Financial Health Inc.",
+    "Capital Bank",
+    "Capitol Bank",
+    "Citrus",
+    "Citrus America",
+    "Compliance Store",
+    "Cordwainer",
+    "Cordwainer Memory Care",
+    "Cureline",
+    "Doodla",
+    "Doodla Farms",
+    "Exterior Renovations",
+    "Flynn Audio",
+    "H.S. client",
+    "Inextechnologies",
+    "Infinity Roofing",
+    "JuicerNet",
+    "Kettle Park",
+    "LaMarie Beauty",
+    "MGMT3D",
+    "MGMT3D (Blue Ops)",
+    "Madison Asbestos",
+    "Madison Asbestos & Hazardous Services",
+    "Madtown Siding",
+    "Milestone Senior Living",
+    "MobileMoney",
+    "New Dawn",
+    "Old World",
+    "Old World Popcorn",
+    "Overhead Door",
+    "Overhead Door Madison",
+    "Paper Tube Co",
+    "PaperTube",
+    "Park Capital",
+    "Quarastone",
+    "Quarra Stone",
+    "ReadyCredit",
+    "ReadyRef",
+    "Reynolds",
+    "SBSWI",
+    "Seamless Building Systems",
+    "Shine",
+    "Shine Construction Cleaning",
+    "Shine Marketing",
+    "Skaalen",
+    "Skaalen Retirement Services",
+    "Stoughton Meadows",
+    "The Exteriors Company",
+    "Trachte",
+    "Twisted Alchemy",
+    "Webstron Store",
+    "ZoomO",
+    "ZoomX"
+  ]
+}

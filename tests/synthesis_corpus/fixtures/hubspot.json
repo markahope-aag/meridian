@@ -1,0 +1,1813 @@
+{
+  "schema_version": 1,
+  "topic_slug": "hubspot",
+  "topic_name": "HubSpot",
+  "extracted_at": "2026-04-09T17:52:17Z",
+  "extract_prompt_sha": "b7ab5ab500eb",
+  "extract_model": "claude-haiku-4-5-20251001",
+  "fragment_count": 94,
+  "newest_fragment_mtime": 1775740707.4080694,
+  "claims": [
+    {
+      "claim": "Contact Type property enables segmentation of non-prospect contacts (customers, GPO partners, vendors) to prevent them from receiving sales automation and drip campaigns",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-contact-type-property.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Lifecycle Stage and Contact Type serve complementary but distinct purposes: Lifecycle Stage tracks position in sales funnel, Contact Type tracks nature of relationship",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-contact-type-property.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "MQL\u2192SQL automation was using 'is equal to all of' operator on single-select fields, making qualification impossible because users can only select one option at a time",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-mql-sql-automation-logic.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Single-select fields should use radio buttons or dropdown selects rather than checkboxes to enforce one-selection-only at form level",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-mql-sql-automation-logic.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BluePoint ATM website form submissions are not automatically syncing to HubSpot, forcing manual contact entry",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-form-sync-troubleshooting.md",
+        "wiki/knowledge/hubspot/bluepoint-gravity-form-sync-failure.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Gravity Forms plugin update broke field mapping between website contact forms and HubSpot, preventing automatic contact creation",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-gravity-forms-integration.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "HubSpot Gmail extension autofill bug causes new contact email field to default to BluePoint's own domain (email@bluepointatm.com) instead of prospect's actual email",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-gmail-sync-bug.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Automated notification emails from website contact forms are not being logged in HubSpot activity feed for corresponding contact records",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-form-integration-logging.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "When a contact reaches Opportunity lifecycle stage, a deal should be created automatically via workflow to preserve pipeline visibility during contact turnover",
+      "sources": [
+        "wiki/knowledge/hubspot/deal-creation-automation.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "CallRail integration with HubSpot enables automatic contact creation for unknown callers using phone number + '@call.com' as email format",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-callrail-integration.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Dynamic number swap for CallRail was not firing on BluePoint ATM live site at time of testing, preventing validation of dynamic-sourced call integration",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-callrail-integration.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Large HubSpot databases (10,000+ records) should be segmented using filtered views and bulk-edit operations rather than permanent data restructuring",
+      "sources": [
+        "wiki/knowledge/hubspot/database-segmentation-bulk-operations.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "GCLID tracking is required to connect PPC ad clicks to leads and sales in HubSpot, enabling accurate ROI measurement across campaigns",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-america-gclid-tracking.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "HubSpot has a confirmed timezone bug causing scheduled social media posts to be set for 9 PM CST instead of 9 AM CST",
+      "sources": [
+        "wiki/knowledge/hubspot/hubspot-timezone-bug-cst.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Fields should be assigned to the object that owns the underlying truth: contact object for person-specific attributes, company object for business-specific attributes",
+      "sources": [
+        "wiki/knowledge/hubspot/contact-vs-company-object-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Company-level attributes (juicing status, number of locations, volume estimates) should live on company object so all contacts at that company share consistent data",
+      "sources": [
+        "wiki/knowledge/hubspot/contact-vs-company-object-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BluePoint ATM's HubSpot training should focus on daily-use essentials (contact management, note-taking, activity logging, email integration) rather than advanced features",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-crm-training-plan.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Aviary's HubSpot instance requires upgrade from Sales Hub Professional to Marketing Hub Professional to enable email automation and drip campaigns",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-hubspot-marketing-hub-setup.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BluePoint should consolidate around Lifecycle Stage as single primary metric and retire redundant Lead Status field",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-crm-simplification.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "HubSpot contact list columns can display company-level name property, not just contact-level company field, to show associated company names correctly",
+      "sources": [
+        "wiki/knowledge/hubspot/contact-customization.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "HubSpot sidebar customizations are per-user by default, requiring each team member to configure their views independently",
+      "sources": [
+        "wiki/knowledge/hubspot/contact-customization.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Bulk edits in HubSpot are difficult or impossible to undo automatically with no native rollback functionality",
+      "sources": [
+        "wiki/knowledge/hubspot/database-segmentation-bulk-operations.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Aviary's Apollo enrichment workflow imported corrupted company names (showing 'Name' column header instead of actual company names) and bloated company list from ~10k to ~15,695 records",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-abm-list-setup.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Filtering a 10,500-company database to Credit Union + 100+ employees yields approximately 600 records, a workable list for focused outreach",
+      "sources": [
+        "wiki/knowledge/hubspot/database-segmentation-bulk-operations.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Aviary's top-91 ABM segment lacks data density needed for effective outreach, with many accounts missing phone numbers, org charts, LinkedIn profiles, and role assignments",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-hubspot-marketing-hub-setup.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Contact database cleanup at Citrus America aims to reduce ~8,200 marketing contacts by at least 50% to cut HubSpot subscription costs by ~$20k/year",
+      "sources": [
+        "wiki/knowledge/hubspot/hubspot-sales-setup-contact-cleanup.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Sending newsletters to unengaged contacts ('gray matter') hurts deliverability and skews open rates; should switch to engaged-only segment",
+      "sources": [
+        "wiki/knowledge/hubspot/hubspot-sales-setup-contact-cleanup.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BANT scoring model simplified for rollout: Budget, Authority, and Need must each score 3; Timing must score 3 or 4",
+      "sources": [
+        "wiki/knowledge/hubspot/hubspot-sales-setup-contact-cleanup.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Lifecycle Stage definitions: Subscriber (email only), Lead (minimal profile data), MQL (sufficient profile for outreach but no BANT confirmation), SQL (all BANT confirmed), Opportunity (deal in progress), Customer (closed/won)",
+      "sources": [
+        "wiki/knowledge/hubspot/lifecycle-stage-definitions.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "SQL criteria set too strictly (requiring full BANT plus additional qualifiers) prevents meaningful lead flow to sales team",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-america-sql-criteria-review.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "HubSpot MQL\u2192SQL automation was broken due to field mismatch (triggered on 'You juicing currently?' instead of 'Are you already juicing?')",
+      "sources": [
+        "wiki/knowledge/hubspot/cai-mql-sql-automation-fix.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Fathom integration with HubSpot is manual per-call (no bulk sync option); requires intentional 'Sync to CRM' action after each call",
+      "sources": [
+        "wiki/knowledge/hubspot/fathom-integration.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BluePoint's Product field sync was failing due to mismatch between form-submitted values and HubSpot property options",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-product-field-sync.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "HubSpot contact database cleanup requires three-step process: export, enrich via Clay, validate via ZeroBounce, then reimport",
+      "sources": [
+        "wiki/knowledge/hubspot/contact-data-cleanup-process.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "B2B contact list uploads require field mapping validation and data quality checks (missing emails, phone formatting issues)",
+      "sources": [
+        "wiki/knowledge/hubspot/hubspot-b2b-contact-list-setup.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "SQL workflow can be efficiently built by cloning MQL workflow and adding BANT criteria groups as AND conditions",
+      "sources": [
+        "wiki/knowledge/hubspot/sql-workflow-cloning-pattern.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Simplified BANT scoring (all dimensions = 3, Timing = 3 or 4) drives better team adoption than complex weighted systems",
+      "sources": [
+        "wiki/knowledge/hubspot/cai-bant-framework-simplified.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "ABM pipeline requires per-company research documents, strategy notes, and target contact mapping stored as custom properties in HubSpot",
+      "sources": [
+        "wiki/knowledge/hubspot/asymmetric-hubspot-abm-architecture.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "AviaryAI had zero SQLs generated in initial contract period due to misalignment on lead definitions and pipeline exclusion rules",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-crm-lead-definition.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "HubSpot Professional can support multi-funnel architecture (ABM, niche marketing, inbound) with proper MQL/SQL trigger definitions",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-sales-process-automation.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Contacts marked as 'Not Interested' should remain as marketing contacts and continue receiving newsletters unless they actively unsubscribe",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-america-form-field-updates.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "HubSpot data model failures silently break automation rather than surfacing errors, making setup disproportionately consequential",
+      "sources": [
+        "wiki/knowledge/hubspot/index.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Contact-level attributes belong on Contact object; company-level attributes belong on Company object to prevent data loss when contacts depart",
+      "sources": [
+        "wiki/knowledge/hubspot/index.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Lifecycle Stage should be the primary funnel metric; Lead Status is redundant and should be retired",
+      "sources": [
+        "wiki/knowledge/hubspot/index.md",
+        "wiki/knowledge/hubspot/bluepoint-lifecycle-stage-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Field proliferation (redundant fields accumulating through ad-hoc setup) is a recurring failure mode across clients",
+      "sources": [
+        "wiki/knowledge/hubspot/index.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BANT qualification framework is dominant across clients but implementation details vary significantly",
+      "sources": [
+        "wiki/knowledge/hubspot/index.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Simplified BANT approaches outperform nuanced scoring systems because sales teams don't use complex systems consistently",
+      "sources": [
+        "wiki/knowledge/hubspot/index.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Gravity Forms to HubSpot dropdown mapping requires exact string matches between form choice values and HubSpot property option internal values",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-gravity-forms-hubspot-mapping.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Deals should be logged at one month's MRR, not annualized contract value, to keep pipeline realistic",
+      "sources": [
+        "wiki/knowledge/hubspot/deal-valuation-pipeline-management.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "With MRR-based valuation, expect to win roughly one-third to one-half of active deals",
+      "sources": [
+        "wiki/knowledge/hubspot/deal-valuation-pipeline-management.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Form submission data appears in Activity tab, not Overview tab \u2014 this is standard HubSpot behavior, not a tracking failure",
+      "sources": [
+        "wiki/knowledge/hubspot/form-data-activity-tab.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Deactivating a HubSpot user without reassigning contacts first causes workflow failures where steps send notifications to the contact owner",
+      "sources": [
+        "wiki/knowledge/hubspot/deactivated-user-contact-reassignment.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "HubSpot's social publishing integration with Instagram is subject to intermittent connection failures that cause scheduled posts to silently fail",
+      "sources": [
+        "wiki/knowledge/hubspot/skaalen-instagram-publishing-issues.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Contact Type custom property (Lead, Customer, Vendor, Partner) prevents unwanted campaign sends to non-prospect contacts",
+      "sources": [
+        "wiki/knowledge/hubspot/index.md",
+        "wiki/knowledge/hubspot/bluepoint-crm-setup-custom-fields.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "HubSpot dropdown fields require exact string match to map correctly from form submissions",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-product-dropdown-sync-failure.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "HubSpot databases accumulated through ad-hoc list imports suffer from poor categorization, stale contact information, and unverified email addresses",
+      "sources": [
+        "wiki/knowledge/hubspot/hubspot-data-quality-enrichment.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Checkboxes are superior to text or dropdown fields for BANT qualification in HubSpot workflow automation",
+      "sources": [
+        "wiki/knowledge/hubspot/bant-field-structure-checkboxes.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "HubSpot's per-seat user limits prevent multiple team members from accessing client accounts simultaneously",
+      "sources": [
+        "wiki/knowledge/hubspot/asymmetric-team-shared-login.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BANT fields should be configured as dropdown fields on the Contact record with tiered values indicating qualification strength",
+      "sources": [
+        "wiki/knowledge/hubspot/bant-qualification-framework.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "HubSpot workflows silently fail; errors accumulate in the 'Needs Review' queue without alerting anyone",
+      "sources": [
+        "wiki/knowledge/hubspot/workflow-automation-review.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "The HubSpot API is a high-leverage tool for bulk deduplication, email verification, and enrichment tasks",
+      "sources": [
+        "wiki/knowledge/hubspot/hubspot-api-data-cleanup-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "A 37,000-record database was fully deduplicated via API in approximately 2 minutes",
+      "sources": [
+        "wiki/knowledge/hubspot/hubspot-api-data-cleanup-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Email verification across a large contact list can be completed via API in ~5 minutes",
+      "sources": [
+        "wiki/knowledge/hubspot/hubspot-api-data-cleanup-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "ZoomInfo credits operate on a strict monthly reset cycle and do not roll over",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-zoominfo-credits.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Fathom's 'Sync to CRM' button is currently a manual one-click action, not fully automatic",
+      "sources": [
+        "wiki/knowledge/hubspot/fathom-callrail-integration.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "CallRail provides attribution tracking, dynamic number insertion, call recording, and AI call analysis",
+      "sources": [
+        "wiki/knowledge/hubspot/fathom-callrail-integration.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "The Aviary ABM email campaign achieved a 37% open rate and 32% click rate as of March 10, 2026",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-abm-email-automation.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "The Aviary ABM campaign sent 238 emails with 77 queued as of March 10, 2026",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-abm-email-automation.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "CallRail call recordings are not available in real-time; webhooks must be configured to fire post-call",
+      "sources": [
+        "wiki/knowledge/hubspot/callrail-hubspot-webhook-integration.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Google keyword data in CallRail may be delayed up to 12 hours",
+      "sources": [
+        "wiki/knowledge/hubspot/callrail-hubspot-webhook-integration.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "The Lifecycle Stage field is often invisible to users because it is not included in the default contact card view",
+      "sources": [
+        "wiki/knowledge/hubspot/lifecycle-stage-field-visibility.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BluePoint PMAX leads are not syncing correctly into HubSpot; the system populates the wrong email address",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-lead-sync-failure.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "AI agents with HubSpot API access can consolidate duplicate fields and update bulk data in minutes rather than hours",
+      "sources": [
+        "wiki/knowledge/hubspot/hubspot-ai-agent-data-cleanup-workflow.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Personal Access Tokens (PATs) consistently outperform other HubSpot token types for agent-driven API work",
+      "sources": [
+        "wiki/knowledge/hubspot/hubspot-ai-agent-data-cleanup-workflow.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Citrus America field consolidation across 9 forms and 2 workflows was completed in a single session using an AI agent",
+      "sources": [
+        "wiki/knowledge/hubspot/hubspot-ai-agent-data-cleanup-workflow.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "HubSpot should be designated as the single source of truth for lead management to prevent data fragmentation and ensure consistent handoffs between marketing and sales",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-hubspot-lead-handoff.md",
+        "wiki/knowledge/hubspot/client-extractions.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Deal auto-creation should trigger at the Opportunity lifecycle stage, not at SQL stage, to avoid premature deal creation and pipeline noise",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-america-deal-auto-creation-workflow.md",
+        "wiki/knowledge/hubspot/citrus-america-deal-automation.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Qualifying data should be stored at the company level with one-directional sync to contact records to preserve data durability when contacts turn over",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-america-lead-qualification-workflow.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BANT qualification should be implemented as structured, visible properties in CRM with conditional automation to route unqualified leads into nurture sequences",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-america-lead-qualification-workflow.md",
+        "wiki/knowledge/hubspot/client-extractions.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Form field mapping between website forms and HubSpot properties can fail silently, causing dropdown/select fields to drop during submission while other fields sync correctly",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-product-service-field-sync-bug.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "When bulk-selecting records in HubSpot for list actions, clicking 'Select all X records' after checking the top box is required to act on the entire filtered set; default behavior only acts on the current page (100 records)",
+      "sources": [
+        "wiki/knowledge/hubspot/client-extractions.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "HubSpot email sending requires CNAME records (hs-* entries) in the sending domain's DNS to enable email tracking and authentication",
+      "sources": [
+        "wiki/knowledge/hubspot/client-extractions.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "When users report form submissions are not appearing in a CRM contact list, the root cause is often a contact filter (such as assignment or ownership filters) rather than a broken integration",
+      "sources": [
+        "wiki/knowledge/hubspot/client-extractions.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Email enrichment via third-party services like Hunter.io can recover actionable contact records at scale, but the process identifies duplicates that must be merged to maintain database integrity",
+      "sources": [
+        "wiki/knowledge/hubspot/client-extractions.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Resolving shared CRM login bottlenecks by reassigning unused seats improves team efficiency and data governance by ensuring individual accountability for account activity",
+      "sources": [
+        "wiki/knowledge/hubspot/client-extractions.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Native filtering tools within CRM are more reliable than CSV export/import cycles for data cleanup and list creation, as column mapping errors during import/export create data integrity issues",
+      "sources": [
+        "wiki/knowledge/hubspot/client-extractions.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Automated list-based workflows prevent task overload more effectively than individual task creation in CRM systems",
+      "sources": [
+        "wiki/knowledge/hubspot/client-extractions.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "HubSpot automation with behavioral triggers and engagement thresholds can route contacts between nurture sequences and trigger human outreach at scale",
+      "sources": [
+        "wiki/knowledge/hubspot/client-extractions.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "SaaS companies often have subscription tier gaps where their current CRM tier lacks marketing automation features required for ABM execution, necessitating explicit upgrade approval before campaign launch",
+      "sources": [
+        "wiki/knowledge/hubspot/client-extractions.md",
+        "wiki/knowledge/hubspot/aviary-email-platform-decision.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "CRM plugin integrations can auto-fill incorrect contact information (e.g., company email instead of prospect email), requiring investigation and manual correction workflows",
+      "sources": [
+        "wiki/knowledge/hubspot/client-extractions.md"
+      ],
+      "confidence": "low"
+    },
+    {
+      "claim": "Contact activity timelines and attribution data provide reliable verification that form integrations are functioning, even when the contact list view appears empty",
+      "sources": [
+        "wiki/knowledge/hubspot/client-extractions.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Lead progression workflows should allow stage-skipping (e.g., Lead \u2192 SQL, bypassing MQL) when a sales rep gathers all required data in a single call",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-america-lead-progression-logic.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Lifecycle stage fields can be set to 'Unknown' to satisfy workflow trigger conditions when information is not yet available",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-america-lead-progression-logic.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "A 'Departed' lifecycle stage should be used when a known contact leaves their company, preserving the record with full activity history while flagging them as inactive",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-america-deal-automation.md",
+        "wiki/knowledge/hubspot/citrus-america-lead-progression-logic.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Deal auto-creation should populate only minimal fields (deal name, deal owner) at creation time, leaving deal type, pipeline priority, amount, and next steps blank for manual entry",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-america-deal-auto-creation-workflow.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "When defining SQL criteria via HubSpot segments, a data audit should be run first to validate that fields are sufficiently populated; strict criteria against sparse data results in zero qualifying contacts",
+      "sources": [
+        "wiki/knowledge/hubspot/sql-segment-pattern.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Separating audience definition (via dynamic segments) from automation actions (via workflows) creates more maintainable and reusable HubSpot automations",
+      "sources": [
+        "wiki/knowledge/hubspot/sql-segment-pattern.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Deal creation should not automatically cancel ABM email sequences for all contacts at an account; instead, cancellation should trigger only when a contact reaches the Opportunity lifecycle stage",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-abm-automation-workflow.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "In multi-business-unit accounts (e.g., large credit unions), creating a deal for one contact should not stop outreach to other contacts at the same organization",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-abm-automation-workflow.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "HubSpot data hygiene and segmentation should be completed before campaign launch to enable targeted, ICP-specific campaigns across multiple channels",
+      "sources": [
+        "wiki/knowledge/hubspot/client-extractions.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Redundant lead source fields (e.g., 'Inbound Lead' alongside 'Lead Source' and 'Lead Source Detail') should be consolidated and hidden after data migration to prevent duplicate data entry and confusion",
+      "sources": [
+        "wiki/knowledge/hubspot/cai-lead-source-consolidation.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Trade show lead source values should be normalized to a standardized format (e.g., '[ABBREVIATION] [YEAR]') across all contacts for consistency",
+      "sources": [
+        "wiki/knowledge/hubspot/cai-lead-source-consolidation.md"
+      ],
+      "confidence": "low"
+    },
+    {
+      "claim": "HubSpot requires at least one seat at the super admin level at all times to avoid being blocked on automation work",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-hubspot-access-email-automation.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "HubSpot supports tracking downloads when files are hosted within its file system, providing visibility into whether a prospect has opened or downloaded a document",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-hubspot-access-email-automation.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Custom AWS SES-based email automation with HubSpot webhook logging can replace manual email sending and avoid the cost of paid bulk email tools like SendGrid",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-aws-ses-email-automation.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "AWS SES email automation should log the full email body to HubSpot's activity feed via webhooks, not just send/open/click metadata, to provide complete visibility for stakeholders",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-aws-ses-email-automation.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "ABM email sequences should use a 30-day cadence with early emails spaced closer together (days 0, 4, 9) to establish presence, then weekly intervals for later sends",
+      "sources": [
+        "wiki/knowledge/hubspot/abm-campaign-setup.md"
+      ],
+      "confidence": "low"
+    },
+    {
+      "claim": "All contact emails should be validated before ABM campaign send; undeliverable addresses should be deleted from HubSpot rather than left in place to avoid future deliverability problems",
+      "sources": [
+        "wiki/knowledge/hubspot/abm-campaign-setup.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "A 2% unsubscribe rate on the first cold email send is considered excellent and a positive indicator of personalization value",
+      "sources": [
+        "wiki/knowledge/hubspot/abm-campaign-setup.md"
+      ],
+      "confidence": "low"
+    },
+    {
+      "claim": "HubSpot's native email tooling lacks the per-account personalization required for true ABM; third-party platforms like Orbit should be used for ABM sending with activity synced back to HubSpot",
+      "sources": [
+        "wiki/knowledge/hubspot/abm-campaign-setup.md"
+      ],
+      "confidence": "medium"
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Form sync failures are recurring issue across multiple clients (BluePoint ATM, Citrus America) \u2014 WordPress/Gravity Forms integrations breaking after plugin updates or misconfiguration",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-form-sync-troubleshooting.md",
+        "wiki/knowledge/hubspot/bluepoint-gravity-forms-integration.md",
+        "wiki/knowledge/hubspot/bluepoint-gravity-form-sync-failure.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "HubSpot integration issues often stem from permission/access gaps \u2014 team members lacking Super Admin seats cannot investigate or remediate integration settings",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-form-sync-troubleshooting.md",
+        "wiki/knowledge/hubspot/bluepoint-gravity-form-sync-failure.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Large contact database imports (Apollo, bulk uploads) create data quality issues: corrupted field values, bloated record counts, undifferentiated segmentation",
+      "sources": [
+        "wiki/knowledge/hubspot/database-segmentation-bulk-operations.md",
+        "wiki/knowledge/hubspot/aviary-abm-list-setup.md"
+      ],
+      "client_contexts": [
+        "Aviary"
+      ]
+    },
+    {
+      "pattern": "Redundant or overlapping fields (Lead Status + Lifecycle Stage, multiple contact type fields) create confusion about which field to update and report on",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-crm-simplification.md",
+        "wiki/knowledge/hubspot/bluepoint-contact-type-property.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Automation trigger logic errors occur when operators (e.g., 'is equal to all of') are mismatched to field types (single-select vs. multi-select)",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-mql-sql-automation-logic.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "Contact-level vs. company-level field assignment is a recurring design decision \u2014 fields should live on the object that owns the underlying truth",
+      "sources": [
+        "wiki/knowledge/hubspot/contact-vs-company-object-strategy.md",
+        "wiki/knowledge/hubspot/lifecycle-stage-definitions.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "HubSpot training needs are practical and focused on daily-use features rather than advanced capabilities \u2014 clients resist async video courses and prefer hands-on sessions",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-crm-training-plan.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Email integration and logging issues are common: Gmail sync bugs, form notification emails not being logged, auto-reply delays",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-gmail-sync-bug.md",
+        "wiki/knowledge/hubspot/bluepoint-form-integration-logging.md",
+        "wiki/knowledge/hubspot/bluepoint-form-sync-troubleshooting.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "HubSpot tier upgrades are often required to unlock marketing automation features (Marketing Hub Pro for email campaigns, drip sequences)",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-hubspot-marketing-hub-setup.md"
+      ],
+      "client_contexts": [
+        "Aviary"
+      ]
+    },
+    {
+      "pattern": "Database hygiene and contact cleanup are necessary prerequisites for effective CRM operations \u2014 large unqualified contact lists hurt deliverability and inflate costs",
+      "sources": [
+        "wiki/knowledge/hubspot/hubspot-sales-setup-contact-cleanup.md",
+        "wiki/knowledge/hubspot/lifecycle-stage-definitions.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "Field mapping mismatches between forms and HubSpot properties cause silent sync failures; exact string matching is required",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-product-field-sync.md",
+        "wiki/knowledge/hubspot/citrus-america-form-field-updates.md"
+      ],
+      "client_contexts": [
+        "BluePoint",
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "B2B clients entering HubSpot for first time lack defined MQL/SQL criteria; this must be established before automation can function",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-sales-process-automation.md",
+        "wiki/knowledge/hubspot/aviary-ai-crm-setup.md",
+        "wiki/knowledge/hubspot/anchain-crm-setup.md"
+      ],
+      "client_contexts": [
+        "AviaryAI",
+        "AnChain.ai"
+      ]
+    },
+    {
+      "pattern": "Contact data cleanup is a prerequisite for reliable outreach; missing emails, invalid addresses, and stale records block campaign execution",
+      "sources": [
+        "wiki/knowledge/hubspot/contact-data-cleanup-process.md",
+        "wiki/knowledge/hubspot/hubspot-b2b-contact-list-setup.md"
+      ],
+      "client_contexts": [
+        "Internal operations"
+      ]
+    },
+    {
+      "pattern": "ABM campaigns require per-company research and strategy documents stored in CRM properties to enable personalized outreach at scale",
+      "sources": [
+        "wiki/knowledge/hubspot/asymmetric-hubspot-abm-architecture.md",
+        "wiki/knowledge/hubspot/aviary-sales-process-automation.md"
+      ],
+      "client_contexts": [
+        "AviaryAI",
+        "AnChain.ai"
+      ]
+    },
+    {
+      "pattern": "HubSpot training and onboarding is a recurring need for new clients; estimated 1 hour for functional walkthrough",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-hubspot-training.md",
+        "wiki/knowledge/hubspot/aviary-ai-crm-setup.md"
+      ],
+      "client_contexts": [
+        "Bluepoint",
+        "AviaryAI"
+      ]
+    },
+    {
+      "pattern": "Contact card cleanup (hiding unused fields) improves sales rep experience without deleting underlying data",
+      "sources": [
+        "wiki/knowledge/hubspot/cai-contact-card-field-cleanup.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "Multi-funnel architecture (ABM, inbound, paid, events) requires separate pipeline tracks with distinct lifecycle stages and automation",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-sales-process-automation.md",
+        "wiki/knowledge/hubspot/aviary-hubspot-setup-sales-architecture.md"
+      ],
+      "client_contexts": [
+        "AviaryAI"
+      ]
+    },
+    {
+      "pattern": "Checkbox fields are preferred for workflow criteria evaluation (BANT qualification) over text/dropdown fields due to unambiguous true/false logic",
+      "sources": [
+        "wiki/knowledge/hubspot/sql-workflow-cloning-pattern.md"
+      ],
+      "client_contexts": [
+        "Best practice"
+      ]
+    },
+    {
+      "pattern": "Clients accumulate redundant fields through ad-hoc setup, creating duplicate data entry and automation ambiguity",
+      "sources": [
+        "wiki/knowledge/hubspot/index.md"
+      ],
+      "client_contexts": [
+        "Citrus America",
+        "CAI",
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Form integration failures are typically caused by field value mismatches between form options and HubSpot property values",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-gravity-forms-hubspot-mapping.md",
+        "wiki/knowledge/hubspot/bluepoint-product-dropdown-sync-failure.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "HubSpot setup requires significant upfront structural decisions that have long-term consequences for automation and reporting",
+      "sources": [
+        "wiki/knowledge/hubspot/index.md",
+        "wiki/knowledge/hubspot/bluepoint-lifecycle-stage-strategy.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM",
+        "Citrus America",
+        "Asymmetric"
+      ]
+    },
+    {
+      "pattern": "Contact capacity management requires post-campaign pruning of non-engaging contacts to free slots for new imports",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-contact-management-strategy.md",
+        "wiki/knowledge/hubspot/bluepoint-contact-capacity-management.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Sales team adoption of HubSpot workflows depends on reducing friction in data entry \u2014 standard contact profile is cumbersome",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-america-data-entry-ui-exploration.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "HubSpot user permission issues are common root causes of missing activity data; often a permission toggle, not a data problem",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-crm-setup-custom-fields.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Deal records should contain pitch decks, call recordings, and activity logs as attachments for single source of truth",
+      "sources": [
+        "wiki/knowledge/hubspot/deal-valuation-pipeline-management.md"
+      ],
+      "client_contexts": [
+        "Asymmetric"
+      ]
+    },
+    {
+      "pattern": "BANT qualification fields are used to automate the transition of contacts to SQL status and trigger deal creation",
+      "sources": [
+        "wiki/knowledge/hubspot/bant-field-structure-checkboxes.md",
+        "wiki/knowledge/hubspot/bant-qualification-framework.md",
+        "wiki/knowledge/hubspot/pipeline-stages-bant-qualification.md",
+        "wiki/knowledge/hubspot/cai-sql-opportunity-automation-logic.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "Lifecycle stage progression follows a consistent funnel: Prospect \u2192 Lead \u2192 MQL \u2192 SQL \u2192 Opportunity \u2192 Customer",
+      "sources": [
+        "wiki/knowledge/hubspot/lifecycle-stages-contact-qualification.md",
+        "wiki/knowledge/hubspot/pipeline-stages-bant-qualification.md",
+        "wiki/knowledge/hubspot/cai-lifecycle-stage-contact-type-structure.md",
+        "wiki/knowledge/hubspot/cai-sql-opportunity-automation-logic.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "Contact Type and Lifecycle Stage are two distinct fields that should not be conflated; Contact Type captures role/relationship, Lifecycle Stage captures sales progression",
+      "sources": [
+        "wiki/knowledge/hubspot/cai-lifecycle-stage-contact-type-structure.md",
+        "wiki/knowledge/hubspot/lifecycle-stages-contact-qualification.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "HubSpot workflow errors are common and require systematic review; deactivated users are a frequent root cause",
+      "sources": [
+        "wiki/knowledge/hubspot/workflow-automation-review.md",
+        "wiki/knowledge/hubspot/lifecycle-stage-field-visibility.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "Data enrichment and verification should happen before re-import to protect sender reputation and improve contact quality",
+      "sources": [
+        "wiki/knowledge/hubspot/hubspot-data-quality-enrichment.md",
+        "wiki/knowledge/hubspot/hubspot-api-data-cleanup-strategy.md"
+      ],
+      "client_contexts": []
+    },
+    {
+      "pattern": "Multi-system integrations (HubSpot + CallRail + Fathom) are used to close attribution gaps between phone calls and digital activity",
+      "sources": [
+        "wiki/knowledge/hubspot/fathom-callrail-integration.md",
+        "wiki/knowledge/hubspot/callrail-hubspot-webhook-integration.md",
+        "wiki/knowledge/hubspot/call-logging-workflow.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "ABM campaigns in HubSpot use account-level tracking with custom company properties (ABM Tier, Vertical, Campaign, Research Status, Outreach Status)",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-hubspot-abm-configuration.md",
+        "wiki/knowledge/hubspot/aviary-abm-email-automation.md"
+      ],
+      "client_contexts": [
+        "Aviary"
+      ]
+    },
+    {
+      "pattern": "Form integration issues result in manual data entry and broken automation workflows",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-contact-form-integration.md",
+        "wiki/knowledge/hubspot/bluepoint-lead-sync-failure.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Shared team logins are proposed as a solution to HubSpot per-seat user limits across multiple client accounts",
+      "sources": [
+        "wiki/knowledge/hubspot/asymmetric-team-shared-login.md"
+      ],
+      "client_contexts": [
+        "Bluepoint",
+        "Citrus America",
+        "Doodla",
+        "Scallin"
+      ]
+    },
+    {
+      "pattern": "Lead qualification workflows require multiple sequential stages (Prospect \u2192 Lead \u2192 MQL \u2192 SQL \u2192 Opportunity) with explicit field requirements at each stage",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-america-lead-qualification-workflow.md",
+        "wiki/knowledge/hubspot/citrus-america-lead-progression-logic.md",
+        "wiki/knowledge/hubspot/citrus-america-deal-automation.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "BANT (Budget, Authority, Need, Timing) is a standard qualification framework implemented across multiple clients as the trigger for SQL/Opportunity stage advancement",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-america-lead-qualification-workflow.md",
+        "wiki/knowledge/hubspot/aviary-hubspot-lead-handoff.md"
+      ],
+      "client_contexts": [
+        "Citrus America",
+        "AviaryAI"
+      ]
+    },
+    {
+      "pattern": "Form field mapping issues (missing fields, incorrect field types, misconfigured dropdowns) are a recurring integration problem between website forms and HubSpot",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-product-service-field-sync-bug.md",
+        "wiki/knowledge/hubspot/cai-lead-source-consolidation.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM",
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "HubSpot access and permissions management is critical; loss of super admin access blocks automation work and requires immediate remediation",
+      "sources": [
+        "wiki/knowledge/hubspot/bluepoint-hubspot-access-email-automation.md",
+        "wiki/knowledge/hubspot/client-extractions.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "ABM campaigns require a decision between native HubSpot email automation and third-party platforms (Apollo, SendGrid, Orbit, AWS SES) based on cost, personalization needs, and integration requirements",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-email-platform-decision.md",
+        "wiki/knowledge/hubspot/aviary-aws-ses-email-automation.md",
+        "wiki/knowledge/hubspot/abm-campaign-setup.md"
+      ],
+      "client_contexts": [
+        "AviaryAI"
+      ]
+    },
+    {
+      "pattern": "Redundant or legacy fields accumulate in HubSpot over time and require consolidation and cleanup to prevent data entry confusion and maintain database integrity",
+      "sources": [
+        "wiki/knowledge/hubspot/cai-lead-source-consolidation.md",
+        "wiki/knowledge/hubspot/citrus-america-lead-progression-logic.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "Deal auto-creation workflows should be triggered by lifecycle stage progression (Opportunity) rather than other events (SQL, deal creation) to avoid premature or duplicate deal creation",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-america-deal-auto-creation-workflow.md",
+        "wiki/knowledge/hubspot/citrus-america-deal-automation.md",
+        "wiki/knowledge/hubspot/aviary-abm-automation-workflow.md"
+      ],
+      "client_contexts": [
+        "Citrus America",
+        "AviaryAI"
+      ]
+    },
+    {
+      "pattern": "HubSpot lifecycle stages should include non-active stages (Departed, Unqualified, Not Ready) to handle contacts who exit the active pipeline while preserving data history",
+      "sources": [
+        "wiki/knowledge/hubspot/citrus-america-deal-automation.md",
+        "wiki/knowledge/hubspot/citrus-america-lead-progression-logic.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "Dynamic segments (formerly lists) should be used to define audience qualification criteria separately from workflow actions, enabling reusability and easier maintenance",
+      "sources": [
+        "wiki/knowledge/hubspot/sql-segment-pattern.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "Data quality audits should precede automation implementation; sparse field population can result in zero qualifying contacts and wasted automation effort",
+      "sources": [
+        "wiki/knowledge/hubspot/sql-segment-pattern.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "ABM campaigns require careful trigger logic to avoid unintended side effects in multi-business-unit accounts; deal creation for one contact should not stop outreach to others at the same organization",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-abm-automation-workflow.md"
+      ],
+      "client_contexts": [
+        "AviaryAI"
+      ]
+    },
+    {
+      "pattern": "Email automation platforms should log full email body content to HubSpot activity feeds for stakeholder visibility, not just engagement metrics",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-aws-ses-email-automation.md"
+      ],
+      "client_contexts": [
+        "AviaryAI"
+      ]
+    },
+    {
+      "pattern": "Lead handoff processes require explicit notification protocols (email, Slack) and a single source of truth (HubSpot) to ensure fast sales follow-up",
+      "sources": [
+        "wiki/knowledge/hubspot/aviary-hubspot-lead-handoff.md"
+      ],
+      "client_contexts": [
+        "AviaryAI"
+      ]
+    }
+  ],
+  "contradictions": [
+    {
+      "claim_a": "BluePoint ATM website form submissions are not automatically syncing to HubSpot",
+      "source_a": "wiki/knowledge/hubspot/bluepoint-form-sync-troubleshooting.md",
+      "claim_b": "HubSpot shows the Gravity Form as a non-HubSpot form with 57 recorded submissions, indicating the form is partially connected",
+      "source_b": "wiki/knowledge/hubspot/bluepoint-gravity-form-sync-failure.md",
+      "note": "Not a direct contradiction \u2014 submissions are being logged in HubSpot but not creating contact records. The form is partially connected at a surface level but not configured to create/update contacts."
+    },
+    {
+      "claim_a": "SQL criteria should require full BANT plus additional qualifiers to ensure high-quality leads",
+      "source_a": "wiki/knowledge/hubspot/citrus-america-sql-criteria-review.md (initial setup)",
+      "claim_b": "SQL criteria should be loosened to focus on two core questions: fit/application match and demonstrated intent, allowing earlier sales engagement",
+      "source_b": "wiki/knowledge/hubspot/citrus-america-sql-criteria-review.md (recommendation)",
+      "context": "Citrus America's SQL definition was revised mid-engagement after discovering the strict criteria prevented meaningful lead flow"
+    },
+    {
+      "claim_a": "Disqualified contacts ('Not Interested') should be removed from marketing communications",
+      "source_a": "Implied in standard CRM practice",
+      "claim_b": "Contacts marked as 'Not Interested' should remain as marketing contacts and continue receiving newsletters unless they actively unsubscribe",
+      "source_b": "wiki/knowledge/hubspot/citrus-america-form-field-updates.md",
+      "context": "Citrus America explicitly chose to keep disqualified contacts in marketing flows"
+    },
+    {
+      "claim_a": "Lifecycle Stage should be the single source of truth for sales funnel progression",
+      "source_a": "wiki/knowledge/hubspot/bluepoint-lifecycle-stage-strategy.md",
+      "claim_b": "Lead Status was being actively used to track sales progress at BluePoint before the decision to retire it",
+      "source_b": "wiki/knowledge/hubspot/bluepoint-lifecycle-stage-strategy.md",
+      "note": "Not a true contradiction \u2014 rather a documented transition from one approach to another. Both were in use simultaneously, creating confusion."
+    },
+    {
+      "claim_a": "BANT fields should be configured as checkboxes for clean boolean logic in workflow automation",
+      "source_a": "wiki/knowledge/hubspot/bant-field-structure-checkboxes.md",
+      "claim_b": "BANT fields should be configured as dropdown fields with tiered values indicating qualification strength",
+      "source_b": "wiki/knowledge/hubspot/bant-qualification-framework.md",
+      "note": "These articles describe different BANT field structures. The checkbox approach is recommended for Citrus America; the dropdown approach is described as a general pattern. This may reflect different client implementations or a shift in best practice."
+    },
+    {
+      "claim_a": "Deal auto-creation should trigger at the SQL stage",
+      "source_a": "wiki/knowledge/hubspot/citrus-america-deal-automation.md (historical context: 'old SQL-stage workflow created April 2024')",
+      "claim_b": "Deal auto-creation should trigger at the Opportunity stage, not SQL, to avoid premature deal creation and pipeline noise",
+      "source_b": "wiki/knowledge/hubspot/citrus-america-deal-auto-creation-workflow.md (November 2025 update: 'replaced an earlier workflow that triggered deal creation at the SQL stage')",
+      "resolution": "The contradiction reflects an evolution in best practice. The SQL-stage trigger was identified as creating noise and was deactivated in November 2025 in favor of the Opportunity-stage trigger."
+    },
+    {
+      "claim_a": "ABM email sequences should be cancelled when a deal is created for a contact",
+      "source_a": "wiki/knowledge/hubspot/aviary-abm-automation-workflow.md (current behavior: 'workflow cancels email sequences for a contact as soon as a HubSpot deal is created')",
+      "claim_b": "ABM email sequences should not be cancelled for all contacts at an account when a deal is created; cancellation should trigger only when a contact reaches the Opportunity lifecycle stage",
+      "source_b": "wiki/knowledge/hubspot/aviary-abm-automation-workflow.md (proposed solution: 'Change the cancellation trigger from deal creation to the Opportunity lifecycle stage')",
+      "resolution": "The contradiction reflects a discovered flaw in the current implementation. The proposed solution (Opportunity-stage trigger) is more precise and avoids unintended cancellation of sequences for other contacts at multi-business-unit accounts."
+    }
+  ],
+  "exceptions": [
+    {
+      "general_rule": "Contact Type property should exclude non-leads from sales automation and drip campaigns",
+      "exception": "Vendors are included in HubSpot despite being excluded from marketing automation, to allow email history to be tracked centrally",
+      "context": "BluePoint ATM",
+      "source": "wiki/knowledge/hubspot/bluepoint-contact-type-property.md"
+    },
+    {
+      "general_rule": "Lifecycle Stage automation should be bidirectional (contacts can move forward and backward through stages)",
+      "exception": "Disqualified stage was added as a terminal stage for contacts who should never be re-engaged (e.g., 'do not call' requests)",
+      "context": "BluePoint ATM",
+      "source": "wiki/knowledge/hubspot/bluepoint-crm-simplification.md"
+    },
+    {
+      "general_rule": "Bulk edits in HubSpot should be tested on small subsets first due to lack of rollback functionality",
+      "exception": "Full database cleanup was greenlit at Citrus America without explicit mention of testing on subset first, though hygiene run is being done in phases",
+      "context": "Citrus America",
+      "source": "wiki/knowledge/hubspot/hubspot-sales-setup-contact-cleanup.md"
+    },
+    {
+      "general_rule": "HubSpot integrations should automatically sync data between systems",
+      "exception": "Fathom integration requires manual per-call 'Sync to CRM' action; no bulk or automatic sync option available",
+      "context": "Call recording and transcription tools",
+      "source": "wiki/knowledge/hubspot/fathom-integration.md"
+    },
+    {
+      "general_rule": "Lifecycle stage progression should be automated via workflows once criteria are met",
+      "exception": "AnChain.ai's high-touch, low-volume sales motion requires deliberate manual progression gates rather than automated bulk advancement",
+      "context": "Niche B2B sales with small deal volume",
+      "source": "wiki/knowledge/hubspot/anchain-crm-setup.md"
+    },
+    {
+      "general_rule": "Deprecated field values should be removed from contact records during cleanup",
+      "exception": "Citrus America chose to migrate deprecated Market Segment values to 'Other' rather than delete them, preserving data integrity",
+      "context": "Contact data migration",
+      "source": "wiki/knowledge/hubspot/citrus-america-form-field-updates.md"
+    },
+    {
+      "general_rule": "Contact-level attributes should not be stored on Contact object if they are company-specific",
+      "exception": "Citrus America stores qualifying data at company level but syncs it down to contact records for sales rep visibility",
+      "context": "B2B sales operations where reps need quick access to company-level data without navigating to separate company record",
+      "source": "wiki/knowledge/hubspot/index.md"
+    },
+    {
+      "general_rule": "Contacts should be deleted when no longer relevant to prevent CRM bloat",
+      "exception": "Old Full Name fields should be hidden, not deleted, to preserve historical entry data",
+      "context": "Form field restructuring where historical data must be retained",
+      "source": "wiki/knowledge/hubspot/bluepoint-gravity-forms-hubspot-mapping.md"
+    },
+    {
+      "general_rule": "All contacts should be marked as marketing contacts when imported",
+      "exception": "Contacts should be imported as non-marketing contacts first, then promoted to marketing status when a campaign is ready to send",
+      "context": "Contact capacity management on limited tier plans",
+      "source": "wiki/knowledge/hubspot/bluepoint-contact-capacity-management.md"
+    },
+    {
+      "general_rule": "All four BANT criteria must be met before a contact qualifies for SQL status",
+      "exception": "Citrus America's SQL workflow uses an OR logic \u2014 a contact becomes SQL when they answer ANY ONE of ~10 sales qualification questions, not when all BANT fields are confirmed",
+      "context": "Citrus America",
+      "source": "wiki/knowledge/hubspot/cai-sql-opportunity-automation-logic.md"
+    },
+    {
+      "general_rule": "Lifecycle Stage field is visible on all contact records by default",
+      "exception": "The Lifecycle Stage field is often invisible to users because it is not included in the default contact card view; admins must manually add it",
+      "context": "General HubSpot configuration issue",
+      "source": "wiki/knowledge/hubspot/lifecycle-stage-field-visibility.md"
+    },
+    {
+      "general_rule": "Fathom call recordings sync automatically to HubSpot",
+      "exception": "Fathom's 'Sync to CRM' button is currently a manual one-click action, not fully automatic; each team member must enable the sync in their own Fathom account settings",
+      "context": "BluePoint ATM",
+      "source": "wiki/knowledge/hubspot/fathom-callrail-integration.md"
+    },
+    {
+      "general_rule": "ZoomInfo credits roll over month-to-month",
+      "exception": "ZoomInfo credits operate on a strict monthly reset cycle and do not roll over; credits not used within the calendar month are forfeited",
+      "context": "BluePoint",
+      "source": "wiki/knowledge/hubspot/bluepoint-zoominfo-credits.md"
+    },
+    {
+      "general_rule": "Lead progression should follow the standard sequence: Prospect \u2192 Lead \u2192 MQL \u2192 SQL \u2192 Opportunity",
+      "exception": "If a sales rep gathers all MQL and SQL data in a single call, the contact may advance directly from Lead \u2192 SQL, bypassing the MQL stage",
+      "context": "Citrus America lead qualification workflow",
+      "source": "wiki/knowledge/hubspot/citrus-america-lead-progression-logic.md"
+    },
+    {
+      "general_rule": "Form field mapping should sync all form fields to HubSpot automatically",
+      "exception": "Dropdown/select fields may fail to sync while other fields (name, email, phone, company) sync correctly, requiring investigation of field mapping configuration",
+      "context": "BluePoint ATM website form submissions",
+      "source": "wiki/knowledge/hubspot/bluepoint-product-service-field-sync-bug.md"
+    },
+    {
+      "general_rule": "Deal auto-creation should happen automatically when qualification criteria are met",
+      "exception": "Manual deal creation is still available at any stage; sales reps can create a deal immediately if a call warrants it, bypassing the automation",
+      "context": "Citrus America deal automation",
+      "source": "wiki/knowledge/hubspot/citrus-america-deal-auto-creation-workflow.md"
+    },
+    {
+      "general_rule": "All contacts at an account should be treated as a single pipeline unit",
+      "exception": "In multi-business-unit accounts (e.g., large credit unions), different business units may be at different stages of the sales process and should receive independent outreach",
+      "context": "AviaryAI ABM automation",
+      "source": "wiki/knowledge/hubspot/aviary-abm-automation-workflow.md"
+    },
+    {
+      "general_rule": "HubSpot's native email tooling should be used for all email campaigns",
+      "exception": "ABM campaigns requiring per-account personalization (unique research reports, strategy documents, individually personalized copy) should use third-party platforms like Orbit with activity synced back to HubSpot",
+      "context": "AviaryAI ABM campaign setup",
+      "source": "wiki/knowledge/hubspot/abm-campaign-setup.md"
+    }
+  ],
+  "evidence": [
+    {
+      "metric": "BluePoint ATM Gravity Form shows 57 recorded submissions in HubSpot",
+      "context": "Form is partially connected but not creating contact records",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/hubspot/bluepoint-gravity-form-sync-failure.md"
+    },
+    {
+      "metric": "Auto-reply email delay of approximately 9 hours (3:00 PM to midnight)",
+      "context": "Test form submission at BluePoint ATM",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/hubspot/bluepoint-form-sync-troubleshooting.md"
+    },
+    {
+      "metric": "Filtering 10,500-company database to Credit Union + 100+ employees yields approximately 600 records",
+      "context": "Database segmentation for focused outreach",
+      "client": "Aviary",
+      "source": "wiki/knowledge/hubspot/database-segmentation-bulk-operations.md"
+    },
+    {
+      "metric": "Aviary's Apollo enrichment workflow inflated company list from ~10k to ~15,695 records",
+      "context": "Bloated list with non-target organizations (banks, fintechs) alongside credit unions",
+      "client": "Aviary",
+      "source": "wiki/knowledge/hubspot/aviary-abm-list-setup.md"
+    },
+    {
+      "metric": "Aviary's top-91 ABM segment identified as target list",
+      "context": "Requires data enrichment via ZoomInfo for phone numbers, org charts, LinkedIn profiles, role assignments",
+      "client": "Aviary",
+      "source": "wiki/knowledge/hubspot/aviary-hubspot-marketing-hub-setup.md"
+    },
+    {
+      "metric": "Citrus America database contains approximately 40,000 contacts with many poorly categorized",
+      "context": "Goal to convert, enrich, or remove contacts that don't meet stage criteria",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/hubspot/lifecycle-stage-definitions.md"
+    },
+    {
+      "metric": "Citrus America Lead stage contains approximately 28,000 contacts",
+      "context": "Goal is to convert or purge this cohort via enrichment",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/hubspot/lifecycle-stage-definitions.md"
+    },
+    {
+      "metric": "Citrus America aims to reduce ~8,200 marketing contacts by at least 50%",
+      "context": "To cut HubSpot subscription costs by approximately $20k/year",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/hubspot/hubspot-sales-setup-contact-cleanup.md"
+    },
+    {
+      "metric": "Aviary HubSpot instance has ~70,000 total contacts",
+      "context": "Marketing Hub Professional not yet active; email automation blocked",
+      "client": "Aviary",
+      "source": "wiki/knowledge/hubspot/aviary-hubspot-marketing-hub-setup.md"
+    },
+    {
+      "metric": "Marketing Hub Professional upgrade cost: $445/month",
+      "context": "Required for Aviary to execute email automation and drip campaigns",
+      "client": "Aviary",
+      "source": "wiki/knowledge/hubspot/aviary-hubspot-marketing-hub-setup.md"
+    },
+    {
+      "metric": "CallRail test calls placed during session routed correctly with recordings appearing in activity log",
+      "context": "Static number tests (703-952-5858, 303-732-8411) validated end-to-end",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/hubspot/bluepoint-callrail-integration.md"
+    },
+    {
+      "metric": "Dynamic number swap for CallRail was not firing on live site at time of testing",
+      "context": "Prevents validation of dynamic-sourced call integration",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/hubspot/bluepoint-callrail-integration.md"
+    },
+    {
+      "metric": "~40,000 contacts in database, ~28,000 stuck in 'Lead' stage with insufficient qualification data",
+      "context": "Contact database cleanup initiative",
+      "client": "Internal operations",
+      "source": "wiki/knowledge/hubspot/contact-data-cleanup-process.md"
+    },
+    {
+      "metric": "159 contacts in GL Food & Beverage test segment",
+      "context": "B2B contact list upload validation",
+      "client": "Internal operations",
+      "source": "wiki/knowledge/hubspot/hubspot-b2b-contact-list-setup.md"
+    },
+    {
+      "metric": "Majority of contacts sourced with LinkedIn profiles only; email addresses not populated",
+      "context": "Data quality issue blocking email sequence enrollment",
+      "client": "Internal operations",
+      "source": "wiki/knowledge/hubspot/hubspot-b2b-contact-list-setup.md"
+    },
+    {
+      "metric": "91 companies loaded into HubSpot for ABM campaign, targeting 100 total",
+      "context": "Account-based marketing pipeline setup",
+      "client": "Unnamed (ABM architecture reference)",
+      "source": "wiki/knowledge/hubspot/asymmetric-hubspot-abm-architecture.md"
+    },
+    {
+      "metric": "Zero SQLs generated in initial AviaryAI contract period",
+      "context": "Lead definition misalignment and pipeline exclusion issues",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/hubspot/aviary-crm-lead-definition.md"
+    },
+    {
+      "metric": "~69 contacts in Aaron Grossman's active sales pipeline (AviaryAI)",
+      "context": "Pipeline exclusion list for campaign suppression",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/hubspot/aviary-crm-lead-definition.md"
+    },
+    {
+      "metric": "Contractual MQL target: 15\u201325 per month; SQL target: 6\u201312 per month",
+      "context": "AviaryAI engagement metrics",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/hubspot/aviary-crm-lead-definition.md"
+    },
+    {
+      "metric": "3\u20134 page research document per company for ABM outreach",
+      "context": "Per-company strategy documentation",
+      "client": "Unnamed (ABM architecture reference)",
+      "source": "wiki/knowledge/hubspot/asymmetric-hubspot-abm-architecture.md"
+    },
+    {
+      "metric": "1 hour estimated for HubSpot functional walkthrough training",
+      "context": "Client onboarding",
+      "client": "Bluepoint",
+      "source": "wiki/knowledge/hubspot/bluepoint-hubspot-training.md"
+    },
+    {
+      "metric": "Four BANT scoring options reduced to three (Cash ATM, Reverse ATM, Other Kiosk)",
+      "context": "Product field consolidation for lead routing",
+      "client": "BluePoint",
+      "source": "wiki/knowledge/hubspot/bluepoint-product-field-sync.md"
+    },
+    {
+      "metric": "BluePoint ATM HubSpot account: 4,375 marketing contacts used of 7,000 tier limit (62% utilized)",
+      "context": "As of February 2026 review",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/hubspot/bluepoint-contact-management-strategy.md"
+    },
+    {
+      "metric": "BluePoint ATM total contacts in CRM: 5,329 (marketing + non-marketing)",
+      "context": "As of February 2026 sync",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/hubspot/bluepoint-contact-capacity-management.md"
+    },
+    {
+      "metric": "BluePoint ATM NY campaign: ~2,300 contacts marked as marketing contacts",
+      "context": "Represents largest opportunity for post-campaign pruning",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/hubspot/bluepoint-contact-management-strategy.md"
+    },
+    {
+      "metric": "ZoomInfo bounce rate: approximately 5% due to contact turnover",
+      "context": "Justifies list hygiene before import",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/hubspot/bluepoint-contact-capacity-management.md"
+    },
+    {
+      "metric": "BluePoint ATM ZoomInfo download limit: 700 contacts per month",
+      "context": "Constrains new list import velocity",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/hubspot/bluepoint-crm-setup-training.md"
+    },
+    {
+      "metric": "Citrus America CAI: Jay Gardner deactivated while owning 3,260 contacts",
+      "context": "Caused multiple active workflows to fail with 'invalid user' errors",
+      "client": "Citrus America / CAI",
+      "source": "wiki/knowledge/hubspot/deactivated-user-contact-reassignment.md"
+    },
+    {
+      "metric": "Asymmetric HubSpot database: 37,000 contacts after cleanup and enrichment",
+      "context": "Validated, enriched database structured for multi-channel outreach",
+      "client": "Asymmetric",
+      "source": "wiki/knowledge/hubspot/asymmetric-hubspot-database-segmentation.md"
+    },
+    {
+      "metric": "Asymmetric deal example (Blast Wave): $8,000/month MRR logged as $8,000 deal value, not $96,000 annualized",
+      "context": "Illustrates MRR-based valuation approach",
+      "client": "Asymmetric",
+      "source": "wiki/knowledge/hubspot/deal-valuation-pipeline-management.md"
+    },
+    {
+      "metric": "BluePoint ATM form submissions not syncing to HubSpot automatically",
+      "context": "Identified during Oct/Nov 2025 digital marketing review; requires manual data entry workaround",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/hubspot/bluepoint-lead-sync-issues.md"
+    },
+    {
+      "metric": "BluePoint ATM Product dropdown field not populating into HubSpot contact property",
+      "context": "Confirmed via same-day test submission on Reverse ATM landing page; critical for lead routing",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/hubspot/bluepoint-product-dropdown-sync-failure.md"
+    },
+    {
+      "metric": "BluePoint ATM HubSpot account: 1,622 contacts across multiple imported lists",
+      "context": "As of October 2025 marketing call",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/hubspot/bluepoint-crm-setup-training.md"
+    },
+    {
+      "metric": "Skaalen Instagram publishing: 2 posts failed to publish during week of April 5, 2026",
+      "context": "Due to HubSpot-Instagram connection failure; one post promoted canceled concert event",
+      "client": "Skaalen",
+      "source": "wiki/knowledge/hubspot/skaalen-instagram-publishing-issues.md"
+    },
+    {
+      "metric": "~40,000 contacts in HubSpot database",
+      "context": "Asymmetric data quality cleanup initiative",
+      "client": "Asymmetric (internal)",
+      "source": "wiki/knowledge/hubspot/hubspot-data-quality-enrichment.md"
+    },
+    {
+      "metric": "~28,000 contacts sitting in Lead stage alone",
+      "context": "Asymmetric data quality cleanup initiative; most lacking sufficient data to qualify or disqualify",
+      "client": "Asymmetric (internal)",
+      "source": "wiki/knowledge/hubspot/hubspot-data-quality-enrichment.md"
+    },
+    {
+      "metric": "37,000-record database fully deduplicated in approximately 2 minutes via API",
+      "context": "HubSpot API data cleanup",
+      "client": "Unknown",
+      "source": "wiki/knowledge/hubspot/hubspot-api-data-cleanup-strategy.md"
+    },
+    {
+      "metric": "Email verification across large contact list completed in ~5 minutes via API",
+      "context": "HubSpot API data cleanup",
+      "client": "Unknown",
+      "source": "wiki/knowledge/hubspot/hubspot-api-data-cleanup-strategy.md"
+    },
+    {
+      "metric": "15 automations and sequences built in ~2 hours using AI-assisted scripting",
+      "context": "vs. estimated week manually",
+      "client": "Unknown",
+      "source": "wiki/knowledge/hubspot/hubspot-api-data-cleanup-strategy.md"
+    },
+    {
+      "metric": "BluePoint ZoomInfo allocation: 1,000 credits/month standard",
+      "context": "October 2025 one-time increase to 1,400 credits",
+      "client": "BluePoint",
+      "source": "wiki/knowledge/hubspot/bluepoint-zoominfo-credits.md"
+    },
+    {
+      "metric": "BluePoint ZoomInfo usage (November 2025): 278 credits used, 722 remaining",
+      "context": "Out of 1,000 monthly allocation",
+      "client": "BluePoint",
+      "source": "wiki/knowledge/hubspot/bluepoint-zoominfo-credits.md"
+    },
+    {
+      "metric": "Aviary ABM email campaign: 238 emails sent, 77 queued (as of March 10, 2026)",
+      "context": "Multi-system pipeline (HubSpot \u2192 Orbit \u2192 SES)",
+      "client": "Aviary",
+      "source": "wiki/knowledge/hubspot/aviary-abm-email-automation.md"
+    },
+    {
+      "metric": "Aviary ABM campaign open rate: 37%",
+      "context": "Well above industry benchmarks",
+      "client": "Aviary",
+      "source": "wiki/knowledge/hubspot/aviary-abm-email-automation.md"
+    },
+    {
+      "metric": "Aviary ABM campaign click rate: 32%",
+      "context": "Well above industry benchmarks",
+      "client": "Aviary",
+      "source": "wiki/knowledge/hubspot/aviary-abm-email-automation.md"
+    },
+    {
+      "metric": "Aviary ABM campaign unsubscribes: near zero",
+      "context": "Indicates strong engagement and relevance",
+      "client": "Aviary",
+      "source": "wiki/knowledge/hubspot/aviary-abm-email-automation.md"
+    },
+    {
+      "metric": "Aviary ABM campaign bounces: near zero",
+      "context": "Indicates good list quality",
+      "client": "Aviary",
+      "source": "wiki/knowledge/hubspot/aviary-abm-email-automation.md"
+    },
+    {
+      "metric": "Citrus America field consolidation: 9 forms and 2 workflows updated in a single session",
+      "context": "Using AI agent with HubSpot API access",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/hubspot/hubspot-ai-agent-data-cleanup-workflow.md"
+    },
+    {
+      "metric": "~3,000 contacts in Citrus America HubSpot database",
+      "context": "Underwent field consolidation and bulk data updates",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/hubspot/hubspot-ai-agent-data-cleanup-workflow.md"
+    },
+    {
+      "metric": "Lead qualification workflow blocked by missing field visibility",
+      "context": "The 'Are you juicing?' field existed in HubSpot but was not visible in the standard contact view, preventing reps from completing the MQL trigger condition",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/hubspot/citrus-america-lead-qualification-workflow.md"
+    },
+    {
+      "metric": "Product/Service field not syncing from website form to HubSpot",
+      "context": "Website form submissions create HubSpot contacts successfully for name, email, phone, company, but the Product/Service dropdown selection is dropped entirely",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/hubspot/bluepoint-product-service-field-sync-bug.md"
+    },
+    {
+      "metric": "Deal auto-creation workflow deactivated after creating noise in the pipeline",
+      "context": "The old SQL-stage workflow (created April 2024) was deactivated in November 2025 after it was identified as the source of premature deal creation",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/hubspot/citrus-america-deal-auto-creation-workflow.md"
+    },
+    {
+      "metric": "13-criteria SQL definition with sparse field population",
+      "context": "The 'Are you already juicing?' field had zero matches across ~10,000 contacts; implementing all 13 criteria as-is would have produced an empty SQL list",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/hubspot/sql-segment-pattern.md"
+    },
+    {
+      "metric": "ABM email sequences cancelled unintentionally for multi-business-unit accounts",
+      "context": "Creating a deal for one contact at a large credit union caused sequences for other contacts at the same account to be cancelled, stopping outreach that should continue",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/hubspot/aviary-abm-automation-workflow.md"
+    },
+    {
+      "metric": "Redundant lead source field accumulation",
+      "context": "Three lead source fields existed simultaneously (Inbound Lead, Lead Source, Lead Source Detail), causing duplicate data entry and confusion during MQL/SQL automation setup",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/hubspot/cai-lead-source-consolidation.md"
+    },
+    {
+      "metric": "HubSpot access removal blocking automation work",
+      "context": "Chris (Asymmetric) was inadvertently removed from super admin status, blocking progress on pending email automation updates including the stadium automation campaign",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/hubspot/bluepoint-hubspot-access-email-automation.md"
+    },
+    {
+      "metric": "ABM email platform decision blocking campaign launch",
+      "context": "Outreach to the top 100 tier-1 accounts cannot begin until the choice between HubSpot upgrade and Apollo/SendGrid is made and the platform is configured",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/hubspot/aviary-email-platform-decision.md"
+    },
+    {
+      "metric": "ABM campaign initial performance: 13% open rate, 11% click rate, 2% bounce rate, 2% unsubscribe rate",
+      "context": "First send to 101 contacts; 2% unsubscribe rate on email 1 considered excellent for cold outreach",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/hubspot/abm-campaign-setup.md"
+    },
+    {
+      "metric": "104 Tier 1 accounts in ABM campaign with one primary contact per company",
+      "context": "One-to-one account mapping with personalized research reports, strategy documents, and 6-email sequence per account",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/hubspot/abm-campaign-setup.md"
+    },
+    {
+      "metric": "Lead handoff notification protocol established with explicit channels",
+      "context": "Primary channel: email to Aaron Grossman; secondary channel: Slack; manual notification required to ensure fast follow-up",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/hubspot/aviary-hubspot-lead-handoff.md"
+    },
+    {
+      "metric": "Modified BANT framework in use (Budget, Authority, Need \u2014 Timeline de-emphasized)",
+      "context": "Timeline is de-emphasized given how new the product category is; a 'good' first call results in the prospect opening the next meeting to a larger internal audience",
+      "client": "AviaryAI",
+      "source": "wiki/knowledge/hubspot/aviary-hubspot-lead-handoff.md"
+    }
+  ],
+  "client_mentions": [
+    "AnChain.ai",
+    "Asymmetric",
+    "Asymmetric (internal)",
+    "Aviary",
+    "AviaryAI",
+    "BluePoint",
+    "BluePoint ATM",
+    "Bluepoint",
+    "CAI",
+    "Citrus America",
+    "Doodla",
+    "Doodla Farms",
+    "Historic Hudson Valley",
+    "Machinery",
+    "Scallin",
+    "Skaalen",
+    "Source",
+    "Three Gates"
+  ]
+}

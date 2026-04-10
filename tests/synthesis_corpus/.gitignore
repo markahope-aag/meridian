@@ -1,0 +1,3 @@
+# Ignore the working directory for `make test-synthesis` output.
+# Baselines and fixtures ARE committed; the latest run output is not.
+latest/

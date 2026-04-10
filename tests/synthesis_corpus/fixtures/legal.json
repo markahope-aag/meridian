@@ -1,0 +1,274 @@
+{
+  "schema_version": 1,
+  "topic_slug": "legal",
+  "topic_name": "Legal",
+  "extracted_at": "2026-04-09T20:38:33Z",
+  "extract_prompt_sha": "b7ab5ab500eb",
+  "extract_model": "claude-haiku-4-5-20251001",
+  "fragment_count": 11,
+  "newest_fragment_mtime": 1775751025.1399746,
+  "claims": [
+    {
+      "claim": "A member may make voluntary capital contributions to an LLC without consent of other members if the operating agreement does not explicitly prohibit such contributions",
+      "sources": [
+        "wiki/knowledge/legal/asymmetric-llc-capital-contributions.md",
+        "wiki/knowledge/legal/asymmetric-member-termination-process.md"
+      ],
+      "confidence": "high",
+      "caveat": "Attorney Sam Wayne assessed this position as holding up well but 'not ironclad'; opposing argument could be made that agreement structure functionally requires joint agreement"
+    },
+    {
+      "claim": "Unauthorized access to a company's digital accounts (Google Ads, CRM) simultaneously triggers liability under CFAA, DTSA, and tortious interference claims",
+      "sources": [
+        "wiki/knowledge/legal/cfaa-trade-secrets-litigation.md",
+        "wiki/knowledge/legal/tortious-interference-business-relationships.md",
+        "wiki/knowledge/legal/index.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Trade secrets in digital account management are not the raw data (client names, spend figures) but the proprietary methodology (account configuration, bid structuring, campaign organization)",
+      "sources": [
+        "wiki/knowledge/legal/cfaa-trade-secrets-litigation.md",
+        "wiki/knowledge/legal/index.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Establishing liability in trade secret and computer crime cases is typically easier than establishing damages; defense strategy predictably pivots to attacking causation and limiting damages period",
+      "sources": [
+        "wiki/knowledge/legal/cfaa-trade-secrets-litigation.md",
+        "wiki/knowledge/legal/damages-calculation-methodology.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Baseline damages in trade secret misappropriation = monthly revenue per affected client \u00d7 expected client tenure (months)",
+      "sources": [
+        "wiki/knowledge/legal/damages-calculation-methodology.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "CFAA and DTSA both permit 2\u00d7 multiplier on actual damages for willful violations",
+      "sources": [
+        "wiki/knowledge/legal/damages-calculation-methodology.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Using product descriptions from third-party retailers (Crutchfield, Amazon, Best Buy) without authorization constitutes copyright infringement regardless of whether links are removed",
+      "sources": [
+        "wiki/knowledge/legal/product-description-copyright-compliance.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Using manufacturer's own product copy to sell their products is generally tolerated and low-risk for authorized resellers",
+      "sources": [
+        "wiki/knowledge/legal/product-description-copyright-compliance.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Tortious interference with business relationships requires: (1) known existing relationship, (2) intentional interference, (3) improper means, (4) causation, (5) damages",
+      "sources": [
+        "wiki/knowledge/legal/tortious-interference-business-relationships.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Ordinary competition and client solicitation by former employees is not actionable; the claim activates only when solicitation uses unauthorized access or stolen proprietary information",
+      "sources": [
+        "wiki/knowledge/legal/tortious-interference-business-relationships.md",
+        "wiki/knowledge/legal/index.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Criminal referral threat can function as settlement leverage by shifting defendant's calculus from financial risk to potential loss of liberty",
+      "sources": [
+        "wiki/knowledge/legal/settlement-leverage-criminal-referral.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "A settlement can include language where plaintiff agrees not to proactively refer matter to DA, but cannot promise to stonewall independent law enforcement investigation",
+      "sources": [
+        "wiki/knowledge/legal/settlement-leverage-criminal-referral.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Fraud-based judgments are non-dischargeable in bankruptcy, making them more valuable than settlements that forgive debt",
+      "sources": [
+        "wiki/knowledge/legal/client-extractions.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BluePoint ATM name is officially registered with USPTO as of December 2025 and may carry \u00ae symbol",
+      "sources": [
+        "wiki/knowledge/legal/bluepoint-trademark-registration.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Breach of covenant of good faith and fair dealing occurs when defendant solicits clients and damages revenue during active settlement negotiation period",
+      "sources": [
+        "wiki/knowledge/legal/cfaa-trade-secrets-litigation.md"
+      ],
+      "confidence": "medium",
+      "caveat": "Claim is weaker standing alone and unlikely to survive if defendant waited until after deal closed"
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Asymmetric legal matters involve layered, overlapping federal and state claims (CFAA, DTSA, tortious interference, breach of good faith) that reinforce each other and foreclose different defense arguments",
+      "sources": [
+        "wiki/knowledge/legal/cfaa-trade-secrets-litigation.md",
+        "wiki/knowledge/legal/tortious-interference-business-relationships.md",
+        "wiki/knowledge/legal/index.md"
+      ],
+      "client_contexts": [
+        "Asymmetric"
+      ]
+    },
+    {
+      "pattern": "Unauthorized digital account access (Google Ads, CRM) is treated as both a federal crime (CFAA) and a civil violation (DTSA, tortious interference), creating compounding liability",
+      "sources": [
+        "wiki/knowledge/legal/cfaa-trade-secrets-litigation.md",
+        "wiki/knowledge/legal/egan-tro-resolution.md",
+        "wiki/knowledge/legal/index.md"
+      ],
+      "client_contexts": [
+        "Asymmetric"
+      ]
+    },
+    {
+      "pattern": "LLC operating agreements that lack explicit prohibitions on unilateral capital contributions may permit strategic ownership changes without member consent",
+      "sources": [
+        "wiki/knowledge/legal/asymmetric-llc-capital-contributions.md",
+        "wiki/knowledge/legal/asymmetric-member-termination-process.md"
+      ],
+      "client_contexts": [
+        "Asymmetric"
+      ]
+    },
+    {
+      "pattern": "Product description copyright compliance requires sourcing from manufacturer websites rather than third-party retailers to avoid infringement liability",
+      "sources": [
+        "wiki/knowledge/legal/product-description-copyright-compliance.md"
+      ],
+      "client_contexts": [
+        "Flynn Audio"
+      ]
+    },
+    {
+      "pattern": "Settlement negotiations in computer crime cases should anticipate defense pivot from liability to damages causation and duration",
+      "sources": [
+        "wiki/knowledge/legal/cfaa-trade-secrets-litigation.md",
+        "wiki/knowledge/legal/damages-calculation-methodology.md"
+      ],
+      "client_contexts": [
+        "Asymmetric"
+      ]
+    }
+  ],
+  "contradictions": [
+    {
+      "claim_a": "The operating agreement does not contain an express prohibition on unilateral capital contributions",
+      "source_a": "wiki/knowledge/legal/asymmetric-llc-capital-contributions.md",
+      "claim_b": "The operating agreement does not explicitly authorize unilateral capital contributions",
+      "source_b": "wiki/knowledge/legal/asymmetric-member-termination-process.md",
+      "resolution": "Not a true contradiction; both statements are true. The agreement is silent on the issue, which creates the legal ambiguity that the strategy exploits."
+    }
+  ],
+  "exceptions": [
+    {
+      "general_rule": "Ordinary competition and client solicitation by former employees is not actionable",
+      "exception": "When solicitation is conducted using unauthorized access or stolen proprietary information, tortious interference claim activates",
+      "context": "Egan matter; unauthorized Google Ads account access combined with client poaching",
+      "source": "wiki/knowledge/legal/tortious-interference-business-relationships.md"
+    },
+    {
+      "general_rule": "Criminal referral leverage is most credible when conduct clearly violates specific criminal statute",
+      "exception": "Leverage is diminished if defendant has nothing to lose (no assets or reputation to protect)",
+      "context": "General settlement strategy",
+      "source": "wiki/knowledge/legal/settlement-leverage-criminal-referral.md"
+    },
+    {
+      "general_rule": "Breach of covenant of good faith and fair dealing claim is available during settlement negotiations",
+      "exception": "Claim is unlikely to survive if defendant waited until after deal closed to interfere",
+      "context": "Trade secret litigation",
+      "source": "wiki/knowledge/legal/cfaa-trade-secrets-litigation.md"
+    },
+    {
+      "general_rule": "Using manufacturer product copy is acceptable for authorized resellers",
+      "exception": "Using third-party retailer copy (Crutchfield, Best Buy) is copyright infringement even with links removed",
+      "context": "E-commerce product descriptions",
+      "source": "wiki/knowledge/legal/product-description-copyright-compliance.md"
+    }
+  ],
+  "evidence": [
+    {
+      "metric": "Three affected clients (Axley, Trachte, Adavacare) generated ~$9,000/month in aggregate revenue",
+      "context": "Egan unauthorized account access and client poaching",
+      "client": "Asymmetric",
+      "source": "wiki/knowledge/legal/damages-calculation-methodology.md"
+    },
+    {
+      "metric": "~36-month average client tenure across affected clients",
+      "context": "Baseline for damages calculation in Egan matter",
+      "client": "Asymmetric",
+      "source": "wiki/knowledge/legal/damages-calculation-methodology.md"
+    },
+    {
+      "metric": "Baseline lost revenue calculation: ~$324,000 (3 clients \u00d7 $9K/month \u00d7 36 months)",
+      "context": "Before statutory multipliers applied",
+      "client": "Asymmetric",
+      "source": "wiki/knowledge/legal/damages-calculation-methodology.md"
+    },
+    {
+      "metric": "$324,000 baseline \u00d7 2\u00d7 CFAA/DTSA multiplier = ~$648,000 initial demand",
+      "context": "Damages demand in Egan matter",
+      "client": "Asymmetric",
+      "source": "wiki/knowledge/legal/damages-calculation-methodology.md"
+    },
+    {
+      "metric": "Mark Hope's estimated three-year value of three poached accounts exceeds settlement obligation owed to Egan",
+      "context": "Egan settlement obligation nullified by account poaching",
+      "client": "Asymmetric",
+      "source": "wiki/knowledge/legal/egan-tro-resolution.md"
+    },
+    {
+      "metric": "TRO granted 2026-02-26 requiring Egan to restore full admin access to Get Found Madison Google Ads account by EOD",
+      "context": "Emergency TRO hearing; Egan's attorney offered no defense",
+      "client": "Asymmetric",
+      "source": "wiki/knowledge/legal/egan-tro-resolution.md"
+    },
+    {
+      "metric": "Mark contributed $5,000 after Egan's termination to establish majority ownership",
+      "context": "Capital contribution strategy; any amount exceeding Egan's capital account balance would suffice",
+      "client": "Asymmetric",
+      "source": "wiki/knowledge/legal/asymmetric-llc-capital-contributions.md"
+    },
+    {
+      "metric": "BluePoint ATM trademark registered with USPTO as of December 2025",
+      "context": "Dual-logo mark (Reverse ATM) status pending legal confirmation",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/legal/bluepoint-trademark-registration.md"
+    },
+    {
+      "metric": "Alpine product pages on Flynn Audio WooCommerce site contained copy sourced from Crutchfield",
+      "context": "Copyright compliance audit; flagged as legal liability requiring remediation",
+      "client": "Flynn Audio",
+      "source": "wiki/knowledge/legal/product-description-copyright-compliance.md"
+    }
+  ],
+  "client_mentions": [
+    "Asymmetric",
+    "BluePoint ATM",
+    "Flynn Audio"
+  ]
+}

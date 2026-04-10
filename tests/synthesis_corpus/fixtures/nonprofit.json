@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "topic_slug": "nonprofit",
+  "topic_name": "Nonprofit",
+  "extracted_at": "2026-04-09T20:59:19Z",
+  "extract_prompt_sha": "b7ab5ab500eb",
+  "extract_model": "claude-haiku-4-5-20251001",
+  "fragment_count": 7,
+  "newest_fragment_mtime": 1775752303.7568977,
+  "claims": [
+    {
+      "claim": "Nonprofit websites must serve two distinct audiences simultaneously \u2014 service users and donors \u2014 requiring equal visual weight for both conversion paths",
+      "sources": [
+        "wiki/knowledge/nonprofit/index.md",
+        "wiki/knowledge/nonprofit/three-gaits-emotional-storytelling.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Emotional storytelling and human narratives consistently outperform statistics-only messaging in nonprofit fundraising",
+      "sources": [
+        "wiki/knowledge/nonprofit/capital-campaign-landing-pages.md",
+        "wiki/knowledge/nonprofit/three-gaits-emotional-storytelling.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Donation CTAs placed before earning emotional permission fail to convert; sequencing mission \u2192 science \u2192 human stories \u2192 giving produces better results",
+      "sources": [
+        "wiki/knowledge/nonprofit/three-gaits-emotional-storytelling.md",
+        "wiki/knowledge/nonprofit/capital-campaign-landing-pages.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Tangible donor recognition programs (physical artifacts) lower psychological barriers to giving by converting abstract transactions into lasting representations",
+      "sources": [
+        "wiki/knowledge/nonprofit/doudlah-farms-facility-donation-campaign.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Grant fulfillment can be partially automated by branching on grant type (vendor-fulfilled vs. direct-payment grants)",
+      "sources": [
+        "wiki/knowledge/nonprofit/wi-masons-grant-automation.md",
+        "wiki/knowledge/nonprofit/client-extractions.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Manual fund-balance lookups in grant approval workflows can be eliminated through API integration with database platforms",
+      "sources": [
+        "wiki/knowledge/nonprofit/wi-masons-grant-automation.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Invoice line-item structure for grant reimbursement must strictly adhere to original grant budget categories to satisfy grant administrator compliance requirements",
+      "sources": [
+        "wiki/knowledge/nonprofit/doudlah-farms-invoice-structure.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Payment method breadth is a consistent requirement across nonprofit donation campaigns",
+      "sources": [
+        "wiki/knowledge/nonprofit/index.md",
+        "wiki/knowledge/nonprofit/doudlah-farms-facility-donation-campaign.md"
+      ],
+      "confidence": "medium"
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Equine-assisted therapy nonprofits (Three Gaits, Hearts & Horses) share structurally similar audiences and benefit from identical emotional storytelling and dual-conversion-path architectures",
+      "sources": [
+        "wiki/knowledge/nonprofit/three-gaits-emotional-storytelling.md",
+        "wiki/knowledge/nonprofit/capital-campaign-landing-pages.md"
+      ],
+      "client_contexts": [
+        "Three Gaits",
+        "Hearts & Horses"
+      ]
+    },
+    {
+      "pattern": "Nonprofit grant programs with distributed member networks (lodges, chapters) require automated eligibility verification and per-entity login systems to reduce administrative overhead",
+      "sources": [
+        "wiki/knowledge/nonprofit/wi-masons-grant-automation.md",
+        "wiki/knowledge/nonprofit/client-extractions.md"
+      ],
+      "client_contexts": [
+        "Wisconsin Masonic Foundation"
+      ]
+    },
+    {
+      "pattern": "Nonprofit websites frequently fail to clearly communicate core services and value proposition, causing visitor drop-off without understanding engagement pathways",
+      "sources": [
+        "wiki/knowledge/nonprofit/index.md",
+        "wiki/knowledge/nonprofit/client-extractions.md"
+      ],
+      "client_contexts": [
+        "Vcedc"
+      ]
+    },
+    {
+      "pattern": "Capital campaign landing pages require investment breakdowns (itemized cost allocation) rather than lump-sum goals to improve donor comprehension and confidence",
+      "sources": [
+        "wiki/knowledge/nonprofit/capital-campaign-landing-pages.md"
+      ],
+      "client_contexts": [
+        "Three Gaits"
+      ]
+    },
+    {
+      "pattern": "Nonprofit donation pages should present payment methods in order of accessibility and friction, starting with lowest-barrier options",
+      "sources": [
+        "wiki/knowledge/nonprofit/doudlah-farms-facility-donation-campaign.md",
+        "wiki/knowledge/nonprofit/client-extractions.md"
+      ],
+      "client_contexts": [
+        "Doudlah Farms",
+        "Vcedc"
+      ]
+    }
+  ],
+  "contradictions": [],
+  "exceptions": [
+    {
+      "general_rule": "Grant reimbursement invoices should reflect actual service delivery across multiple line items",
+      "exception": "Doudlah Farms invoices must preserve original total across restructured line items, adjusting commission bases to maintain sum equivalence rather than reflecting actual sales proportions",
+      "context": "Grant compliance with Stewards Unlimited administrator requirements",
+      "source": "wiki/knowledge/nonprofit/doudlah-farms-invoice-structure.md"
+    },
+    {
+      "general_rule": "Nonprofit websites should prioritize service-user pathways for organizations primarily serving beneficiaries",
+      "exception": "Dual-conversion architecture (equal weight to service and donor paths) applies even when one audience is significantly smaller, because both must be served simultaneously",
+      "context": "Three Gaits and Hearts & Horses equine therapy models",
+      "source": "wiki/knowledge/nonprofit/three-gaits-emotional-storytelling.md"
+    }
+  ],
+  "evidence": [
+    {
+      "metric": "Recognition Wall tile cost: ~$10 per tile; minimum donation threshold: $50",
+      "context": "Tile cost represents 20% of minimum donation, leaving 80% directed to facility goal",
+      "client": "Doudlah Farms",
+      "source": "wiki/knowledge/nonprofit/doudlah-farms-facility-donation-campaign.md"
+    },
+    {
+      "metric": "Three Gaits capital campaign goal: $4 million",
+      "context": "Allocation: heated indoor arena, modern stable/barn, therapy & classroom space, administrative/contingency",
+      "client": "Three Gaits",
+      "source": "wiki/knowledge/nonprofit/capital-campaign-landing-pages.md"
+    },
+    {
+      "metric": "Wisconsin Masonic Foundation grant limit: $4,000 per lodge per fiscal year (May 1\u2013April 30)",
+      "context": "Approval rule enforced through Ninox database; proposed automation via API integration",
+      "client": "Wisconsin Masonic Foundation",
+      "source": "wiki/knowledge/nonprofit/wi-masons-grant-automation.md"
+    },
+    {
+      "metric": "Doudlah Farms January 2026 invoice: $8,496 total ($4,000 retainer + $2,485 Amazon popcorn commission + $2,011 other sales commission)",
+      "context": "Popcorn sales base: $62,130 (corrected from initial ~$64k after filtering non-popcorn SKUs)",
+      "client": "Doudlah Farms",
+      "source": "wiki/knowledge/nonprofit/doudlah-farms-invoice-structure.md"
+    },
+    {
+      "metric": "WP Charitable plugin cost: $99/year; expected duration: 1\u20132 years until facility funding goal reached",
+      "context": "Enables subscription/recurring donations not available in existing WooCommerce setup",
+      "client": "Doudlah Farms",
+      "source": "wiki/knowledge/nonprofit/doudlah-farms-facility-donation-campaign.md"
+    },
+    {
+      "metric": "Wisconsin Masonic Foundation staffing: 1.5 FTE (Adam Rigden 50%, Erica 50%, Christina 50%)",
+      "context": "Manual grant approval and payment processing creates significant bottleneck",
+      "client": "Wisconsin Masonic Foundation",
+      "source": "wiki/knowledge/nonprofit/wi-masons-grant-automation.md"
+    }
+  ],
+  "client_mentions": [
+    "Doudlah Farms",
+    "Hearts & Horses",
+    "Three Gaits",
+    "Vcedc",
+    "Wisconsin Masonic Foundation"
+  ]
+}

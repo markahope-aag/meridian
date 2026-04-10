@@ -546,12 +546,26 @@ def _inject_provenance(content: str, provenance: dict) -> str:
     return "---".join(parts)
 
 
-def do_write(topic_slug: str) -> dict:
+def do_write(
+    topic_slug: str,
+    fixture_path: Path | None = None,
+    output_path_override: Path | None = None,
+) -> dict:
     """Run the write pass (Pass 2). Requires a valid extraction cache.
 
     Archives any existing index.md to state/synthesis_versions/<slug>/
     before overwriting. Stamps Meridian provenance fields into the
     frontmatter of the new file.
+
+    Test-harness parameters (normally None for production runs):
+      fixture_path: read extraction JSON from this path instead of the
+        cache. When set, no cache validation is performed and the
+        extraction is not modified. Used by the regression harness to
+        run the write pass against frozen inputs.
+      output_path_override: write the synthesis to this path instead of
+        wiki/knowledge/<slug>/index.md. Skips the archive step. Used
+        by the regression harness to capture outputs without touching
+        production state.
     """
     t0 = time.time()
     bundle = _load_topic_bundle(topic_slug)
@@ -563,20 +577,35 @@ def do_write(topic_slug: str) -> dict:
     fragments = bundle["fragments"]
     config = bundle["config"]
 
-    cached = load_extraction_cache(topic_slug, fragment_paths)
-    cache_hit = cached is not None
-    if cached is None:
-        # No cache — fall back to running extraction inline so write can proceed.
+    if fixture_path is not None:
+        # Test-harness mode: read the frozen extraction from disk. Do not
+        # validate, do not touch the production cache.
+        if not fixture_path.exists():
+            return {"topic": topic_slug, "error": f"fixture not found: {fixture_path}"}
+        try:
+            cached = json.loads(fixture_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as e:
+            return {"topic": topic_slug, "error": f"failed to read fixture: {e}"}
+        cache_hit = True
         print(
-            f"  No extraction cache for '{topic_name}' — running extraction first",
+            f"  Using fixture for '{topic_name}' ({cached.get('fragment_count', '?')} fragments)",
             file=sys.stderr,
         )
-        extract_result = do_extract(topic_slug, re_extract=True)
-        if extract_result.get("error"):
-            return extract_result
+    else:
         cached = load_extraction_cache(topic_slug, fragment_paths)
+        cache_hit = cached is not None
         if cached is None:
-            return {"topic": topic_slug, "error": "extraction cache still missing after rebuild"}
+            # No cache — fall back to running extraction inline so write can proceed.
+            print(
+                f"  No extraction cache for '{topic_name}' — running extraction first",
+                file=sys.stderr,
+            )
+            extract_result = do_extract(topic_slug, re_extract=True)
+            if extract_result.get("error"):
+                return extract_result
+            cached = load_extraction_cache(topic_slug, fragment_paths)
+            if cached is None:
+                return {"topic": topic_slug, "error": "extraction cache still missing after rebuild"}
 
     merged = {
         "claims": cached.get("claims", []),
@@ -621,6 +650,25 @@ def do_write(topic_slug: str) -> dict:
         "extraction_cache_hit": bool(cache_hit),
     }
     synthesis_content = _inject_provenance(synthesis_content, provenance)
+
+    # Test-harness mode short-circuits archiving and log updates: the
+    # harness writes to a scratch directory and must not mutate
+    # production state.
+    if output_path_override is not None:
+        output_path_override.parent.mkdir(parents=True, exist_ok=True)
+        output_path_override.write_text(synthesis_content, encoding="utf-8")
+        elapsed = time.time() - t0
+        print(f"  Done '{topic_name}' fixture run ({elapsed:.1f}s)", file=sys.stderr)
+        return {
+            "topic": topic_slug,
+            "topic_name": topic_name,
+            "action": "fixture_written",
+            "run_id": run_id,
+            "fragment_count": len(fragments),
+            "output_path": str(output_path_override),
+            "provenance": provenance,
+            "elapsed_s": round(elapsed, 1),
+        }
 
     # Archive the previous version before overwriting, so rollbacks and
     # prompt A/B comparisons are one mv away.
@@ -727,6 +775,16 @@ def _build_parser() -> argparse.ArgumentParser:
 
     p_write = sub.add_parser("write", help="Run write pass only — requires cached extraction")
     p_write.add_argument("--topic", required=True)
+    p_write.add_argument(
+        "--fixture",
+        help="Path to a frozen extraction JSON. When set, bypasses the cache "
+             "and does not modify production state. Used by the test harness.",
+    )
+    p_write.add_argument(
+        "--output",
+        help="Write synthesis to this path instead of wiki/knowledge/<slug>/index.md. "
+             "Required when --fixture is set; skips archive + log update.",
+    )
 
     p_run = sub.add_parser("run", help="Extract (or reuse cache) then write")
     p_run.add_argument("--topic", required=True)
@@ -756,7 +814,11 @@ def main():
     elif args.command == "extract":
         result = do_extract(args.topic, re_extract=args.re_extract)
     elif args.command == "write":
-        result = do_write(args.topic)
+        fixture = Path(args.fixture) if getattr(args, "fixture", None) else None
+        output = Path(args.output) if getattr(args, "output", None) else None
+        if fixture is not None and output is None:
+            parser.error("--output is required when --fixture is set")
+        result = do_write(args.topic, fixture_path=fixture, output_path_override=output)
     elif args.command == "run":
         result = synthesize_topic(
             args.topic,

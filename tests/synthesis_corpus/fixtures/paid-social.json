@@ -1,0 +1,2316 @@
+{
+  "schema_version": 1,
+  "topic_slug": "paid-social",
+  "topic_name": "Paid Social",
+  "extracted_at": "2026-04-09T17:32:44Z",
+  "extract_prompt_sha": "b7ab5ab500eb",
+  "extract_model": "claude-haiku-4-5-20251001",
+  "fragment_count": 115,
+  "newest_fragment_mtime": 1775754703.1624057,
+  "claims": [
+    {
+      "claim": "Meta ads for Trachte Door Hallway campaign generating ~$0.30 cost per page view, indicating genuine audience interest despite creative quality issues",
+      "sources": [
+        "wiki/knowledge/paid-social/trachte-meta-creative-refresh.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "LinkedIn allows targeting by job title, industry, seniority, and company size for recruitment ads",
+      "sources": [
+        "wiki/knowledge/paid-social/didion-recruitment-linkedin-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "LinkedIn Lead Gen Forms reduce drop-off from external redirects and pre-populate candidate data from LinkedIn profiles",
+      "sources": [
+        "wiki/knowledge/paid-social/didion-recruitment-linkedin-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "LinkedIn API does not support personalized automation at scale for ABM outreach, making manual outreach the only viable path",
+      "sources": [
+        "wiki/knowledge/paid-social/aviary-linkedin-abm-outreach.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Overhead Door Madison Meta ads delivering ~$0.40 CPC with high traffic volume as brand awareness play",
+      "sources": [
+        "wiki/knowledge/paid-social/overhead-door-meta-ads-awareness.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Retargeting campaigns typically deliver stronger ROI than cold prospecting because audiences have already demonstrated intent",
+      "sources": [
+        "wiki/knowledge/paid-social/retargeting-site-visitor-campaigns.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "PaperTube was not running any retargeting campaigns despite having meaningful site traffic",
+      "sources": [
+        "wiki/knowledge/paid-social/retargeting-site-visitor-campaigns.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BluePoint ATM LinkedIn static ad achieved $0.70 CPC and ~2% CTR, driving 8 form fills in one week",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-ny-compliance-guide-campaign.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BluePoint ATM LinkedIn video boost achieved ~$10 CPC with lower CTR than static ad, serving brand awareness purpose",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-ny-compliance-guide-campaign.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Cordwainer Meta lead form ads are generating unqualified leads (apartment seekers rather than memory care prospects) despite adding disqualifying filter questions",
+      "sources": [
+        "wiki/knowledge/paid-social/cordwainer-meta-lead-quality.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Meta Multi-Advertiser placements can crop ad creative and place ads alongside unrelated competitors, degrading brand impression",
+      "sources": [
+        "wiki/knowledge/paid-social/meta-ads-multi-advertiser-placements.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Meta enables Multi-Advertiser setting by default in some campaign configurations",
+      "sources": [
+        "wiki/knowledge/paid-social/meta-ads-multi-advertiser-placements.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BluePoint ATM LinkedIn ads running nationwide with 1.6% CTR across ~22,000 impressions and 376 clicks",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-linkedin-ads-optimization.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "LinkedIn B2B CTR averages typically run 0.4\u20130.6%",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-linkedin-ads-optimization.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Didion Meta recruitment ads performing at $7\u2013$24 per form submission at $2.30/day, with some ad sets flagged as learning limited",
+      "sources": [
+        "wiki/knowledge/paid-social/didion-recruitment-linkedin-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Scooter repair economics are unprofitable: most scooters retail for $500\u2013600, repairs run $300\u2013400, causing customers to discard rather than repair",
+      "sources": [
+        "wiki/knowledge/paid-social/crazy-lennys-social-content-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Crazy Lenny's tunes-up promotions have performed well and should be recurring content type",
+      "sources": [
+        "wiki/knowledge/paid-social/crazy-lennys-social-content-strategy.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Piano moving has low competition on Google Ads with only one known competitor having a dedicated landing page",
+      "sources": [
+        "wiki/knowledge/paid-social/reynolds-specialty-services-strategy.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "LinkedIn offers the most granular B2B targeting of any major ad platform, enabling simultaneous filtering by location, job title, industry, and company size",
+      "sources": [
+        "wiki/knowledge/paid-social/linkedin-geographic-targeting-b2b.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Reddit ads are significantly cheaper than comparable placements on Google or Meta, especially for niche audiences",
+      "sources": [
+        "wiki/knowledge/paid-social/reddit-ads-niche-targeting.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "CTR above 6% is considered exceptional; Citrus America's Commercial Juicer campaign achieved 12.65% CTR, nearly double the agency benchmark across 40+ clients",
+      "sources": [
+        "wiki/knowledge/paid-social/citrus-america-ad-performance.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Remarketing display campaigns can achieve interaction rates above 0.5% average with very low CPCs ($0.41 average)",
+      "sources": [
+        "wiki/knowledge/paid-social/citrus-america-ad-performance.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "LinkedIn approval for ad campaigns typically takes a few days after submission",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-linkedin-advertising-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Meta's Advantage+ budget feature allows the platform to naturally favor whichever creative performs better between static graphics and video",
+      "sources": [
+        "wiki/knowledge/paid-social/trachte-doorhallway-meta-campaign.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Reddit users are sensitive to overt promotion; ad creative must feel native and helpful, not salesy",
+      "sources": [
+        "wiki/knowledge/paid-social/wedding-app-advertising-strategy.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Influencer effectiveness has declined as audiences have grown skeptical of paid endorsements; authenticity and fit matter more than follower count",
+      "sources": [
+        "wiki/knowledge/paid-social/wedding-app-advertising-strategy.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Pinterest is a high-intent discovery platform for wedding planning with strong visual fit for product categories",
+      "sources": [
+        "wiki/knowledge/paid-social/wedding-app-advertising-strategy.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Geofencing campaigns around trade shows can capture attendees during high-intent purchasing decision windows",
+      "sources": [
+        "wiki/knowledge/paid-social/trachte-trade-show-geo-targeting.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "LinkedIn enables simultaneous filtering by job title, industry, and location \u2014 capabilities Google Ads cannot match for B2B targeting",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-linkedin-targeting-strategy.md",
+        "wiki/knowledge/paid-social/papertube-linkedin-ads-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Meta CPCs for local service businesses run $0.30\u2013$0.40 versus $4\u2013$5 on Google Search \u2014 a 10x cost difference",
+      "sources": [
+        "wiki/knowledge/paid-social/index.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Cordwainer Meta Ads achieved CPLPV under $2.00 and CTR of 4\u20135%, meeting target benchmarks",
+      "sources": [
+        "wiki/knowledge/paid-social/cordwainer-meta-ads-performance.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "BluePoint LinkedIn campaigns generated only 3 form fills over ~$3,000 spend (two months), with average CPC of $1.85",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-linkedin-ads-pause-reallocation.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Paper Tube Co LinkedIn ads achieved 0.38% CTR after two weeks, described as within normal range for LinkedIn video ads",
+      "sources": [
+        "wiki/knowledge/paid-social/papertube-linkedin-ads.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Overhead Door's Bing PPC baseline was 29 conversions over 30 days at ~$24/conversion",
+      "sources": [
+        "wiki/knowledge/paid-social/overhead-door-meta-ads-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Avant Gardening Meta campaigns experienced recurring payment failures due to bank-side fraud flags on the billing card",
+      "sources": [
+        "wiki/knowledge/paid-social/avant-gardening-meta-campaign-performance.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "ClickCease saved ~$115/month in fraudulent clicks on Google Ads but requires separate manual configuration for Microsoft Ads protection",
+      "sources": [
+        "wiki/knowledge/paid-social/clickcease-microsoft-ads-configuration.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "TrackRite Meta ad account is blocked pending business verification because TrackRite is a trading name division of Trachte Building Systems, not a standalone legal entity",
+      "sources": [
+        "wiki/knowledge/paid-social/trachte-meta-verification-issue.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Capitol Bank's Meta account suspension was unexplained and resolved without communication from Meta, leaving the client reluctant to make changes",
+      "sources": [
+        "wiki/knowledge/paid-social/meta-account-suspension-recovery.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Meta's Business Manager permission system frequently fails to propagate access when a new ad account is added; fix requires removing and re-adding the partner with Facebook Page explicitly included",
+      "sources": [
+        "wiki/knowledge/paid-social/meta-ad-account-access-troubleshooting.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Cordwainer's actual buyer for memory care is adult children (~45 years old), not the person who will live there",
+      "sources": [
+        "wiki/knowledge/paid-social/cordwainer-meta-ads-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Didion's existing Meta campaigns achieved CPC under $1, described as 'incredible'",
+      "sources": [
+        "wiki/knowledge/paid-social/didion-meta-recruitment-campaign.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "AHS school training course has 50-person capacity but only 15 registrations; email list performance is strong (30\u201340% open rates, ~50% form conversion) but list size is the bottleneck",
+      "sources": [
+        "wiki/knowledge/paid-social/ahs-school-training-facebook-ads.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Meta outperforms Google Ads for recruitment advertising, with Meta TOFU delivering ~$11 CPA vs. Google's significantly higher CPA",
+      "sources": [
+        "wiki/knowledge/paid-social/didion-recruitment-ad-performance-meta-vs-google.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "LinkedIn is the highest-performing paid acquisition channel for BluePoint ATM to date",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-linkedin-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Local Service Ads (LSAs) are a lower-risk testing mechanism for legal services before scaling standard PPC",
+      "sources": [
+        "wiki/knowledge/paid-social/axley-ppc-budget-allocation.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Rotating weekly social boosts prevent ad fatigue better than single extended boosts",
+      "sources": [
+        "wiki/knowledge/paid-social/skaalen-job-fair-boost-campaign.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Visual products (packaging, apparel, design) sell better on Meta and YouTube than Google Search alone",
+      "sources": [
+        "wiki/knowledge/paid-social/meta-youtube-visual-product-strategy.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "LinkedIn's company-level and contact-list targeting enables precise B2B account-based marketing unavailable on Meta or Google",
+      "sources": [
+        "wiki/knowledge/paid-social/linkedin-ads-b2b-campaigns.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Meta lead-gen campaigns with 0-for-11 conversion rate indicate fundamental audience/intent mismatch and should be paused rather than reduced in budget",
+      "sources": [
+        "wiki/knowledge/paid-social/cordwainer-meta-lead-gen-pause.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Geofencing at trade shows can capture attendees without booth costs by targeting city-wide and venue-specific audiences on Meta",
+      "sources": [
+        "wiki/knowledge/paid-social/papertube-trade-show-geofencing.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Prior cook-specific social boost for Skaalen achieved ~5,500 impressions, ~115 site clicks, and ~$0.30 CPC",
+      "sources": [
+        "wiki/knowledge/paid-social/skaalen-job-fair-boost-campaign.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "LinkedIn video ads outperform carousel and single-image ads in engagement",
+      "sources": [
+        "wiki/knowledge/paid-social/linkedin-ads-b2b-campaigns.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "LinkedIn automation tools carry meaningful account restriction risk; platform actively enforces against third-party automation",
+      "sources": [
+        "wiki/knowledge/paid-social/aviary-linkedin-automation-research.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Meta clicks cost ~$0.30 vs. $4\u20135 on Google Search for local service businesses",
+      "sources": [
+        "wiki/knowledge/paid-social/adava-care-meta-awareness-campaigns.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Overhead Door Madison Meta Ads campaign maintains CPC under $0.40 across all ad formats (testimonials, carousels, video, homeowner creatives)",
+      "sources": [
+        "wiki/knowledge/paid-social/overhead-door-meta-ads-performance.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "LinkedIn matched audience targeting requires minimum audience size threshold; ~1,000 raw contacts often fall below minimum after matching",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-linkedin-stadium-targeting.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Google Discovery campaigns attract consumer traffic rather than B2B buyers; $169 wasted on irrelevant consumer queries in 90 days for Aviary",
+      "sources": [
+        "wiki/knowledge/paid-social/aviary-linkedin-ads-proposal.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "Shopify is a poor host for lead-gen landing pages requiring CRM form integrations; WordPress + Gravity Forms is the standard solution",
+      "sources": [
+        "wiki/knowledge/paid-social/papertube-linkedin-ads-rebuild.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "New blog posts receiving diverse early traffic (social, email, direct) signal quality to Google and accelerate ranking faster than organic-only approach",
+      "sources": [
+        "wiki/knowledge/paid-social/content-boost-strategy.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "LinkedIn is more effective than Google Search for reaching B2B financial services decision-makers by job title and company",
+      "sources": [
+        "wiki/knowledge/paid-social/aviary-linkedin-ads-proposal.md"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim": "Didion successfully filled high-level roles including CEO using LinkedIn recruitment ads",
+      "sources": [
+        "wiki/knowledge/paid-social/didion-recruitment-campaign.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "YouTube retargeting creative optimized for mobile dimensions appears distorted when rendered on YouTube; platform-specific creative variants required",
+      "sources": [
+        "wiki/knowledge/paid-social/flynn-audio-youtube-retargeting-creative.md"
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim": "LinkedIn static ads can achieve $0.70 CPC against industry benchmark of $2\u2013$5",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-ny-compliance-campaign.md"
+      ],
+      "confidence": "high",
+      "context": "BluePoint NY compliance campaign with strong call-to-action"
+    },
+    {
+      "claim": "LinkedIn outperforms Google Ads for B2B niche compliance topics",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-ny-compliance-campaign.md"
+      ],
+      "confidence": "high",
+      "context": "BluePoint campaign showed LinkedIn significantly outperformed Google in volume and lead quality"
+    },
+    {
+      "claim": "YouTube is currently the highest-value paid channel with favorable pricing relative to other platforms",
+      "sources": [
+        "wiki/knowledge/paid-social/aviary-paid-media-strategy.md"
+      ],
+      "confidence": "medium",
+      "context": "Asymmetric assessment; pricing advantage may close within 12\u201318 months as competition increases"
+    },
+    {
+      "claim": "Paid search requires sufficient keyword search volume to be effective",
+      "sources": [
+        "wiki/knowledge/paid-social/american-extractions-ad-campaign-failure.md"
+      ],
+      "confidence": "high",
+      "context": "American Extractions campaign failure attributed to low keyword search volume in niche market"
+    },
+    {
+      "claim": "Poor domain rating raises Google Ads CPCs and lowers ad placement quality",
+      "sources": [
+        "wiki/knowledge/paid-social/american-extractions-ad-campaign-failure.md"
+      ],
+      "confidence": "high",
+      "context": "American Extractions case study; weak domain undermines both organic and paid performance"
+    },
+    {
+      "claim": "Email campaigns outperform paid ads for niche B2B clients with low search volume",
+      "sources": [
+        "wiki/knowledge/paid-social/american-extractions-ad-campaign-failure.md"
+      ],
+      "confidence": "high",
+      "context": "American Extractions generated majority of leads through email, only ~3 through paid ads"
+    },
+    {
+      "claim": "LinkedIn personal profile optimization should prioritize first 3\u20134 lines of About section",
+      "sources": [
+        "wiki/knowledge/paid-social/linkedin-personal-profile-optimization.md"
+      ],
+      "confidence": "high",
+      "context": "Only first 3\u20134 lines visible without clicking 'See more'"
+    },
+    {
+      "claim": "LinkedIn headline should lead with job title, then add value proposition",
+      "sources": [
+        "wiki/knowledge/paid-social/linkedin-personal-profile-optimization.md"
+      ],
+      "confidence": "high",
+      "context": "Title gets cut off in most views; value proposition speaks to what you do for others"
+    },
+    {
+      "claim": "Meta Ads budgets are set at Ad Set level, not campaign level",
+      "sources": [
+        "wiki/knowledge/paid-social/facebook-ad-budget-management.md"
+      ],
+      "confidence": "high",
+      "context": "Three-tier hierarchy: Campaign \u2192 Ad Set (budget here) \u2192 Ad"
+    },
+    {
+      "claim": "Meta billing emails use rolling two-day windows and commonly overlap, causing confusion",
+      "sources": [
+        "wiki/knowledge/paid-social/facebook-ad-budget-management.md"
+      ],
+      "confidence": "high",
+      "context": "Billing & Payments tab in Ads Manager provides clearer transaction breakdown"
+    },
+    {
+      "claim": "Consistency beats perfection on LinkedIn; weekly good posts outperform polished posts every 3 weeks",
+      "sources": [
+        "wiki/knowledge/paid-social/linkedin-content-engagement-strategy.md"
+      ],
+      "confidence": "high",
+      "context": "Core principle from Asymmetric's LinkedIn strategy"
+    },
+    {
+      "claim": "Personal/event posts with photos consistently outperform text-only or graphic-only posts on LinkedIn",
+      "sources": [
+        "wiki/knowledge/paid-social/linkedin-content-engagement-strategy.md"
+      ],
+      "confidence": "high",
+      "context": "Authenticity drives engagement more than polish"
+    },
+    {
+      "claim": "Tagging colleagues in LinkedIn posts significantly expands reach",
+      "sources": [
+        "wiki/knowledge/paid-social/linkedin-content-engagement-strategy.md"
+      ],
+      "confidence": "high",
+      "context": "More tags = further reach without additional effort"
+    },
+    {
+      "claim": "Comments generate more algorithmic reach than likes on LinkedIn",
+      "sources": [
+        "wiki/knowledge/paid-social/linkedin-content-engagement-strategy.md"
+      ],
+      "confidence": "medium",
+      "context": "Engagement tactic guidance"
+    },
+    {
+      "claim": "Meta awareness campaigns can reach senior living research audiences at significantly lower CPC than Google Search",
+      "sources": [
+        "wiki/knowledge/paid-social/client-extractions.md"
+      ],
+      "confidence": "medium",
+      "context": "Adava Care, 2025-11-19"
+    },
+    {
+      "claim": "Retargeting audiences segmented by engagement level can convert 10\u201320% of previously interested visitors",
+      "sources": [
+        "wiki/knowledge/paid-social/client-extractions.md"
+      ],
+      "confidence": "medium",
+      "context": "Adava Care, 2026-04-05; segments: visited location page, viewed pricing, abandoned form"
+    },
+    {
+      "claim": "Redirecting paid social budget from generic awareness to content promotion can improve ROI when paired with organic search",
+      "sources": [
+        "wiki/knowledge/paid-social/client-extractions.md"
+      ],
+      "confidence": "medium",
+      "context": "Adava Care, 2026-04-05"
+    },
+    {
+      "claim": "Paid social audiences should be segmented by decision-maker role and intent level",
+      "sources": [
+        "wiki/knowledge/paid-social/client-extractions.md"
+      ],
+      "confidence": "medium",
+      "context": "AHS, 2026-04-05; budget allocation should reflect conversion likelihood, not audience size"
+    },
+    {
+      "claim": "Geofencing campaigns at industry events can target high-intent attendees in defined physical locations",
+      "sources": [
+        "wiki/knowledge/paid-social/client-extractions.md"
+      ],
+      "confidence": "low",
+      "context": "AHS, 2026-04-05"
+    },
+    {
+      "claim": "Timely social content addressing immediate local events maximizes relevance and engagement",
+      "sources": [
+        "wiki/knowledge/paid-social/client-extractions.md"
+      ],
+      "confidence": "medium",
+      "context": "AHS, 2026-04-05; weather, infrastructure issues"
+    },
+    {
+      "claim": "Seasonal audio advertising during predictable demand windows builds awareness cost-efficiently",
+      "sources": [
+        "wiki/knowledge/paid-social/client-extractions.md"
+      ],
+      "confidence": "low",
+      "context": "AHS, 2026-04-05; example: spring thaw for moisture-related home issues"
+    },
+    {
+      "claim": "Meta's audience targeting can reach niche professional groups without exact job title matching",
+      "sources": [
+        "wiki/knowledge/paid-social/client-extractions.md"
+      ],
+      "confidence": "medium",
+      "context": "AHS, 2026-04-05; example: school employees"
+    },
+    {
+      "claim": "Reddit and LinkedIn ads serve distinct funnel roles: Reddit for low-cost awareness, LinkedIn for higher-intent MOFU",
+      "sources": [
+        "wiki/knowledge/paid-social/client-extractions.md"
+      ],
+      "confidence": "low",
+      "context": "American Extractions, 2025-10-27"
+    },
+    {
+      "claim": "Consolidating fragmented ad budgets into single broad campaigns targeting universal pain points improves lead velocity",
+      "sources": [
+        "wiki/knowledge/paid-social/client-extractions.md"
+      ],
+      "confidence": "low",
+      "context": "Asymmetric, 2026-04-05; when per-segment budgets are too small"
+    },
+    {
+      "claim": "Multi-advertiser placements on Meta drive lower-intent traffic and should be disabled",
+      "sources": [
+        "wiki/knowledge/paid-social/client-extractions.md"
+      ],
+      "confidence": "low",
+      "context": "Adava Care, 2025-10-22"
+    },
+    {
+      "claim": "Spotify ads can reach prospective self-storage investors through business/finance podcast targeting",
+      "sources": [
+        "wiki/knowledge/paid-social/spotify-ads-business-investment-targeting.md"
+      ],
+      "confidence": "medium",
+      "context": "Trachte strategy; listeners already in investment mindset"
+    },
+    {
+      "claim": "LinkedIn Sales Navigator complements paid ad efforts for targeted prospecting",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-linkedin-ads-strategy.md"
+      ],
+      "confidence": "medium",
+      "context": "BluePoint ATM; Mike Stebbins assigned dedicated seat"
+    },
+    {
+      "claim": "Dual-bid strategy separating low-intent and high-intent searches optimizes spend efficiency",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-q1-linkedin-google-ads-campaign.md"
+      ],
+      "confidence": "high",
+      "context": "BluePoint Q1 campaign; traditional ATM searches ~$1/click, reverse ATM searches ~$10/click"
+    },
+    {
+      "claim": "LinkedIn does not support interest-based targeting like Meta, but job title + industry combination is sufficient for B2B",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-q1-linkedin-google-ads-campaign.md"
+      ],
+      "confidence": "high",
+      "context": "BluePoint Q1 campaign planning"
+    },
+    {
+      "claim": "Google Ads B2B in-market audiences are less effective than geographic and intent-based targeting for B2B",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-q1-linkedin-google-ads-campaign.md"
+      ],
+      "confidence": "medium",
+      "context": "Google treats users as consumers, not by job title/industry"
+    },
+    {
+      "claim": "Personal storytelling on LinkedIn performs well when posted from individual profiles rather than company pages",
+      "sources": [
+        "wiki/knowledge/paid-social/citrus-america-x-pro-linkedin-campaign.md"
+      ],
+      "confidence": "medium",
+      "context": "Citrus America founder story campaign; increases authenticity and organic draw"
+    },
+    {
+      "claim": "Meta's delivery algorithm favors ads with longer performance history, crowding out newer creatives",
+      "sources": [
+        "wiki/knowledge/paid-social/didion-meta-recruitment-ad-fatigue.md"
+      ],
+      "confidence": "high",
+      "context": "Didion recruitment campaign; older 'Set B' dominated delivery despite newer creatives available"
+    },
+    {
+      "claim": "Ad fatigue from single creative running 6+ months contributes to significant application drop-off",
+      "sources": [
+        "wiki/knowledge/paid-social/didion-meta-recruitment-ad-fatigue.md"
+      ],
+      "confidence": "high",
+      "context": "Didion recruitment; ~35% drop in job applications correlated with stale creative rotation"
+    },
+    {
+      "claim": "Under-spending against budget cap signals campaigns may not be competitive enough in auction",
+      "sources": [
+        "wiki/knowledge/paid-social/didion-meta-recruitment-ad-fatigue.md"
+      ],
+      "confidence": "medium",
+      "context": "Didion spending ~$545 against $700 max budget"
+    },
+    {
+      "claim": "Test small before scaling: start at $100, increment to $200, then $500 before major spend",
+      "sources": [
+        "wiki/knowledge/paid-social/aviary-paid-media-strategy.md"
+      ],
+      "confidence": "high",
+      "context": "Mark Hope's paid media philosophy; avoid front-loading budget before validation"
+    },
+    {
+      "claim": "LinkedIn is expensive relative to performance but viable when properly targeted at decision-makers",
+      "sources": [
+        "wiki/knowledge/paid-social/aviary-paid-media-strategy.md"
+      ],
+      "confidence": "medium",
+      "context": "Aviary strategy; best for reaching VPs, CEOs, COOs not actively searching"
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Trade show Meta campaigns require booth numbers and dedicated landing pages before launch; these are frequently blocking items",
+      "sources": [
+        "wiki/knowledge/paid-social/trachte-fssa-trade-show-campaign.md",
+        "wiki/knowledge/paid-social/ahs-nari-expo-campaign.md"
+      ],
+      "client_contexts": [
+        "Trachte",
+        "AHS"
+      ]
+    },
+    {
+      "pattern": "Meta lead form ads attract low-intent, unqualified audiences even when disqualifying questions are added to forms",
+      "sources": [
+        "wiki/knowledge/paid-social/cordwainer-meta-lead-quality.md"
+      ],
+      "client_contexts": [
+        "Cordwainer"
+      ]
+    },
+    {
+      "pattern": "Clients pause paid social campaigns at natural calendar boundaries (month/quarter end) to evaluate performance before committing to new budget",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-linkedin-meta-pause-oct-nov-2025.md",
+        "wiki/knowledge/paid-social/bluepoint-linkedin-ads-pause.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "LinkedIn ads perform better when aligned to monthly campaign verticals with job title and industry targeting filters applied",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-linkedin-ads-optimization.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Meta account access issues are resolved by removing and re-adding partners with explicit Facebook Page inclusion in the invitation",
+      "sources": [
+        "wiki/knowledge/paid-social/avant-gardening-meta-campaigns.md"
+      ],
+      "client_contexts": [
+        "Avant Gardening"
+      ]
+    },
+    {
+      "pattern": "Design team capacity constraints frequently block paid social campaign launches, requiring workload rebalancing",
+      "sources": [
+        "wiki/knowledge/paid-social/asymmetric-linkedin-ads.md"
+      ],
+      "client_contexts": [
+        "Asymmetric"
+      ]
+    },
+    {
+      "pattern": "Organic social content quality (authentic, frequent, community-focused) provides strong foundation for paid social creative",
+      "sources": [
+        "wiki/knowledge/paid-social/cordwainer-meta-ads-setup.md",
+        "wiki/knowledge/paid-social/crazy-lennys-social-content-strategy.md"
+      ],
+      "client_contexts": [
+        "Cordwainer",
+        "Crazy Lenny's"
+      ]
+    },
+    {
+      "pattern": "Retargeting is frequently missing from ad account audits despite being a high-ROI optimization opportunity",
+      "sources": [
+        "wiki/knowledge/paid-social/retargeting-site-visitor-campaigns.md"
+      ],
+      "client_contexts": [
+        "PaperTube"
+      ]
+    },
+    {
+      "pattern": "LinkedIn static ads outperform video ads for direct response objectives, while video serves brand awareness purpose",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-ny-compliance-guide-campaign.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Paid social campaigns are deferred in favor of SEO focus when organic growth is the primary 2026 investment",
+      "sources": [
+        "wiki/knowledge/paid-social/overhead-door-meta-ads-awareness.md"
+      ],
+      "client_contexts": [
+        "Overhead Door"
+      ]
+    },
+    {
+      "pattern": "Multi-channel paid social testing approach: clients run simultaneous small tests across multiple platforms (Google, Meta, LinkedIn, Reddit, Pinterest, Spotify) rather than betting heavily on a single channel",
+      "sources": [
+        "wiki/knowledge/paid-social/wedding-app-advertising-strategy.md"
+      ],
+      "client_contexts": [
+        "Wedding App"
+      ]
+    },
+    {
+      "pattern": "LinkedIn is preferred for B2B campaigns targeting professional decision-makers; Google Ads is preferred for intent-capture; Meta handles awareness and broader audience reach",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-linkedin-advertising-strategy.md",
+        "wiki/knowledge/paid-social/linkedin-geographic-targeting-b2b.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM",
+        "Trachte",
+        "Quarra Stone"
+      ]
+    },
+    {
+      "pattern": "Reallocation of budget from underperforming to high-performing campaigns without increasing total spend is a standard optimization approach",
+      "sources": [
+        "wiki/knowledge/paid-social/citrus-america-ad-budget-reallocation.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ]
+    },
+    {
+      "pattern": "Competitor-imitation content strategy: when a client's social content underperforms, studying high-performing competitor posts and adapting their format/tone is faster than iterating on failing original creative",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-content-strategy-pivot.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Geofencing and location-specific creative are used for event promotion (trade shows, seminars) to drive registrations and local awareness",
+      "sources": [
+        "wiki/knowledge/paid-social/trachte-trade-show-geo-targeting.md",
+        "wiki/knowledge/paid-social/trachte-spring-seminar-geofencing.md"
+      ],
+      "client_contexts": [
+        "Trachte"
+      ]
+    },
+    {
+      "pattern": "Influencer partnerships for consumer/lifestyle brands use promo codes as the partnership mechanism rather than cash fees, especially for mid-tier influencers",
+      "sources": [
+        "wiki/knowledge/paid-social/wedding-app-advertising-strategy.md",
+        "wiki/knowledge/paid-social/doudlah-farms-influencer-marketing-trial.md"
+      ],
+      "client_contexts": [
+        "Wedding App",
+        "Doudlah Farms"
+      ]
+    },
+    {
+      "pattern": "Retargeting campaigns are prioritized as the first paid channel to activate for new products/launches due to lower cost and higher intent",
+      "sources": [
+        "wiki/knowledge/paid-social/wedding-app-advertising-strategy.md"
+      ],
+      "client_contexts": [
+        "Wedding App"
+      ]
+    },
+    {
+      "pattern": "Reddit subreddit-targeted ads are positioned as cost-effective, high-intent channels for niche B2B audiences and investment-oriented products",
+      "sources": [
+        "wiki/knowledge/paid-social/reddit-ads-niche-targeting.md",
+        "wiki/knowledge/paid-social/reddit-ads-passive-income-subreddit-strategy.md"
+      ],
+      "client_contexts": [
+        "Blue Sky",
+        "Trachte"
+      ]
+    },
+    {
+      "pattern": "Meta (Facebook/Instagram) is used for brand awareness, visual storytelling, and recruitment; Instagram is preferred over Facebook for visual-heavy industries",
+      "sources": [
+        "wiki/knowledge/paid-social/avant-gardening-meta-strategy.md",
+        "wiki/knowledge/paid-social/quarra-stone-facebook-launch.md"
+      ],
+      "client_contexts": [
+        "Avant Gardening",
+        "Quarra Stone"
+      ]
+    },
+    {
+      "pattern": "LinkedIn Sales Navigator is required for ABM (account-based marketing) programs to enable targeted outreach and HubSpot integration",
+      "sources": [
+        "wiki/knowledge/paid-social/aviary-linkedin-sales-navigator-abm.md"
+      ],
+      "client_contexts": [
+        "Aviary"
+      ]
+    },
+    {
+      "pattern": "LinkedIn is selected for B2B campaigns targeting professional decision-makers by job title and industry; Meta is selected for local service awareness and recruitment",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-linkedin-targeting-strategy.md",
+        "wiki/knowledge/paid-social/papertube-linkedin-ads-strategy.md",
+        "wiki/knowledge/paid-social/cordwainer-meta-ads-strategy.md",
+        "wiki/knowledge/paid-social/didion-meta-recruitment-campaign.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM",
+        "Paper Tube Co",
+        "Cordwainer",
+        "Didion",
+        "Skaalen"
+      ]
+    },
+    {
+      "pattern": "Meta campaigns for local service businesses consistently underperform initial expectations or require creative refresh after 6+ months of running the same assets",
+      "sources": [
+        "wiki/knowledge/paid-social/index.md",
+        "wiki/knowledge/paid-social/overhead-door-meta-ads-strategy.md"
+      ],
+      "client_contexts": [
+        "Overhead Door Madison",
+        "Cordwainer",
+        "Avant Gardening"
+      ]
+    },
+    {
+      "pattern": "Retargeting is consistently identified as the highest-ROI tactic but is frequently missed in initial campaign setups",
+      "sources": [
+        "wiki/knowledge/paid-social/index.md",
+        "wiki/knowledge/paid-social/overhead-door-meta-ads-strategy.md"
+      ],
+      "client_contexts": [
+        "Multiple clients"
+      ]
+    },
+    {
+      "pattern": "Campaigns require 5,000\u201310,000 impressions before meaningful optimization decisions should be made; changes made too early risk introducing noise",
+      "sources": [
+        "wiki/knowledge/paid-social/avant-gardening-meta-campaign-performance.md",
+        "wiki/knowledge/paid-social/papertube-linkedin-ads.md"
+      ],
+      "client_contexts": [
+        "Avant Gardening",
+        "Paper Tube Co"
+      ]
+    },
+    {
+      "pattern": "Meta account access issues are recurring and require removing/re-adding the partner relationship with Facebook Page explicitly included in the invitation",
+      "sources": [
+        "wiki/knowledge/paid-social/meta-ad-account-access-troubleshooting.md"
+      ],
+      "client_contexts": [
+        "Multiple clients"
+      ]
+    },
+    {
+      "pattern": "Client-initiated unauthorized changes to ad accounts (pausing campaigns, creating duplicates) undermine agency optimization and require explicit expectation-setting",
+      "sources": [
+        "wiki/knowledge/paid-social/cordwainer-meta-ads-strategy.md"
+      ],
+      "client_contexts": [
+        "Cordwainer"
+      ]
+    },
+    {
+      "pattern": "LinkedIn native lead gen forms are recommended over website landing pages for B2B audiences to reduce friction and leverage pre-populated profile data",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-linkedin-ads-pause-reallocation.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "CPM (brand awareness) optimization is used for top-of-funnel campaigns; CPC optimization is introduced for middle/bottom-funnel conversion campaigns",
+      "sources": [
+        "wiki/knowledge/paid-social/papertube-linkedin-ads.md"
+      ],
+      "client_contexts": [
+        "Paper Tube Co"
+      ]
+    },
+    {
+      "pattern": "Meta verification issues arise when the ad account name does not match legal entity names (e.g., trading names, divisions); resolution requires human support escalation",
+      "sources": [
+        "wiki/knowledge/paid-social/trachte-meta-verification-issue.md"
+      ],
+      "client_contexts": [
+        "TrackRite/Trachte"
+      ]
+    },
+    {
+      "pattern": "Social media content strategy for service businesses emphasizes repurposing existing assets (blog articles, case studies) over net-new content creation to maintain sustainable cadence",
+      "sources": [
+        "wiki/knowledge/paid-social/citrus-america-weekly-social-resumption.md",
+        "wiki/knowledge/paid-social/ahs-social-content-strategy.md"
+      ],
+      "client_contexts": [
+        "Citrus America",
+        "AHS"
+      ]
+    },
+    {
+      "pattern": "Recruitment campaigns on Meta benefit from brand-appropriate imagery (residential vs. clinical) and immediate boosting to accelerate applicant response",
+      "sources": [
+        "wiki/knowledge/paid-social/didion-meta-recruitment-campaign.md",
+        "wiki/knowledge/paid-social/skaalen-cook-recruitment-campaign.md"
+      ],
+      "client_contexts": [
+        "Didion",
+        "Skaalen"
+      ]
+    },
+    {
+      "pattern": "Meta account suspensions are opaque, lack clear violation explanations, and have no reliable customer support path \u2014 leaving clients reluctant to make changes post-reinstatement",
+      "sources": [
+        "wiki/knowledge/paid-social/meta-account-suspension-recovery.md"
+      ],
+      "client_contexts": [
+        "Capitol Bank"
+      ]
+    },
+    {
+      "pattern": "Geo-targeted Meta boosts ($50\u2013$100) are effective for local events/training when search volume is too low for PPC and audience is geographically concentrated",
+      "sources": [
+        "wiki/knowledge/paid-social/meta-geo-targeting-boost.md",
+        "wiki/knowledge/paid-social/ahs-school-training-facebook-ads.md"
+      ],
+      "client_contexts": [
+        "AHS"
+      ]
+    },
+    {
+      "pattern": "Meta performs better than Google for audience-based targeting (recruitment, lead-gen) while Google Search captures high-intent keywords; optimal strategy uses both channels",
+      "sources": [
+        "wiki/knowledge/paid-social/didion-recruitment-ad-performance-meta-vs-google.md",
+        "wiki/knowledge/paid-social/meta-youtube-visual-product-strategy.md"
+      ],
+      "client_contexts": [
+        "Didion",
+        "PaperTube"
+      ]
+    },
+    {
+      "pattern": "LinkedIn requires higher CPM/CPC but justifies cost for B2B/enterprise targeting due to precision and account value; pilot budgets of $1,000/month are common starting point",
+      "sources": [
+        "wiki/knowledge/paid-social/linkedin-ads-b2b-campaigns.md",
+        "wiki/knowledge/paid-social/papertube-linkedin-pilot-strategy.md",
+        "wiki/knowledge/paid-social/bluepoint-linkedin-strategy.md"
+      ],
+      "client_contexts": [
+        "PaperTube",
+        "BluePoint ATM",
+        "Didion"
+      ]
+    },
+    {
+      "pattern": "Rotating/weekly social boosts are preferred over single extended boosts to prevent ad fatigue and reach different audience segments",
+      "sources": [
+        "wiki/knowledge/paid-social/skaalen-job-fair-boost-campaign.md"
+      ],
+      "client_contexts": [
+        "Skaalen"
+      ]
+    },
+    {
+      "pattern": "Trade show campaigns benefit from multi-layer targeting: city-wide prospecting + geofenced venue-specific + post-show nurturing via ads to collected contacts",
+      "sources": [
+        "wiki/knowledge/paid-social/papertube-trade-show-geofencing.md",
+        "wiki/knowledge/paid-social/trachte-trade-show-campaigns.md"
+      ],
+      "client_contexts": [
+        "PaperTube",
+        "Trachte"
+      ]
+    },
+    {
+      "pattern": "Remarketing audiences require time to populate before campaigns can launch; minimum audience size thresholds (typically 100 for Display, 1,000 for Search) must be met",
+      "sources": [
+        "wiki/knowledge/paid-social/cordwainer-remarketing-strategy.md"
+      ],
+      "client_contexts": [
+        "Cordwainer"
+      ]
+    },
+    {
+      "pattern": "Landing page destination decisions significantly impact conversion: direct-to-form links reduce friction for time-sensitive conversions; career/browse pages work for exploratory audiences",
+      "sources": [
+        "wiki/knowledge/paid-social/skaalen-job-fair-boost-campaign.md",
+        "wiki/knowledge/paid-social/trachte-trade-show-campaigns.md"
+      ],
+      "client_contexts": [
+        "Skaalen",
+        "Trachte"
+      ]
+    },
+    {
+      "pattern": "Meta budget allocation typically weights residential/consumer segments higher than commercial/B2B on social platforms due to platform demographics",
+      "sources": [
+        "wiki/knowledge/paid-social/overhead-door-meta-budget-allocation.md",
+        "wiki/knowledge/paid-social/didion-recruitment-ad-performance-meta-vs-google.md"
+      ],
+      "client_contexts": [
+        "Overhead Door Madison",
+        "Didion"
+      ]
+    },
+    {
+      "pattern": "Form submission volume without quality conversions (0-for-11 pattern) indicates audience mismatch; phone verification alone insufficient to filter low-quality leads in senior care vertical",
+      "sources": [
+        "wiki/knowledge/paid-social/cordwainer-meta-lead-gen-pause.md"
+      ],
+      "client_contexts": [
+        "Cordwainer"
+      ]
+    },
+    {
+      "pattern": "Conversion tracking setup (LinkedIn, Meta, Google) must be verified before campaign launch or relaunch; incomplete tracking limits performance analysis",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-linkedin-strategy.md",
+        "wiki/knowledge/paid-social/papertube-linkedin-ads-launch.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM",
+        "PaperTube"
+      ]
+    },
+    {
+      "pattern": "Payment method blockers prevent campaign launch; client responsibility to add card to ad account before Asymmetric can activate campaigns",
+      "sources": [
+        "wiki/knowledge/paid-social/avant-gardening-facebook-ads-setup.md"
+      ],
+      "client_contexts": [
+        "Avant Gardening"
+      ]
+    },
+    {
+      "pattern": "Multi-format paid social campaigns (testimonials, carousels, video, static) perform at parity when audience targeting and offer are strong; format diversity hedges against creative fatigue",
+      "sources": [
+        "wiki/knowledge/paid-social/overhead-door-meta-ads-performance.md"
+      ],
+      "client_contexts": [
+        "Overhead Door Madison"
+      ]
+    },
+    {
+      "pattern": "LinkedIn is platform of choice for B2B recruitment and professional hiring; Meta is better for frontline/hourly worker recruitment",
+      "sources": [
+        "wiki/knowledge/paid-social/didion-recruitment-campaign.md"
+      ],
+      "client_contexts": [
+        "Didion"
+      ]
+    },
+    {
+      "pattern": "Consolidating small budgets into single broad campaigns outperforms segmented campaigns; thin budgets across multiple segments produce insufficient signal",
+      "sources": [
+        "wiki/knowledge/paid-social/asymmetric-linkedin-consolidation-strategy.md",
+        "wiki/knowledge/paid-social/asymmetric-linkedin-strategy-2026.md"
+      ],
+      "client_contexts": [
+        "Asymmetric Marketing"
+      ]
+    },
+    {
+      "pattern": "LinkedIn and email ABM sequences work in parallel: LinkedIn drives top-of-funnel awareness; email handles segmented, industry-specific nurturing",
+      "sources": [
+        "wiki/knowledge/paid-social/asymmetric-linkedin-consolidation-strategy.md",
+        "wiki/knowledge/paid-social/papertube-linkedin-campaign-strategy.md"
+      ],
+      "client_contexts": [
+        "Asymmetric Marketing",
+        "PaperTube"
+      ]
+    },
+    {
+      "pattern": "Low-budget Meta awareness campaigns ($2\u20135/day) generate meaningful impressions and traffic for local service businesses at fraction of Google Search cost",
+      "sources": [
+        "wiki/knowledge/paid-social/adava-care-meta-awareness-campaigns.md"
+      ],
+      "client_contexts": [
+        "Adava Care"
+      ]
+    },
+    {
+      "pattern": "Creative fatigue is addressed through copy rotation, photo asset refresh, and video introduction rather than budget reallocation",
+      "sources": [
+        "wiki/knowledge/paid-social/didion-meta-copy-rotation-campaign.md"
+      ],
+      "client_contexts": [
+        "Didion"
+      ]
+    },
+    {
+      "pattern": "Paid social campaigns targeting niche audiences (subreddits, specific job titles) offer lower CPMs and higher contextual relevance than broad platforms",
+      "sources": [
+        "wiki/knowledge/paid-social/doudlah-farms-reddit-ads-exploration.md"
+      ],
+      "client_contexts": [
+        "Doudlah Farms"
+      ]
+    },
+    {
+      "pattern": "LinkedIn content requires differentiated strategy from Facebook/Instagram; professional audience and tone differ significantly",
+      "sources": [
+        "wiki/knowledge/paid-social/adava-care-linkedin-strategy.md"
+      ],
+      "client_contexts": [
+        "Adava Care"
+      ]
+    },
+    {
+      "pattern": "Competitor emulation (studying competitor content style, tone, format) drives more engagement than cartoon/AI-generated imagery for B2B social",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-social-content-strategy.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "Multi-touch campaign coordination (LinkedIn ads + direct mail) increases effectiveness; same audience reached across channels",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-linkedin-stadium-targeting.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ]
+    },
+    {
+      "pattern": "B2B niche/compliance topics perform better on LinkedIn than Google Search",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-ny-compliance-campaign.md",
+        "wiki/knowledge/paid-social/bluepoint-q1-linkedin-google-ads-campaign.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ],
+      "evidence": "BluePoint NY compliance: LinkedIn $0.70 CPC vs. Google $2\u2013$5 benchmark; LinkedIn outperformed Google in volume and lead quality"
+    },
+    {
+      "pattern": "Low search volume in niche markets makes paid search ineffective; email becomes primary channel",
+      "sources": [
+        "wiki/knowledge/paid-social/american-extractions-ad-campaign-failure.md"
+      ],
+      "client_contexts": [
+        "American Extractions"
+      ],
+      "evidence": "Only ~3 leads from paid ads; majority from email campaigns"
+    },
+    {
+      "pattern": "LinkedIn content strategy emphasizes consistency over perfection, with weekly posting as minimum viable presence",
+      "sources": [
+        "wiki/knowledge/paid-social/linkedin-content-engagement-strategy.md",
+        "wiki/knowledge/paid-social/linkedin-personal-profile-optimization.md"
+      ],
+      "client_contexts": [
+        "Asymmetric internal"
+      ],
+      "evidence": "Weekly good posts outperform polished posts every 3 weeks; best days Tue\u2013Thu, ~9 AM"
+    },
+    {
+      "pattern": "Personal/authentic content (photos, event posts, team wins) outperforms generic or overly polished content on LinkedIn",
+      "sources": [
+        "wiki/knowledge/paid-social/linkedin-content-engagement-strategy.md",
+        "wiki/knowledge/paid-social/citrus-america-x-pro-linkedin-campaign.md"
+      ],
+      "client_contexts": [
+        "Asymmetric internal",
+        "Citrus America"
+      ],
+      "evidence": "Personal event posts consistently outperform text-only; founder story from personal profile increases authenticity"
+    },
+    {
+      "pattern": "Creative fatigue from single ad running 6+ months causes measurable performance decline",
+      "sources": [
+        "wiki/knowledge/paid-social/didion-meta-recruitment-ad-fatigue.md"
+      ],
+      "client_contexts": [
+        "Didion"
+      ],
+      "evidence": "~35% drop in job applications; same headline 'Will you help us push us forward?' over-saturating feed"
+    },
+    {
+      "pattern": "Meta's algorithm favors older ad sets with longer performance history, limiting new creative delivery",
+      "sources": [
+        "wiki/knowledge/paid-social/didion-meta-recruitment-ad-fatigue.md"
+      ],
+      "client_contexts": [
+        "Didion"
+      ],
+      "evidence": "Set B dominated delivery despite newer creatives available; required manual intervention to rebalance"
+    },
+    {
+      "pattern": "Segmented retargeting by engagement level (location page, pricing, form abandonment) achieves 10\u201320% conversion",
+      "sources": [
+        "wiki/knowledge/paid-social/client-extractions.md"
+      ],
+      "client_contexts": [
+        "Adava Care"
+      ],
+      "evidence": "Retargeting audiences segmented by engagement level convert 10\u201320% of previously interested visitors"
+    },
+    {
+      "pattern": "Dual-bid strategy separating intent levels optimizes spend efficiency across search campaigns",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-q1-linkedin-google-ads-campaign.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ],
+      "evidence": "Traditional ATM searches bid ~$1/click (low intent), reverse ATM searches bid ~$10/click (high intent)"
+    },
+    {
+      "pattern": "Multi-channel campaigns (LinkedIn + Google + Email + Direct Mail) outperform single-channel approaches for B2B",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-ny-compliance-campaign.md",
+        "wiki/knowledge/paid-social/bluepoint-stadium-arenas-campaign.md",
+        "wiki/knowledge/paid-social/bluepoint-q1-linkedin-google-ads-campaign.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ],
+      "evidence": "BluePoint runs coordinated campaigns across LinkedIn, Google, email, direct mail, and organic social"
+    },
+    {
+      "pattern": "Hashtag strategy should anchor on 2\u20133 core tags used on every post, supplemented by topic-specific tags",
+      "sources": [
+        "wiki/knowledge/paid-social/doudlah-farms-hashtag-strategy.md"
+      ],
+      "client_contexts": [
+        "Doudlah Farms"
+      ],
+      "evidence": "#MomsAcrossAmerica and #TestedClean on every post; supplementary tags by topic"
+    },
+    {
+      "pattern": "Politically charged hashtags should be avoided to prevent audience alienation",
+      "sources": [
+        "wiki/knowledge/paid-social/doudlah-farms-hashtag-strategy.md"
+      ],
+      "client_contexts": [
+        "Doudlah Farms"
+      ],
+      "evidence": "#Maha avoided due to political associations; decision to revisit if climate shifts"
+    },
+    {
+      "pattern": "LinkedIn profile optimization prioritizes first 3\u20134 visible lines for About section and headline",
+      "sources": [
+        "wiki/knowledge/paid-social/linkedin-personal-profile-optimization.md"
+      ],
+      "client_contexts": [
+        "Asymmetric internal"
+      ],
+      "evidence": "Only first 3\u20134 lines visible without 'See more'; headline cut off in most views"
+    },
+    {
+      "pattern": "Meta Ads budget confusion stems from three-tier hierarchy (Campaign \u2192 Ad Set \u2192 Ad) and draft/publish workflow",
+      "sources": [
+        "wiki/knowledge/paid-social/facebook-ad-budget-management.md"
+      ],
+      "client_contexts": [
+        "Avant Gardening"
+      ],
+      "evidence": "Avant Gardening overspend ($46/day vs. $30/day target) caused by unpublished budget changes"
+    },
+    {
+      "pattern": "Paid media strategy should start with small budgets ($100) and increment only after validation",
+      "sources": [
+        "wiki/knowledge/paid-social/aviary-paid-media-strategy.md"
+      ],
+      "client_contexts": [
+        "Aviary"
+      ],
+      "evidence": "Mark Hope's philosophy: avoid front-loading budget; test $100 \u2192 $200 \u2192 $500 before scaling"
+    },
+    {
+      "pattern": "Industry-specific campaign templates enable repeatable monthly cadence for B2B outreach",
+      "sources": [
+        "wiki/knowledge/paid-social/bluepoint-stadium-arenas-campaign.md"
+      ],
+      "client_contexts": [
+        "BluePoint ATM"
+      ],
+      "evidence": "Stadiums & Arenas campaign serves as template for monthly industry campaigns (Water Parks, Live Music Venues, etc.)"
+    },
+    {
+      "pattern": "Retargeting infrastructure should fire on landing page visits to enable follow-up ads across platforms",
+      "sources": [
+        "wiki/knowledge/paid-social/citrus-america-x-pro-linkedin-campaign.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ],
+      "evidence": "Both X-Pro and founder story ads drive to citrusamerica.com to fire retargeting pixel"
+    },
+    {
+      "pattern": "Soft CTAs (e.g., 'Read more') on brand awareness ads enable retargeting without product pitch",
+      "sources": [
+        "wiki/knowledge/paid-social/citrus-america-x-pro-linkedin-campaign.md"
+      ],
+      "client_contexts": [
+        "Citrus America"
+      ],
+      "evidence": "Founder story ad uses soft CTA; retargeted ads lead to homepage, not product page"
+    },
+    {
+      "pattern": "Collaborative social media management works when roles are clearly defined and visual baselines provided",
+      "sources": [
+        "wiki/knowledge/paid-social/client-extractions.md"
+      ],
+      "client_contexts": [
+        "Adava Care"
+      ],
+      "evidence": "Internal ownership with external creative support; clear role definition enables effectiveness"
+    },
+    {
+      "pattern": "Geo-targeted paid social campaigns for events should pair booth CTAs with credibility signals",
+      "sources": [
+        "wiki/knowledge/paid-social/client-extractions.md"
+      ],
+      "client_contexts": [
+        "AHS"
+      ],
+      "evidence": "Trade show campaigns strengthen value proposition with leadership announcements, awards"
+    },
+    {
+      "pattern": "Podcast targeting on Spotify reaches investment-minded audiences; messaging should emphasize ROI and passive income",
+      "sources": [
+        "wiki/knowledge/paid-social/spotify-ads-business-investment-targeting.md"
+      ],
+      "client_contexts": [
+        "Trachte"
+      ],
+      "evidence": "Business & Finance podcast listeners already in investment mindset; messaging frames self-storage as proven opportunity"
+    }
+  ],
+  "contradictions": [
+    {
+      "claim_a": "BluePoint ATM LinkedIn ads are performing well and should be continued",
+      "source_a": "wiki/knowledge/paid-social/bluepoint-linkedin-ads-optimization.md",
+      "claim_b": "BluePoint ATM LinkedIn campaigns were paused in December 2025 pending performance review",
+      "source_b": "wiki/knowledge/paid-social/bluepoint-linkedin-meta-pause-oct-nov-2025.md",
+      "resolution": "Not a true contradiction \u2014 the optimization article discusses planned improvements to LinkedIn ads (aligning to monthly verticals, adding job title/industry filters), while the pause article reflects a later decision to pause pending Oct-Nov performance review before 2026 budget allocation. The pause was a strategic decision to conserve budget and evaluate ROI, not a reflection of poor performance."
+    },
+    {
+      "claim_a": "Campaigns report being 'limited by budget' while not spending the allocated budget",
+      "source_a": "wiki/knowledge/paid-social/citrus-america-ad-performance.md",
+      "claim_b": "Actual daily spend averaged $40/day against a combined daily budget of $60/day, meaning the budget ceiling was not being hit",
+      "source_b": "wiki/knowledge/paid-social/citrus-america-ad-performance.md",
+      "note": "This is not a contradiction between sources but rather a paradox within the same campaign that warrants investigation \u2014 Google Ads may be reporting budget limitations while actual spend remains below ceiling"
+    },
+    {
+      "claim_a": "LinkedIn ads were flagged as a stronger near-term play for Quarra Stone's ABM strategy",
+      "source_a": "wiki/knowledge/paid-social/quarra-stone-facebook-launch.md",
+      "claim_b": "Meta ads remain an option to revisit in the future for Quarra Stone",
+      "source_b": "wiki/knowledge/paid-social/quarra-stone-facebook-launch.md",
+      "note": "Not a direct contradiction but reflects deprioritization of Meta ads relative to LinkedIn for B2B ABM, which aligns with the broader pattern"
+    },
+    {
+      "claim_a": "LinkedIn ads for BluePoint ATM generated only 3 form fills over $3,000 spend and were paused in favor of Google Ads PMAX",
+      "source_a": "wiki/knowledge/paid-social/bluepoint-linkedin-ads-pause-reallocation.md",
+      "claim_b": "LinkedIn is selected as the primary B2B targeting vehicle for BluePoint ATM due to its granular audience controls and is the recommended approach for reaching facility managers and decision-makers",
+      "source_b": "wiki/knowledge/paid-social/bluepoint-linkedin-targeting-strategy.md",
+      "context": "Strategy document recommends LinkedIn; performance data shows it underperformed and was paused. The contradiction reflects a gap between strategic intent and execution/performance."
+    },
+    {
+      "claim_a": "Cordwainer's Meta Ads campaigns are performing consistently and meeting target benchmarks (CPLPV < $2.00, CTR 4\u20135%)",
+      "source_a": "wiki/knowledge/paid-social/cordwainer-meta-ads-performance.md",
+      "claim_b": "Cordwainer's account control problem involved the client owner pausing the properly configured campaign and creating a duplicate campaign with her own settings, fragmenting the ad strategy",
+      "source_b": "wiki/knowledge/paid-social/cordwainer-meta-ads-strategy.md",
+      "context": "Performance metrics are positive, but the account control issue suggests the campaign structure was compromised. The performance data may reflect the original configuration before the client's unauthorized changes."
+    },
+    {
+      "claim_a": "Meta lead-gen campaigns should be paused if conversion rate is 0-for-11, as reduced budget will still attract same low-quality audience",
+      "source_a": "wiki/knowledge/paid-social/cordwainer-meta-lead-gen-pause.md",
+      "claim_b": "Budget reallocation from Google Display to Meta TOFU is recommended to increase conversions at same total spend",
+      "source_b": "wiki/knowledge/paid-social/didion-recruitment-ad-performance-meta-vs-google.md",
+      "note": "Not a direct contradiction but tension: Cordwainer paused Meta due to poor quality, while Didion is increasing Meta investment. Context differs (memory care lead-gen vs. recruitment TOFU), suggesting vertical/audience type matters significantly."
+    },
+    {
+      "claim_a": "General targeting on LinkedIn static ads broadens reach and unblocks launch faster than account-based targeting",
+      "source_a": "wiki/knowledge/paid-social/bluepoint-ny-linkedin-campaign.md",
+      "claim_b": "Account-based targeting on LinkedIn ensures specific companies in prospect list are reached, whereas general targeting does not guarantee it",
+      "source_b": "wiki/knowledge/paid-social/bluepoint-ny-linkedin-campaign.md",
+      "note": "Same source acknowledges trade-off explicitly; not a contradiction but a documented decision with acknowledged risk."
+    },
+    {
+      "claim_a": "LinkedIn automation tools carry meaningful account restriction risk and should be avoided",
+      "source_a": "wiki/knowledge/paid-social/aviary-linkedin-automation-research.md",
+      "claim_b": "Aaron Grossman is consulting his sales network to learn what peers are using (implying some peers are successfully using automation tools)",
+      "source_b": "wiki/knowledge/paid-social/aviary-linkedin-automation-research.md",
+      "note": "Not a direct contradiction, but tension: the research acknowledges risk while also noting that peers are using tools, suggesting some practitioners accept the risk"
+    },
+    {
+      "claim_a": "LinkedIn is expensive relative to performance",
+      "source_a": "wiki/knowledge/paid-social/aviary-paid-media-strategy.md",
+      "claim_b": "LinkedIn static ads achieved $0.70 CPC against $2\u2013$5 industry benchmark",
+      "source_b": "wiki/knowledge/paid-social/bluepoint-ny-compliance-campaign.md",
+      "resolution": "Not necessarily contradictory; Aviary context is general B2B, while BluePoint achieved exceptional performance on compliance topic. LinkedIn cost-effectiveness varies by targeting precision and campaign type."
+    },
+    {
+      "claim_a": "YouTube is currently the highest-value paid channel with favorable pricing",
+      "source_a": "wiki/knowledge/paid-social/aviary-paid-media-strategy.md",
+      "claim_b": "LinkedIn significantly outperformed Google in volume and lead quality for B2B compliance",
+      "source_b": "wiki/knowledge/paid-social/bluepoint-ny-compliance-campaign.md",
+      "resolution": "Not contradictory; YouTube and LinkedIn serve different funnel stages. YouTube for awareness, LinkedIn for B2B decision-maker targeting. Context-dependent."
+    }
+  ],
+  "exceptions": [
+    {
+      "general_rule": "Meta lead form ads are effective for lead generation",
+      "exception": "Cordwainer's Meta lead form ads generate predominantly unqualified leads (apartment seekers) despite adding disqualifying filter questions",
+      "context": "Memory care / high-consideration services where creative may visually resemble general apartment listings",
+      "source": "wiki/knowledge/paid-social/cordwainer-meta-lead-quality.md"
+    },
+    {
+      "general_rule": "Retargeting should be a baseline component of paid media strategy",
+      "exception": "Overhead Door Madison is running primarily brand awareness campaigns without aggressive lead-gen retargeting, due to healthy service capacity (appointments only 1\u20132 days out)",
+      "context": "Service businesses with capacity constraints",
+      "source": "wiki/knowledge/paid-social/overhead-door-meta-ads-awareness.md"
+    },
+    {
+      "general_rule": "LinkedIn is appropriate for recruitment ads targeting salaried/professional roles",
+      "exception": "Didion explicitly excludes skilled trades and manufacturing roles from LinkedIn, directing them to Meta/Google instead",
+      "context": "Recruitment for hourly/technical roles",
+      "source": "wiki/knowledge/paid-social/didion-recruitment-linkedin-strategy.md"
+    },
+    {
+      "general_rule": "Organic social content should align with brand identity and product scope",
+      "exception": "Crazy Lenny's explicitly excludes scooters from social content despite having experimented with scooter service, due to unprofitable repair economics",
+      "context": "Product/service profitability drives content scope decisions, not just brand identity",
+      "source": "wiki/knowledge/paid-social/crazy-lennys-social-content-strategy.md"
+    },
+    {
+      "general_rule": "LinkedIn is preferred for B2B campaigns targeting professional decision-makers",
+      "exception": "Quarra Stone's Facebook page launch was approved despite LinkedIn being the stronger channel, to ensure presence across major platforms for future optionality",
+      "context": "B2B stone/construction company",
+      "source": "wiki/knowledge/paid-social/quarra-stone-facebook-launch.md"
+    },
+    {
+      "general_rule": "Retargeting campaigns are prioritized as the first paid channel to activate",
+      "exception": "Wedding App strategy includes simultaneous testing across Google Ads (retargeting), Pinterest, Spotify, and Reddit rather than sequential activation",
+      "context": "Consumer software product launch",
+      "source": "wiki/knowledge/paid-social/wedding-app-advertising-strategy.md"
+    },
+    {
+      "general_rule": "Geofencing is used for trade shows and seminars to drive event registrations",
+      "exception": "Trachte's trade show campaigns use geo-targeting around venue areas but timing details were incomplete at planning stage",
+      "context": "B2B manufacturing/trade show marketing",
+      "source": "wiki/knowledge/paid-social/trachte-trade-show-geo-targeting.md"
+    },
+    {
+      "general_rule": "Influencer partnerships require payment or promo codes",
+      "exception": "Doudlah Farms' influencer trial sends 15 gift boxes with no payment obligation or expectation of return, evaluating organic coverage before committing to paid partnerships",
+      "context": "Consumer food/agriculture brand",
+      "source": "wiki/knowledge/paid-social/doudlah-farms-influencer-marketing-trial.md"
+    },
+    {
+      "general_rule": "Meta CPCs for local service businesses run $0.30\u2013$0.40",
+      "exception": "Avant Gardening Meta campaigns had elevated cost per result; target was ~$1.00 per result, suggesting higher CPCs than the baseline",
+      "context": "Service business (landscaping/gardening)",
+      "source": "wiki/knowledge/paid-social/avant-gardening-meta-campaign-performance.md"
+    },
+    {
+      "general_rule": "LinkedIn is the primary B2B targeting vehicle for professional decision-makers",
+      "exception": "BluePoint ATM paused LinkedIn ads and reallocated budget to Google Ads PMAX due to low direct conversions and high CPC ($1.85)",
+      "context": "B2B ATM sales; audience is facility managers and operations directors",
+      "source": "wiki/knowledge/paid-social/bluepoint-linkedin-ads-pause-reallocation.md"
+    },
+    {
+      "general_rule": "Retargeting is consistently the highest-ROI tactic",
+      "exception": "AHS school training campaign targets two distinct audiences (school administrators and parents) with different messaging; retargeting strategy not mentioned as a primary lever",
+      "context": "Compliance training for schools; audience is not actively searching",
+      "source": "wiki/knowledge/paid-social/ahs-school-training-facebook-ads.md"
+    },
+    {
+      "general_rule": "Meta campaigns should be optimized for CPM (brand awareness) before shifting to CPC (conversion)",
+      "exception": "Didion's Meta recruitment campaign is structured as a standalone campaign with a $1,000/month budget and conversion goal (recruitment), not brand awareness",
+      "context": "Time-sensitive recruitment need; separate campaign for clean testing",
+      "source": "wiki/knowledge/paid-social/didion-meta-recruitment-campaign.md"
+    },
+    {
+      "general_rule": "LinkedIn's algorithm needs time (2+ weeks) before making major structural changes",
+      "exception": "Paper Tube Co swapped out a prior ad set after a day or two due to poor performance; the new ad set with updated video creative performed meaningfully better",
+      "context": "Early-stage campaign with suboptimal creative; rapid iteration justified",
+      "source": "wiki/knowledge/paid-social/papertube-linkedin-ads.md"
+    },
+    {
+      "general_rule": "Social media boosts should run for extended periods to maximize reach",
+      "exception": "Skaalen job fair boost used rotating weekly boosts (2 weeks total) instead of single extended boost to prevent ad fatigue",
+      "context": "Time-sensitive event (April 22) with limited runway; rotating strategy prioritized audience freshness over duration",
+      "source": "wiki/knowledge/paid-social/skaalen-job-fair-boost-campaign.md"
+    },
+    {
+      "general_rule": "LinkedIn campaigns require account-based targeting to ensure prospect list coverage",
+      "exception": "BluePoint NY campaign switched to general targeting to unblock launch and broaden reach beyond ZoomInfo list",
+      "context": "Cashless ban compliance campaign with time pressure; team accepted risk of not reaching specific ZoomInfo companies in exchange for faster launch",
+      "source": "wiki/knowledge/paid-social/bluepoint-ny-linkedin-campaign.md"
+    },
+    {
+      "general_rule": "Meta performs well for recruitment advertising across all candidate types",
+      "exception": "Didion's Meta TOFU works well for hourly/production roles but may not reach salaried candidates due to 30\u201350 mile geographic radius around Cambria, WI",
+      "context": "Salaried positions require broader geographic reach; Meta's tight radius may be insufficient for professional roles",
+      "source": "wiki/knowledge/paid-social/didion-recruitment-ad-performance-meta-vs-google.md"
+    },
+    {
+      "general_rule": "Organic social posts should be boosted with paid spend to maximize reach",
+      "exception": "Crazy Lenny's E-Bikes declined to boost six approved organic posts; client has significant existing billboard investment and chose not to add paid social spend",
+      "context": "Client budget allocation preference; organic posting only with email campaign coordination",
+      "source": "wiki/knowledge/paid-social/crazy-lennys-social-media-posts.md"
+    },
+    {
+      "general_rule": "Remarketing campaigns should launch once audiences are created",
+      "exception": "Cordwainer remarketing audiences created but not yet populated; campaigns cannot launch until minimum audience size threshold is reached",
+      "context": "Newly created audiences require time to accumulate visitor data; launch blocked until Google's minimum threshold (typically 100\u20131,000) is met",
+      "source": "wiki/knowledge/paid-social/cordwainer-remarketing-strategy.md"
+    },
+    {
+      "general_rule": "Lead-gen form submissions indicate campaign viability",
+      "exception": "Cordwainer Meta lead-gen produced 11 form submissions with zero quality leads; phone verification did not filter out invalid/unqualified contacts",
+      "context": "Senior care vertical; audience/intent mismatch despite form validation; campaign paused rather than optimized",
+      "source": "wiki/knowledge/paid-social/cordwainer-meta-lead-gen-pause.md"
+    },
+    {
+      "general_rule": "Video ads outperform static and carousel formats in paid social",
+      "exception": "Overhead Door Madison shows all formats (testimonials, carousels, video, homeowner creatives) performing at parity with CPC under $0.40",
+      "context": "Home services vertical; strong audience targeting and offer",
+      "source": "wiki/knowledge/paid-social/overhead-door-meta-ads-performance.md"
+    },
+    {
+      "general_rule": "Segmented campaigns allow for industry-specific targeting and personalization",
+      "exception": "Asymmetric found that consolidating $1,500/month into single broad campaign targeting universal pain point (stagnating revenue) outperforms three-way segmentation",
+      "context": "Small budget ($1,500/mo) across multiple segments; early pipeline-building phase",
+      "source": "wiki/knowledge/paid-social/asymmetric-linkedin-strategy-2026.md"
+    },
+    {
+      "general_rule": "LinkedIn matched audiences require contact list uploads for precise targeting",
+      "exception": "BluePoint's ~1,000-contact ZoomInfo list fell below LinkedIn's minimum matched audience threshold; attribute-based targeting (job title, industry, company size) required instead",
+      "context": "Small contact list; niche vertical (stadiums/arenas)",
+      "source": "wiki/knowledge/paid-social/bluepoint-linkedin-stadium-targeting.md"
+    },
+    {
+      "general_rule": "Paid search is primary channel for lead generation",
+      "exception": "Niche B2B markets with low search volume; email becomes primary channel",
+      "context": "American Extractions; low keyword search volume in niche market",
+      "source": "wiki/knowledge/paid-social/american-extractions-ad-campaign-failure.md"
+    },
+    {
+      "general_rule": "Google Ads outperforms LinkedIn for B2B targeting",
+      "exception": "B2B niche/compliance topics where LinkedIn's job title + industry targeting is more precise than Google's consumer-based approach",
+      "context": "BluePoint NY compliance campaign",
+      "source": "wiki/knowledge/paid-social/bluepoint-ny-compliance-campaign.md"
+    },
+    {
+      "general_rule": "Meta's algorithm favors older ad sets with longer performance history",
+      "exception": "Manual intervention can rebalance delivery to newer creatives",
+      "context": "Didion recruitment campaign; requires deliberate action to reduce Set B delivery weight",
+      "source": "wiki/knowledge/paid-social/didion-meta-recruitment-ad-fatigue.md"
+    },
+    {
+      "general_rule": "LinkedIn video ads typically outperform static ads",
+      "exception": "Video boost for BluePoint compliance had higher CPC (~$10) and lower CTR than static ad ($0.70 CPC, ~2% CTR)",
+      "context": "BluePoint NY compliance campaign; video served brand awareness purpose but not recommended for repeat runs",
+      "source": "wiki/knowledge/paid-social/bluepoint-ny-compliance-campaign.md"
+    },
+    {
+      "general_rule": "Broader audience targeting increases reach",
+      "exception": "Granular LinkedIn targeting (job title + industry) reduces audience size but increases relevance and conversion likelihood",
+      "context": "BluePoint Q1 campaign; team agreed to avoid going too narrow initially to preserve learning signal",
+      "source": "wiki/knowledge/paid-social/bluepoint-q1-linkedin-google-ads-campaign.md"
+    },
+    {
+      "general_rule": "Hashtags with high follower counts drive more reach",
+      "exception": "#TestedClean is low-competition tag but builds brand association over time and differentiates from competitors",
+      "context": "Doudlah Farms hashtag strategy; low follower count initially but high strategic value",
+      "source": "wiki/knowledge/paid-social/doudlah-farms-hashtag-strategy.md"
+    }
+  ],
+  "evidence": [
+    {
+      "metric": "Trachte Door Hallway Meta campaign: ~$0.30 cost per page view",
+      "context": "Targeting real estate investors, commercial property owners, facility managers; creative flagged as 'noisy' and overly complex",
+      "client": "Trachte",
+      "source": "wiki/knowledge/paid-social/trachte-meta-creative-refresh.md"
+    },
+    {
+      "metric": "Overhead Door Madison Meta ads: ~$0.40 CPC with high traffic volume",
+      "context": "Brand awareness campaign; notable spike in site active users coinciding with campaign launch",
+      "client": "Overhead Door",
+      "source": "wiki/knowledge/paid-social/overhead-door-meta-ads-awareness.md"
+    },
+    {
+      "metric": "BluePoint ATM LinkedIn static ad: $0.70 CPC, ~2% CTR, 8 form fills in one week",
+      "context": "NY compliance guide campaign; static ad outperformed video boost; all 8 leads attributed to LinkedIn (Google Ads showed 0 conversions from 13 clicks)",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-ny-compliance-guide-campaign.md"
+    },
+    {
+      "metric": "BluePoint ATM LinkedIn video boost: ~$10 CPC, lower CTR than static ad",
+      "context": "Brand awareness purpose; drove spike in YouTube views; not designed for direct response",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-ny-compliance-guide-campaign.md"
+    },
+    {
+      "metric": "BluePoint ATM LinkedIn ads baseline: 1.6% CTR across ~22,000 impressions and 376 clicks",
+      "context": "Nationwide targeting, general reverse ATM audience, no job title or industry segmentation",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-linkedin-ads-optimization.md"
+    },
+    {
+      "metric": "Didion Meta recruitment ads: $7\u2013$24 per form submission at $2.30/day",
+      "context": "Some ad sets flagged as 'learning limited' due to low submission volume, not poor targeting",
+      "client": "Didion",
+      "source": "wiki/knowledge/paid-social/didion-recruitment-linkedin-strategy.md"
+    },
+    {
+      "metric": "Overhead Door Bing Ads: 15 conversions at ~$28 CPA over 30 days",
+      "context": "Performance channel; Meta is awareness channel",
+      "client": "Overhead Door",
+      "source": "wiki/knowledge/paid-social/overhead-door-meta-ads-awareness.md"
+    },
+    {
+      "metric": "BluePoint ATM email outreach: Direct result of meeting with Color Factory (NYC immersive art museum) after receiving compliance guide email",
+      "context": "Parallel to LinkedIn/Google Ads campaigns; demonstrates multi-channel attribution",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-ny-compliance-guide-campaign.md"
+    },
+    {
+      "metric": "Scooter repair economics: Most scooters retail for $500\u2013600, repairs run $300\u2013400",
+      "context": "Customers opt to discard rather than repair; unprofitable service line",
+      "client": "Crazy Lenny's",
+      "source": "wiki/knowledge/paid-social/crazy-lennys-social-content-strategy.md"
+    },
+    {
+      "metric": "Trachte Meta spend: ~$600/month remaining after pausing Blueprint to Build campaign",
+      "context": "Highest-leverage Meta action is improving creative quality on two active campaigns",
+      "client": "Trachte",
+      "source": "wiki/knowledge/paid-social/trachte-meta-creative-refresh.md"
+    },
+    {
+      "metric": "Reddit ad credit opportunity: $500 match for new advertisers who spend $500",
+      "context": "Low-risk channel test for Trachte",
+      "client": "Trachte",
+      "source": "wiki/knowledge/paid-social/trachte-reddit-strategy.md"
+    },
+    {
+      "metric": "Aviary LinkedIn outreach budget request: $500 additional budget for LinkedIn ad test",
+      "context": "Separate from manual outreach work; complement to organic ABM effort",
+      "client": "Aviary",
+      "source": "wiki/knowledge/paid-social/aviary-linkedin-abm-outreach.md"
+    },
+    {
+      "metric": "CTR of 12.65% on Commercial Juicer search campaign",
+      "context": "B2B commercial equipment search; nearly double the agency benchmark across 40+ clients",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/paid-social/citrus-america-ad-performance.md"
+    },
+    {
+      "metric": "Remarketing campaign achieved 0.5% interaction rate with $0.41 average CPC and 8 conversions at $0.40 cost per conversion",
+      "context": "Display retargeting across Google Display Network over 30-day period",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/paid-social/citrus-america-ad-performance.md"
+    },
+    {
+      "metric": "LinkedIn campaign launched same day as marketing sync; approval typically takes a few days",
+      "context": "B2B venue operator targeting for reverse ATM adoption",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-linkedin-advertising-strategy.md"
+    },
+    {
+      "metric": "BluePoint LinkedIn spend grew to ~$2,500/mo against target of <$1,500/mo after approximately one month of running",
+      "context": "Budget discrepancy identified during November 2025 review",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-linkedin-ads-budget-review.md"
+    },
+    {
+      "metric": "Citrus America total spend over 30-day period was ~$1,200 against combined daily budget of $60/day (~$1,800/month potential)",
+      "context": "Three active Google Ads campaigns; actual daily spend averaged $40/day",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/paid-social/citrus-america-ad-performance.md"
+    },
+    {
+      "metric": "Quarra Stone Instagram doubled followers in 2025; 2026 goal is to double again to ~12,262",
+      "context": "Social media growth trajectory for B2B stone/construction company",
+      "client": "Quarra Stone",
+      "source": "wiki/knowledge/paid-social/quarra-stone-facebook-launch.md"
+    },
+    {
+      "metric": "BluePoint ATM budget allocation: Google Ads $3,500/mo, LinkedIn Ads $1,500/mo, Total $5,000/mo",
+      "context": "B2B venue operator targeting; LinkedIn represents 30% of total paid media spend",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-linkedin-advertising-strategy.md"
+    },
+    {
+      "metric": "Trachte DoorHallway Meta campaign initial test budget of $10/day",
+      "context": "Self-storage audience targeting; campaign built but not yet active at time of meeting",
+      "client": "Trachte",
+      "source": "wiki/knowledge/paid-social/trachte-doorhallway-meta-campaign.md"
+    },
+    {
+      "metric": "Doudlah Farms influencer trial: 15 gift boxes sent across three segments (5 moms/clean eating, 5 home chefs, 5 high-tier/name chefs)",
+      "context": "Non-contractual trial with no payment obligation; evaluation of organic coverage before paid partnerships",
+      "client": "Doudlah Farms",
+      "source": "wiki/knowledge/paid-social/doudlah-farms-influencer-marketing-trial.md"
+    },
+    {
+      "metric": "Aviary ABM target list: 91 priority accounts requiring enrichment with key contacts, phone numbers, direct emails, LinkedIn profile URLs",
+      "context": "Account-based marketing program blocked pending LinkedIn Sales Navigator client approval",
+      "client": "Aviary",
+      "source": "wiki/knowledge/paid-social/aviary-linkedin-sales-navigator-abm.md"
+    },
+    {
+      "metric": "LinkedIn targeting dimensions: job title, industry, location simultaneously",
+      "context": "BluePoint ATM B2B targeting for facility managers, operations directors, business owners",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-linkedin-targeting-strategy.md"
+    },
+    {
+      "metric": "12 distinct geographies targeted, with New York State elevated priority due to March 20 cashless ban",
+      "context": "BluePoint ATM Q1 2026 campaign",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-linkedin-targeting-strategy.md"
+    },
+    {
+      "metric": "High-intent searches bid at ~$10/click; low-intent searches bid at ~$1/click",
+      "context": "BluePoint ATM bid strategy based on conversion path length",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-linkedin-targeting-strategy.md"
+    },
+    {
+      "metric": "Paper Tube Co: $352 total spend, 0.38% CTR, 3 campaigns running, Food & Beverage best performer",
+      "context": "LinkedIn Ads after two weeks; CPM optimization (brand awareness)",
+      "client": "Paper Tube Co",
+      "source": "wiki/knowledge/paid-social/papertube-linkedin-ads.md"
+    },
+    {
+      "metric": "Cordwainer CPLPV < $2.00, CTR 4\u20135%",
+      "context": "Meta Ads for memory care facility; consistent with initial results post-launch",
+      "client": "Cordwainer",
+      "source": "wiki/knowledge/paid-social/cordwainer-meta-ads-performance.md"
+    },
+    {
+      "metric": "BluePoint LinkedIn: ~$3,000 spend, ~62,000 impressions, ~1,400 clicks, 2.32% CTR, $1.85 avg CPC, 3 form fills",
+      "context": "Oct/Nov 2025; carousel and video campaigns; paused and budget reallocated to Google Ads PMAX",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-linkedin-ads-pause-reallocation.md"
+    },
+    {
+      "metric": "Overhead Door Bing baseline: 29 conversions over 30 days at ~$24/conversion",
+      "context": "Performance baseline before Meta launch",
+      "client": "Overhead Door Madison",
+      "source": "wiki/knowledge/paid-social/overhead-door-meta-ads-strategy.md"
+    },
+    {
+      "metric": "Avant Gardening: Garden campaign ~1,000 impressions, Landscaping ~3,000 impressions, Maintenance very low",
+      "context": "Early-stage; optimization threshold is 5,000\u201310,000 impressions",
+      "client": "Avant Gardening",
+      "source": "wiki/knowledge/paid-social/avant-gardening-meta-campaign-performance.md"
+    },
+    {
+      "metric": "Avant Gardening target cost per result: ~$1.00",
+      "context": "Service business (landscaping); benchmark for local service",
+      "client": "Avant Gardening",
+      "source": "wiki/knowledge/paid-social/avant-gardening-meta-campaign-performance.md"
+    },
+    {
+      "metric": "Avant Gardening payment failures on 3+ dates; root cause: bank-side fraud flag on Meta billing card",
+      "context": "Campaign downtime from payment failures likely suppressed impression counts",
+      "client": "Avant Gardening",
+      "source": "wiki/knowledge/paid-social/avant-gardening-meta-campaign-performance.md"
+    },
+    {
+      "metric": "ClickCease saved ~$115/month in fraudulent clicks on Google Ads",
+      "context": "Click fraud protection; Microsoft Ads requires separate manual configuration",
+      "client": "Multiple (unnamed)",
+      "source": "wiki/knowledge/paid-social/clickcease-microsoft-ads-configuration.md"
+    },
+    {
+      "metric": "TrackRite Meta account blocked; CFO letter, W-9, and taxpayer ID form submitted but rejected by automated verification system",
+      "context": "Trading name division issue; requires human support escalation",
+      "client": "TrackRite/Trachte",
+      "source": "wiki/knowledge/paid-social/trachte-meta-verification-issue.md"
+    },
+    {
+      "metric": "Capitol Bank Meta account suspension: no specific violation cited, unexplained reinstatement after verification attempt",
+      "context": "Opaque enforcement; no customer support channel; client reluctant to make changes post-reinstatement",
+      "client": "Capitol Bank",
+      "source": "wiki/knowledge/paid-social/meta-account-suspension-recovery.md"
+    },
+    {
+      "metric": "AHS school training: 15 of 50 capacity registrations; email list 30\u201340% open rate, ~50% form conversion; bottleneck is list size",
+      "context": "Facebook ads identified as key channel to grow awareness and registrations",
+      "client": "AHS",
+      "source": "wiki/knowledge/paid-social/ahs-school-training-facebook-ads.md"
+    },
+    {
+      "metric": "Didion Meta recruitment campaign: $1,000/month budget, 3-month duration, separate from existing brand/TOFU campaigns",
+      "context": "Plug-and-play format preferred to minimize design overhead; Meta PMAX-equivalent capability to be verified",
+      "client": "Didion",
+      "source": "wiki/knowledge/paid-social/didion-meta-recruitment-campaign.md"
+    },
+    {
+      "metric": "Didion existing Meta campaigns: CPC under $1",
+      "context": "Described as 'incredible'; context for recruitment campaign budget allocation",
+      "client": "Didion",
+      "source": "wiki/knowledge/paid-social/didion-meta-recruitment-campaign.md"
+    },
+    {
+      "metric": "Citrus America: weekly social cadence across LinkedIn, Instagram, Facebook; monthly batch-approval workflow",
+      "context": "Content repurposed from existing assets (blog articles, case studies, event recaps)",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/paid-social/citrus-america-weekly-social-resumption.md"
+    },
+    {
+      "metric": "AHS social posts: 4 approved posts (Winter Moisture Warning, Ice Dams, NARI Re-election, Start 2026 with Peace of Mind)",
+      "context": "Scheduling order prioritized by timeliness; design in second-round pass with stock image placeholders",
+      "client": "AHS",
+      "source": "wiki/knowledge/paid-social/ahs-social-content-jan-feb-2026.md"
+    },
+    {
+      "metric": "Skaalen cook recruitment post: created by Philippines-based social media specialist; boosted immediately after publishing",
+      "context": "Time-sensitive hiring need; brand-appropriate imagery (residential vs. clinical) critical for candidate perception",
+      "client": "Skaalen",
+      "source": "wiki/knowledge/paid-social/skaalen-cook-recruitment-campaign.md"
+    },
+    {
+      "metric": "Meta geo-targeted boost budget: $50\u2013$100 for local event awareness",
+      "context": "Effective when search volume too low for PPC; awareness play, not direct-response",
+      "client": "AHS (example)",
+      "source": "wiki/knowledge/paid-social/meta-geo-targeting-boost.md"
+    },
+    {
+      "metric": "Meta TOFU recruitment ads: ~$11 CPA; Google Ads: significantly higher CPA",
+      "context": "9-month performance comparison; Meta outperforming across recruitment vertical",
+      "client": "Didion",
+      "source": "wiki/knowledge/paid-social/didion-recruitment-ad-performance-meta-vs-google.md"
+    },
+    {
+      "metric": "Meta TOFU: 65 applications from ~$1,500 spend; Meta MoFu: 35 applications; Google Ads: lower conversion rate from ~$4,500 spend",
+      "context": "Blended CPA ~$20 across all channels; Meta TOFU most efficient",
+      "client": "Didion",
+      "source": "wiki/knowledge/paid-social/didion-recruitment-ad-performance-meta-vs-google.md"
+    },
+    {
+      "metric": "Skaalen prior cook boost: ~5,500 impressions, ~115 site clicks, ~$0.30 CPC",
+      "context": "Standalone cook position boost; replaced by broader job fair campaign",
+      "client": "Skaalen",
+      "source": "wiki/knowledge/paid-social/skaalen-job-fair-boost-campaign.md"
+    },
+    {
+      "metric": "Skaalen job fair boost: $50/week \u00d7 2 weeks = $100 total budget",
+      "context": "Rotating weekly boosts (April 6 and April 13) to prevent ad fatigue",
+      "client": "Skaalen",
+      "source": "wiki/knowledge/paid-social/skaalen-job-fair-boost-campaign.md"
+    },
+    {
+      "metric": "BluePoint ATM LinkedIn static ad: lead volume dropped noticeably after campaign paused February 19",
+      "context": "Campaign restarted at $1,500 for 2 weeks; outperformed all other tested channels on cost-per-lead basis",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-linkedin-strategy.md"
+    },
+    {
+      "metric": "BluePoint ATM LinkedIn poll boost: $50 budget",
+      "context": "Engagement testing; company page post with personal reshares from Mike and Wade",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-linkedin-strategy.md"
+    },
+    {
+      "metric": "PaperTube LinkedIn campaign (first 36 hours): ~4,000 impressions, 18 clicks, cost per result higher than target (expected during learning phase)",
+      "context": "Campaign launched day before review; early-stage metrics; top-performing segments: Food & Beverage, Wellness",
+      "client": "PaperTube",
+      "source": "wiki/knowledge/paid-social/papertube-linkedin-ads-launch.md"
+    },
+    {
+      "metric": "PaperTube LinkedIn pilot: $1,000/month budget across 3 segments (Premium F&B 40%, Beauty & Personal Care 40%, Supplements & Wellness 20%)",
+      "context": "Intentionally scoped pilot; monthly review cadence before optimization",
+      "client": "PaperTube",
+      "source": "wiki/knowledge/paid-social/papertube-linkedin-pilot-strategy.md"
+    },
+    {
+      "metric": "Overhead Door Madison Meta budget: $19/day (~$580/month) split residential $16/day, commercial $3/day",
+      "context": "Conservative starting budget; residential-heavy weighting due to platform fit",
+      "client": "Overhead Door Madison",
+      "source": "wiki/knowledge/paid-social/overhead-door-meta-budget-allocation.md"
+    },
+    {
+      "metric": "Cordwainer Meta lead-gen: 11 form submissions, 0 quality leads, 0 responsive contacts",
+      "context": "Campaign paused; spend reallocated to Google and Bing; phone verification insufficient to filter low-quality audience",
+      "client": "Cordwainer",
+      "source": "wiki/knowledge/paid-social/cordwainer-meta-lead-gen-pause.md"
+    },
+    {
+      "metric": "Cordwainer Google Ads: $60/day across 2 campaigns; Bing Ads: $12/day total ($6/day per campaign)",
+      "context": "Spend reallocated from paused Meta campaign; Google showing early ramp-up in impressions and clicks",
+      "client": "Cordwainer",
+      "source": "wiki/knowledge/paid-social/cordwainer-meta-lead-gen-pause.md"
+    },
+    {
+      "metric": "Didion Google Ads (last 30 days): ~2,000 clicks, 22 conversions, ~$0.91 CPC, low CTR",
+      "context": "Cost-efficient but low conversion volume; suggests audience/intent mismatch for recruitment",
+      "client": "Didion",
+      "source": "wiki/knowledge/paid-social/didion-recruitment-advertising.md"
+    },
+    {
+      "metric": "PaperTube Natural Products Expo West: ~40\u201350 leads collected by rep Amy",
+      "context": "Walking format (no booth); geofencing proposed to amplify reach without booth costs",
+      "client": "PaperTube",
+      "source": "wiki/knowledge/paid-social/papertube-trade-show-geofencing.md"
+    },
+    {
+      "metric": "Overhead Door Madison: 19 new leads across all PPC channels as of November 5, 2025 meeting",
+      "context": "Early-stage data; leads flowing into GoHighLevel; client team reminded to update statuses",
+      "client": "Overhead Door Madison",
+      "source": "wiki/knowledge/paid-social/overhead-door-meta-campaigns.md"
+    },
+    {
+      "metric": "AHS Dec 11\u201312 training Meta campaign: estimated audience ~200K; budget does not need to be large to reach saturation",
+      "context": "Two ad sets (parent awareness + school staff sign-ups); flight through Dec 10, 8:00 AM",
+      "client": "AHS",
+      "source": "wiki/knowledge/paid-social/ahs-dec-training-meta-campaign.md"
+    },
+    {
+      "metric": "Meta CPC $0.30 vs. Google Search $4\u20135",
+      "context": "Local service business (senior living) awareness campaigns",
+      "client": "Adava Care",
+      "source": "wiki/knowledge/paid-social/adava-care-meta-awareness-campaigns.md"
+    },
+    {
+      "metric": "Overhead Door Madison Meta Ads CPC under $0.40 across all formats",
+      "context": "Multi-format campaign (testimonials, carousels, video, homeowner creatives)",
+      "client": "Overhead Door Madison",
+      "source": "wiki/knowledge/paid-social/overhead-door-meta-ads-performance.md"
+    },
+    {
+      "metric": "$169 wasted on irrelevant consumer queries in 90 days",
+      "context": "Google Discovery campaign paused; attracting consumer traffic instead of B2B buyers",
+      "client": "Aviary",
+      "source": "wiki/knowledge/paid-social/aviary-linkedin-ads-proposal.md"
+    },
+    {
+      "metric": "Doudlah Farms website sales ~$8.6k/month (flat month-over-month in Feb 2026)",
+      "context": "Current paid channel mix: Amazon Ads (ROAS 3.34), Google Shopping; Reddit ads being explored",
+      "client": "Doudlah Farms",
+      "source": "wiki/knowledge/paid-social/doudlah-farms-reddit-ads-exploration.md"
+    },
+    {
+      "metric": "LinkedIn recruitment campaign successfully filled high-level roles including CEO",
+      "context": "Campaign wound down after successful placements; shifted to Meta for frontline/hourly hiring",
+      "client": "Didion",
+      "source": "wiki/knowledge/paid-social/didion-recruitment-campaign.md"
+    },
+    {
+      "metric": "Meta awareness campaign budget $2\u20135/day generates 3,000\u20134,000 impressions per post boost",
+      "context": "Content boost strategy; $50\u2013$100 per post on Meta",
+      "client": "General (methodology)",
+      "source": "wiki/knowledge/paid-social/content-boost-strategy.md"
+    },
+    {
+      "metric": "BluePoint ~1,000-contact ZoomInfo list fell below LinkedIn matched audience minimum",
+      "context": "Stadium/arena targeting; matched audience upload rejected by LinkedIn",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-linkedin-stadium-targeting.md"
+    },
+    {
+      "metric": "Asymmetric LinkedIn budget $1,500/month consolidated into single campaign (previously planned as three-way split)",
+      "context": "Unified targeting on universal pain point (stagnating revenue) across all industries",
+      "client": "Asymmetric Marketing",
+      "source": "wiki/knowledge/paid-social/asymmetric-linkedin-strategy-2026.md"
+    },
+    {
+      "metric": "PaperTube LinkedIn campaign minimum $200/month per vertical; ~$1,000/month across 5 campaigns",
+      "context": "5-campaign strategy across Food & Beverage, Beauty, Supplement, Agriculture, and TBD vertical",
+      "client": "PaperTube",
+      "source": "wiki/knowledge/paid-social/papertube-linkedin-campaign-strategy.md"
+    },
+    {
+      "metric": "BluePoint NY Compliance LinkedIn budget $1,000/month ($500 video boost / $500 static image)",
+      "context": "Multi-channel campaign around March 20, 2026 NY cash acceptance law deadline",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-ny-compliance-linkedin-strategy.md"
+    },
+    {
+      "metric": "Aviary LinkedIn Ads proposed budget $600/month (~$20/day)",
+      "context": "Complement to Google Ads; targets financial services decision-makers",
+      "client": "Aviary",
+      "source": "wiki/knowledge/paid-social/aviary-linkedin-ads-proposal.md"
+    },
+    {
+      "metric": "Didion Meta copy rotation campaign $10/day ($300/mo) additional spend",
+      "context": "New campaign testing copy rotation with refreshed photo and video creative",
+      "client": "Didion",
+      "source": "wiki/knowledge/paid-social/didion-meta-copy-rotation-campaign.md"
+    },
+    {
+      "metric": "LinkedIn static ad CPC: $0.70",
+      "context": "BluePoint NY compliance campaign; industry benchmark $2\u2013$5",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-ny-compliance-campaign.md"
+    },
+    {
+      "metric": "LinkedIn static ad CTR: ~2%",
+      "context": "BluePoint NY compliance campaign; target range 2\u20135%",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-ny-compliance-campaign.md"
+    },
+    {
+      "metric": "LinkedIn video boost CPC: ~$10",
+      "context": "BluePoint NY compliance campaign; higher than static ad",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-ny-compliance-campaign.md"
+    },
+    {
+      "metric": "Google Ads spend: ~$20; clicks: 13; conversions: 0",
+      "context": "BluePoint NY compliance campaign; likely conversion tracking misconfiguration",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-ny-compliance-campaign.md"
+    },
+    {
+      "metric": "American Extractions paid ads leads: ~3",
+      "context": "As of early November 2025; majority of leads from email campaigns",
+      "client": "American Extractions",
+      "source": "wiki/knowledge/paid-social/american-extractions-ad-campaign-failure.md"
+    },
+    {
+      "metric": "Didion recruitment applications down ~35%",
+      "context": "Correlated with ad fatigue from 6+ months of same creative",
+      "client": "Didion",
+      "source": "wiki/knowledge/paid-social/didion-meta-recruitment-ad-fatigue.md"
+    },
+    {
+      "metric": "Didion Meta ad spend: ~$145/month against $700 max budget",
+      "context": "Under-spending signals campaigns not competitive enough in auction",
+      "client": "Didion",
+      "source": "wiki/knowledge/paid-social/didion-meta-recruitment-ad-fatigue.md"
+    },
+    {
+      "metric": "Didion Google Ads spend: ~$400/month",
+      "context": "Part of broader paid media mix",
+      "client": "Didion",
+      "source": "wiki/knowledge/paid-social/didion-meta-recruitment-ad-fatigue.md"
+    },
+    {
+      "metric": "Avant Gardening Meta overspend: ~$46/day vs. $30/day target",
+      "context": "Caused by unpublished budget changes in Ads Manager",
+      "client": "Avant Gardening",
+      "source": "wiki/knowledge/paid-social/facebook-ad-budget-management.md"
+    },
+    {
+      "metric": "BluePoint Q1 campaign: 12 distinct geographies targeted",
+      "context": "Mix of cities and states; LinkedIn + Google Ads strategy",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-q1-linkedin-google-ads-campaign.md"
+    },
+    {
+      "metric": "BluePoint dual-bid strategy: ~$1/click traditional ATM, ~$10/click reverse ATM",
+      "context": "Separates low-intent from high-intent searches",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-q1-linkedin-google-ads-campaign.md"
+    },
+    {
+      "metric": "BluePoint LinkedIn Ads budget: $1,500/month",
+      "context": "Out of $5,000 total; remaining $3,500 to Google Ads",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-linkedin-ads-strategy.md"
+    },
+    {
+      "metric": "BluePoint Google Ads budget: $3,500/month",
+      "context": "Out of $5,000 total",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-linkedin-ads-strategy.md"
+    },
+    {
+      "metric": "LinkedIn profile About section limit: 2,600 characters; visible without click: 3\u20134 lines",
+      "context": "Best practice: bulleted list, most important info first",
+      "client": null,
+      "source": "wiki/knowledge/paid-social/linkedin-personal-profile-optimization.md"
+    },
+    {
+      "metric": "LinkedIn posting frequency minimum: 1\u00d7 per week; high-growth: 2\u20133\u00d7 per week",
+      "context": "Best days: Tue\u2013Thu; best time: ~9 AM local",
+      "client": null,
+      "source": "wiki/knowledge/paid-social/linkedin-content-engagement-strategy.md"
+    },
+    {
+      "metric": "Retargeting conversion rate: 10\u201320% of previously interested visitors",
+      "context": "When segmented by engagement level (location page, pricing, form abandonment)",
+      "client": "Adava Care",
+      "source": "wiki/knowledge/paid-social/client-extractions.md"
+    },
+    {
+      "metric": "Doudlah Farms anchor hashtags: #MomsAcrossAmerica, #TestedClean",
+      "context": "Used on every post across both Doudlah Farms and Old World Popcorn brand pages",
+      "client": "Doudlah Farms",
+      "source": "wiki/knowledge/paid-social/doudlah-farms-hashtag-strategy.md"
+    },
+    {
+      "metric": "Doudlah Farms customer inquiry frequency: weekly emails about heavy metals and pesticide testing",
+      "context": "Justifies #TestedClean hashtag strategy",
+      "client": "Doudlah Farms",
+      "source": "wiki/knowledge/paid-social/doudlah-farms-hashtag-strategy.md"
+    },
+    {
+      "metric": "BluePoint Stadium & Arenas campaign: 10-week email drip automation",
+      "context": "Template for monthly industry campaign cadence",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-stadium-arenas-campaign.md"
+    },
+    {
+      "metric": "Citrus America X-Pro campaign: 2 LinkedIn ads with distinct CTAs and landing pages",
+      "context": "Product launch (demo CTA) + founder story (soft 'read more' CTA)",
+      "client": "Citrus America",
+      "source": "wiki/knowledge/paid-social/citrus-america-x-pro-linkedin-campaign.md"
+    },
+    {
+      "metric": "Aviary paid media test budget progression: $100 \u2192 $200 \u2192 $500",
+      "context": "Increment only after each tier yields actionable signal",
+      "client": "Aviary",
+      "source": "wiki/knowledge/paid-social/aviary-paid-media-strategy.md"
+    },
+    {
+      "metric": "Trachte Spotify ads planned launch: January",
+      "context": "Business & Finance podcast targeting for self-storage investment positioning",
+      "client": "Trachte",
+      "source": "wiki/knowledge/paid-social/spotify-ads-business-investment-targeting.md"
+    },
+    {
+      "metric": "Trachte annual seminars: 10 in-person + 5 webinars",
+      "context": "Spotify ads should drive to seminar/webinar registration pages",
+      "client": "Trachte",
+      "source": "wiki/knowledge/paid-social/spotify-ads-business-investment-targeting.md"
+    },
+    {
+      "metric": "BluePoint NY compliance campaign launch date: ~January 29\u201330, 2026",
+      "context": "LinkedIn static ad performance review scheduled for end of February",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-ny-compliance-campaign.md"
+    },
+    {
+      "metric": "BluePoint NY compliance campaign decision date: February 11, 2026",
+      "context": "Continue static ad; pause video boost; repost static ad organic",
+      "client": "BluePoint ATM",
+      "source": "wiki/knowledge/paid-social/bluepoint-ny-compliance-campaign.md"
+    }
+  ],
+  "client_mentions": [
+    "AHS",
+    "AHS (Advanced Health & Safety)",
+    "AHS (Madison Asbestos & Hazardous Services)",
+    "Adava Care",
+    "American Extractions",
+    "Asymmetric",
+    "Asymmetric Marketing",
+    "Avant Gardening",
+    "Aviary",
+    "AviaryAI",
+    "Axley",
+    "Blue Sky",
+    "BluePoint ATM",
+    "Capitol Bank",
+    "Citrus America",
+    "Cordwainer",
+    "Cordwainer Memory Care",
+    "Crazy Lenny's",
+    "Crazy Lenny's E-Bikes",
+    "Didion",
+    "Doudlah Farms",
+    "Exterior Renovation",
+    "Flynn Audio",
+    "Madison Asbestos Services",
+    "Overhead Door",
+    "Overhead Door Madison",
+    "Paper Tube Co",
+    "PaperTube",
+    "Quarra Stone",
+    "Reynolds Transfer",
+    "Skaalen",
+    "The Cordwainer",
+    "Trachte",
+    "TrackRite",
+    "TrackRite/Trachte Building Systems",
+    "Wedding App"
+  ]
+}
