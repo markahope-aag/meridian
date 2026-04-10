@@ -59,17 +59,26 @@ def load_registry(filename: str) -> str:
     with open(path) as f:
         data = yaml.safe_load(f) or {}
 
-    # Build compact representation: slug → [aliases]
-    items = data.get("clients", data.get("categories", []))
+    # Each registry has a different top-level key. Handle all three.
+    items = (
+        data.get("clients")
+        or data.get("categories")
+        or data.get("industries")
+        or []
+    )
     lines = []
     for item in items:
         name = item.get("name", "")
         slug = item.get("slug", "")
-        status = item.get("status", "")
         aliases = item.get("aliases", [])
         alias_str = ", ".join(aliases[:10]) if aliases else ""
         if "clients" in filename:
-            lines.append(f"- {slug} ({status}): \"{name}\" [{alias_str}]")
+            status = item.get("status", "")
+            industry = item.get("industry", "")
+            industry_suffix = f" → {industry}" if industry else ""
+            lines.append(f"- {slug} ({status}{industry_suffix}): \"{name}\" [{alias_str}]")
+        elif "industries" in filename:
+            lines.append(f"- {slug}: \"{name}\" [{alias_str}]")
         else:
             cat = item.get("category", "")
             lines.append(f"- {slug} ({cat}): \"{name}\" [{alias_str}]")
@@ -86,9 +95,19 @@ def load_registry_data(filename: str) -> dict:
 
 
 def build_slug_lookup(registry_data: dict, key: str) -> dict[str, str]:
-    """Build a lookup: alias → canonical slug from a registry."""
+    """Build a lookup: alias → canonical slug from a registry.
+
+    Handles the three possible top-level keys ("clients", "categories",
+    "industries") so one helper works for all three dimensions.
+    """
     lookup = {}
-    items = registry_data.get(key, registry_data.get("categories", []))
+    items = (
+        registry_data.get(key)
+        or registry_data.get("clients")
+        or registry_data.get("categories")
+        or registry_data.get("industries")
+        or []
+    )
     for item in items:
         slug = item.get("slug", "")
         lookup[slug] = slug
@@ -96,6 +115,24 @@ def build_slug_lookup(registry_data: dict, key: str) -> dict[str, str]:
         for alias in item.get("aliases", []):
             lookup[alias.lower()] = slug
     return lookup
+
+
+def build_client_industry_map(clients_data: dict) -> dict[str, str]:
+    """Return {client_slug: industry_slug} for every client with an industry tag.
+
+    The compiler passes this to the planner so the LLM knows which industry
+    to cross-file a client-specific insight into. Clients without an
+    industry field are skipped — their fragments won't be cross-filed.
+    """
+    out: dict[str, str] = {}
+    for item in clients_data.get("clients", []):
+        if not isinstance(item, dict):
+            continue
+        slug = item.get("slug")
+        industry = item.get("industry")
+        if slug and industry:
+            out[slug] = industry
+    return out
 
 
 def get_uncompiled_files() -> list[Path]:
@@ -120,12 +157,24 @@ def get_uncompiled_files() -> list[Path]:
 
 def plan_document(client: anthropic.Anthropic, raw_content: str,
                   index_md: str, clients_yaml: str, topics_yaml: str,
+                  industries_yaml: str, client_industry_map: dict[str, str],
                   config: dict) -> dict:
     """Use Haiku to decide what files to create and where."""
     system_prompt = (PROMPTS_DIR / "compiler_plan.md").read_text(encoding="utf-8")
     planning_model = config.get("compiler", {}).get(
         "planning_model", "claude-haiku-4-5-20251001"
     )
+
+    # Render the client → industry mapping as a compact lookup so the
+    # planner can resolve "BluePoint" → "financial-services" without
+    # having to re-derive it from clients.yaml.
+    if client_industry_map:
+        industry_map_lines = "\n".join(
+            f"- {slug} → {industry}"
+            for slug, industry in sorted(client_industry_map.items())
+        )
+    else:
+        industry_map_lines = "(empty)"
 
     response = client.messages.create(
         model=planning_model,
@@ -138,6 +187,8 @@ def plan_document(client: anthropic.Anthropic, raw_content: str,
                 f"## wiki/_index.md\n\n{index_md}\n\n"
                 f"## Client Registry (clients.yaml)\n\n{clients_yaml}\n\n"
                 f"## Topic Registry (topics.yaml)\n\n{topics_yaml}\n\n"
+                f"## Industry Registry (industries.yaml)\n\n{industries_yaml}\n\n"
+                f"## Client → Industry Lookup\n\n{industry_map_lines}\n\n"
                 f"## Raw Document to Compile\n\n{raw_content}"
             ),
         }],
@@ -150,10 +201,16 @@ def plan_document(client: anthropic.Anthropic, raw_content: str,
     return json.loads(text)
 
 
-def validate_plan(plan: dict, client_lookup: dict, topic_lookup: dict) -> dict:
+def validate_plan(
+    plan: dict,
+    client_lookup: dict,
+    topic_lookup: dict,
+    industry_lookup: dict | None = None,
+) -> dict:
     """Validate plan entries against registries. Fix or flag invalid paths."""
     validated_entries = []
     warnings = []
+    industry_lookup = industry_lookup or {}
 
     for entry in plan.get("plan", []):
         path = entry.get("path", "")
@@ -186,6 +243,26 @@ def validate_plan(plan: dict, client_lookup: dict, topic_lookup: dict) -> dict:
                         entry["path"] = "/".join(parts)
                     else:
                         warnings.append(f"Skipped {path}: topic '{topic_slug}' not in registry")
+                        continue
+
+        # Validate industry paths — the third cross-filing dimension.
+        # Same enforcement model as clients/topics: reject any industry
+        # slug that isn't in industries.yaml, try an alias match before
+        # giving up. If no industry lookup was provided (legacy call
+        # site), pass industry paths through unchanged.
+        if "/industries/" in path and industry_lookup:
+            parts = path.split("/")
+            if len(parts) >= 4:
+                industry_slug = parts[2]  # wiki/industries/SLUG/...
+                if industry_slug not in industry_lookup.values():
+                    matched = industry_lookup.get(industry_slug.lower())
+                    if matched:
+                        parts[2] = matched
+                        entry["path"] = "/".join(parts)
+                    else:
+                        warnings.append(
+                            f"Skipped {path}: industry '{industry_slug}' not in registry"
+                        )
                         continue
 
         validated_entries.append(entry)
@@ -384,7 +461,8 @@ def append_log(message: str):
 
 def compile_one(client: anthropic.Anthropic, filepath: Path,
                 index_md: str, clients_yaml: str, topics_yaml: str,
-                client_lookup: dict, topic_lookup: dict,
+                industries_yaml: str, client_industry_map: dict[str, str],
+                client_lookup: dict, topic_lookup: dict, industry_lookup: dict,
                 config: dict) -> dict:
     """Plan then write all files for one raw document."""
     t0 = time.time()
@@ -403,13 +481,21 @@ def compile_one(client: anthropic.Anthropic, filepath: Path,
     # Pass 1: Planning (with registries)
     print(f"  Planning {filepath.name}...", file=sys.stderr)
     try:
-        plan = plan_document(client, planning_content, index_md,
-                             clients_yaml, topics_yaml, config)
+        plan = plan_document(
+            client,
+            planning_content,
+            index_md,
+            clients_yaml,
+            topics_yaml,
+            industries_yaml,
+            client_industry_map,
+            config,
+        )
     except (json.JSONDecodeError, Exception) as e:
         return {"file": str(filepath), "error": f"Planning failed: {e}"}
 
     # Validate plan against registries
-    plan = validate_plan(plan, client_lookup, topic_lookup)
+    plan = validate_plan(plan, client_lookup, topic_lookup, industry_lookup)
     if plan.get("validation_warnings"):
         for w in plan["validation_warnings"]:
             print(f"    WARN: {w}", file=sys.stderr)
@@ -470,15 +556,25 @@ def main():
     client = anthropic.Anthropic()
     index_md = load_index()
 
-    # Load registries once
+    # Load registries once — three dimensions: clients, topics, industries.
     clients_yaml = load_registry("clients.yaml")
     topics_yaml = load_registry("topics.yaml")
+    industries_yaml = load_registry("industries.yaml")
     client_data = load_registry_data("clients.yaml")
     topic_data = load_registry_data("topics.yaml")
+    industry_data = load_registry_data("industries.yaml")
     client_lookup = build_slug_lookup(client_data, "clients")
     topic_lookup = build_slug_lookup(topic_data, "categories")
+    industry_lookup = build_slug_lookup(industry_data, "industries")
+    client_industry_map = build_client_industry_map(client_data)
 
-    print(f"Loaded registries: {len(client_lookup)} client aliases, {len(topic_lookup)} topic aliases", file=sys.stderr)
+    print(
+        f"Loaded registries: {len(client_lookup)} client aliases, "
+        f"{len(topic_lookup)} topic aliases, "
+        f"{len(industry_lookup)} industry aliases, "
+        f"{len(client_industry_map)} client→industry mappings",
+        file=sys.stderr,
+    )
 
     if args.file:
         files = [Path(args.file)]
@@ -499,8 +595,10 @@ def main():
     with ThreadPoolExecutor(max_workers=3) as pool:
         futures = {
             pool.submit(compile_one, client, fp, index_md,
-                        clients_yaml, topics_yaml,
-                        client_lookup, topic_lookup, config): fp
+                        clients_yaml, topics_yaml, industries_yaml,
+                        client_industry_map,
+                        client_lookup, topic_lookup, industry_lookup,
+                        config): fp
             for fp in files
         }
         for future in as_completed(futures):
