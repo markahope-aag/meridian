@@ -29,6 +29,19 @@ BRANCH="${MERIDIAN_BRANCH:-april-2026-rebuild}"
 LOG_DIR="${LOG_DIR:-/var/log/meridian-deploy}"
 LOG_FILE="${LOG_DIR}/deploy-$(date -u +%Y-%m-%d).log"
 
+# Runtime-mutable scaffolding files that MUST survive every deploy.
+# These live at well-known paths inside tracked directories but are
+# rewritten by agents at runtime. The bootstrap of this deploy system
+# clobbered wiki/log.md once and we don't want that ever again.
+# Paths are relative to $REPO_DIR. Add new entries whenever an agent
+# starts writing to a file that used to be a seed in git.
+CHECKPOINT_FILES=(
+    "wiki/log.md"
+    "wiki/_index.md"
+    "wiki/_backlinks.md"
+    "raw/_index.md"
+)
+
 mkdir -p "$LOG_DIR"
 cd "$REPO_DIR"
 
@@ -67,9 +80,42 @@ fi
     echo "changed files:"
     printf '%s\n' "$CHANGED_FILES" | sed 's/^/  /'
 
+    # Checkpoint runtime-mutable scaffolding so `git reset --hard`
+    # can't delete or overwrite files that agents are actively
+    # writing to. This is what actually kept log.md safe during the
+    # deploy loop — the naive reset would otherwise wipe every line
+    # the pipeline has appended since the last commit.
+    CHECKPOINT_DIR="$(mktemp -d)"
+    trap 'rm -rf "$CHECKPOINT_DIR"' EXIT
+    for rel in "${CHECKPOINT_FILES[@]}"; do
+        src="$REPO_DIR/$rel"
+        if [ -f "$src" ]; then
+            mkdir -p "$CHECKPOINT_DIR/$(dirname "$rel")"
+            cp -p "$src" "$CHECKPOINT_DIR/$rel"
+            echo "  checkpointed $rel ($(wc -l < "$src") lines)"
+        fi
+    done
+
     # Fast-forward to the remote HEAD. Hard reset so local scp fiddling
-    # can never block a deploy — git is authoritative.
+    # can never block a deploy — git is authoritative for tracked
+    # code, and the checkpoint above protects runtime scaffolding.
     git reset --hard "origin/$BRANCH"
+
+    # Restore checkpointed files. This is a no-op for files that are
+    # still tracked at the new HEAD (git reset just restored them to
+    # their repo content), unless the repo content is older than
+    # what the agents wrote — in which case the checkpoint wins.
+    for rel in "${CHECKPOINT_FILES[@]}"; do
+        ckpt="$CHECKPOINT_DIR/$rel"
+        dst="$REPO_DIR/$rel"
+        if [ -f "$ckpt" ]; then
+            mkdir -p "$(dirname "$dst")"
+            cp -p "$ckpt" "$dst"
+            # Preserve the ownership the agents expect
+            chown --reference="$REPO_DIR/agents" "$dst" 2>/dev/null || true
+            echo "  restored $rel"
+        fi
+    done
 
     # Decide which containers (if any) need a gunicorn reload.
     needs_receiver_reload=0
