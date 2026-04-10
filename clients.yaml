@@ -7,191 +7,226 @@ clients:
   # === CURRENT (from invoicing sheet) ===
   - name: "Doudlah Farms"
     slug: doudlah-farms
+    industry: food-beverage  # classifier: high
     status: current
     aliases: ["DFO", "doodla", "doodla-farms", "doodle-farms", "toodla-farms", "zoodla", "doodlers", "old-world", "old-world-popcorn", "old-world-nostalgia", "bean-vivo", "beanvivo", "lula-b2b", "lula-barnes"]
     website: https://doudlahfarms.com/
 
   - name: "AviaryAI"
     slug: aviary
+    industry: saas  # classifier: high
     status: current
     aliases: ["aviary-ai", "aviaryai", "the-aviary", "saviary", "helloaviary"]
     website: https://www.helloaviary.ai/
 
   - name: "Quarra Stone"
     slug: quarra
+    industry: manufacturing  # classifier: high
     status: current
     aliases: ["quarra-italia", "quarastone", "quarrowstone", "quora", "quora-italia", "quora-stone", "cora", "cora-italia", "cora-stone", "choirstone", "carstone", "coristone", "corristone", "corustone", "core-of-stone"]
     website: https://www.quarrastone.com/
 
   - name: "Crazy Lenny's E-Bikes"
     slug: crazy-lennys
+    industry: ecommerce-retail  # classifier: high
     status: current
     aliases: ["crazy-lenny", "crazy-lennys", "crazy-lennys-grannys", "crazylenna", "crazylany", "crazy-leanings", "crazy-learning", "crazy-lenin", "crazy-lennies", "crazy-lindys", "crazy-linis", "crazyling-e-bikes", "grannys"]
     website: https://www.crazylennysebikes.com/
 
   - name: "The Cordwainer"
     slug: cordwainer
+    industry: senior-living  # classifier: high
     status: current
     aliases: ["cordwaining", "codewiner", "the-cordwainer"]
     website: https://cordwainermemorycare.com/
 
   - name: "Citrus America"
     slug: citrus-america
+    industry: food-beverage  # classifier: high
     status: current
     aliases: ["citrus", "citra-casa", "CAI"]
     website: https://citrusamerica.com/
 
   - name: "Skaalen Retirement Services"
     slug: skaalen
+    industry: senior-living  # classifier: high
     status: current
     aliases: ["skallen", "skullen", "skullin", "scullin", "scallin", "scallon", "scalding", "scallion-worship", "scotland"]
     website: https://skaalen.com/
 
   - name: "Paper Tube Co"
     slug: papertube
+    industry: ecommerce-retail  # classifier: high
     status: current
     aliases: ["paper-tube-co", "papercube", "paper2email", "paper-two", "kepatube"]
     website: https://papertube.co/
 
   - name: "Advanced Health & Safety"
     slug: ahs
+    industry: construction-home-services  # classifier: high
     status: current
     aliases: ["advanced-health", "advanced-health-and-safety", "advanced-health-safety", "ahs", "madison-asbestos", "madison-asbestos-services", "hazardos", "hhs", "hs"]
     website: https://madisonasbestos.com/
 
   - name: "Didion Milling"
     slug: didion
+    industry: food-beverage  # classifier: high
     status: current
     aliases: ["didion-milling", "didion-recruitment", "didyna", "diddy", "gideon", "gideon-emacs"]
     website: https://didioninc.com/
 
   - name: "Exterior Renovations"
     slug: exterior-renovations
+    industry: construction-home-services  # classifier: high
     status: current
     aliases: ["exterior", "exterior-renovation", "reynolds-exterior"]
     website: https://exteriorrenovations.com/
 
   - name: "Overhead Door Company of Madison"
     slug: overhead-door
+    industry: construction-home-services  # classifier: high
     status: current
     aliases: ["overhead", "overhead-doors", "overhead-door-madison", "overhead-door-medicine"]
     website: https://www.overheaddoormadison.com/
 
   - name: "SonoPlot"
     slug: sonoplot
+    industry: b2b-services  # classifier: high
     status: current
     aliases: ["sona-plot", "sonoplat"]
     website: https://www.sonoplot.com/
 
   - name: "Reynolds Transfer and Storage"
     slug: reynolds
+    industry: b2b-services  # classifier: high
     status: current
     aliases: ["reynolds-transfer"]
     website: https://reynoldstransfer.com/
 
   - name: "Village of Maple Bluff"
     slug: maple-bluff
+    industry: nonprofit  # classifier: high
     status: current
     aliases: ["vilas", "vilas-county", "vilas-county-edc", "vilus", "violus", "vlas"]
 
   - name: "Wisconsin Masonic Foundation"
     slug: wi-masons
+    industry: nonprofit  # classifier: high
     status: current
     aliases: ["wisconsin-masonic", "wi-masons"]
 
   - name: "Asymmetric Marketing"
     slug: asymmetric
+    industry: b2b-services  # classifier: high
     status: current
     aliases: ["asymmetric-applications", "asymmetric-applications-group", "asymmetric-marketing", "symmetric"]
 
   # === CLIENTS FROM MEETINGS (not on invoice sheet — verify status) ===
   - name: "Agility Recovery"
     slug: agility-recovery
+    industry: saas  # classifier: high
     status: current
     aliases: ["agility", "agility-courses", "agility-way", "avr"]
 
   - name: "BluepointATM"
     slug: bluepoint
+    industry: financial-services  # classifier: high
     status: current
     aliases: ["bluepoint-atm", "bluepointatm", "blue-point", "loot-point"]
 
   - name: "American Extractions"
     slug: american-extractions
+    industry: b2b-services  # classifier: high
     status: current
     aliases: ["american-extraction", "american"]
 
   - name: "A New Dawn / Shine"
     slug: new-dawn-shine
+    industry: healthcare  # classifier: high
     status: current
     aliases: ["a-new-dawn", "a-new-dawn-therapy", "new-dawn", "newdown", "shine", "shine-construction-cleaning", "shine-marketing", "the-shine"]
 
   - name: "Trachte Building Systems"
     slug: trachte
+    industry: manufacturing  # classifier: medium
     status: current
     aliases: ["trachty", "track-right", "tracku", "tracti", "tracti-building-systems", "traffy", "trakti", "trocta", "trocte"]
 
   - name: "Seamless Building Solutions"
     slug: seamless
+    industry: construction-home-services  # classifier: high
     status: current
     aliases: ["seamless-building-solutions", "seamless-building-systems"]
 
   - name: "Adava Care"
     slug: adava-care
+    industry: healthcare  # classifier: high
     status: current
     aliases: ["adabacare", "adavacare", "adavacare-karosh", "adava-cares", "adawa-care", "adovacare", "davacare", "abdabakir", "ababacare", "karosh"]
 
   - name: "Axley Law"
     slug: axley
+    industry: legal-services  # classifier: high
     status: current
     aliases: ["axley-law-firm"]
 
   - name: "Avant Gardening"
     slug: avant-gardening
+    industry: construction-home-services  # classifier: medium
     status: current
     aliases: ["avant", "avant-garde", "avoke-gardening", "gardening-account"]
 
   - name: "PEMA"
     slug: pema
+    industry: saas  # classifier: high
     status: current
     aliases: ["pema-io", "pima"]
 
   - name: "Flynn Audio"
     slug: flynn-audio
+    industry: ecommerce-retail  # classifier: medium
     status: current
     aliases: ["flynn", "flan-audio", "flint-audio", "plain-audio", "clean-audio", "lynn-audio", "sam-flynn", "sam"]
 
   - name: "Capitol Bank"
     slug: capitol-bank
+    industry: financial-services  # classifier: high
     status: former
     aliases: ["capital-bank"]
 
   - name: "Vilas County Economic Development"
     slug: vcedc
+    industry: nonprofit  # classifier: high
     status: current
     aliases: ["vce", "vilas-county-edc", "VCEDC"]
 
   - name: "FinWellU"
     slug: finwellu
+    industry: financial-services  # classifier: medium
     status: current
     aliases: ["fenwell", "fenwell-u", "fieldwell", "financial-u", "financialu", "financial-utesk", "finwell-u", "firestone", "next-level", "nextlevel", "next-level-financial", "next-level-financialu", "nlp-wealth-management"]
 
   - name: "Seamless Building Systems"
     slug: sbs
+    industry: b2b-services  # classifier: medium
     status: current
     aliases: ["sbswi", "SBS Wisconsin"]
 
   - name: "LaMarie Beauty"
     slug: lamarie
+    industry: ecommerce-retail  # classifier: high
     status: current
     aliases: ["la-marie", "lamarie-beauty", "la-marie-beauty", "la-marie-connect", "lamaurie", "lameri-beauty", "lammary", "lmb"]
 
   - name: "Hooper"
     slug: ab-hooper
+    industry: b2b-services  # classifier: low
     status: current
     aliases: ["hooper", "AB Hooper"]
 
   - name: "HazardOS"
     slug: hazardos
+    industry: saas  # classifier: high
     status: current
     aliases: ["aiden-app"]
     notes: "SaaS product, related to Advanced Health & Safety"
@@ -199,111 +234,133 @@ clients:
   # === FROM INVOICING HISTORY (may be former) ===
   - name: "Evolution Body Transformation"
     slug: evolution-body
+    industry: b2b-services  # classifier: low
     status: former
     aliases: []
 
   - name: "The King Company"
     slug: king-company
+    industry: b2b-services  # classifier: low
     status: former
     aliases: []
 
   - name: "Global Coin"
     slug: global-coin
+    industry: financial-services  # classifier: low
     status: former
     aliases: []
 
   - name: "Innoviom"
     slug: innoviom
+    industry: b2b-services  # classifier: low
     status: former
     aliases: ["innoviom-websites"]
 
   - name: "Naviant"
     slug: naviant
+    industry: b2b-services  # classifier: low
     status: former
     aliases: []
 
   - name: "Dirty Ducts"
     slug: dirty-ducts
+    industry: construction-home-services  # classifier: low
     status: former
     aliases: []
 
   - name: "Machinery Source"
     slug: machinery-source
+    industry: manufacturing  # classifier: medium
     status: former
     aliases: ["machine-resource"]
 
   - name: "Jupmode"
     slug: jupmode
+    industry: saas  # classifier: low
     status: former
     aliases: []
 
   - name: "Bake Believe"
     slug: bake-believe
+    industry: food-beverage  # classifier: high
     status: former
     aliases: ["make-believe"]
 
   - name: "Best Defense"
     slug: best-defense
+    industry: legal-services  # classifier: low
     status: former
     aliases: []
 
   - name: "CraftOptics"
     slug: craftoptics
+    industry: manufacturing  # classifier: low
     status: former
     aliases: []
 
   - name: "Gulf Coast Business Credit"
     slug: gulf-coast
+    industry: financial-services  # classifier: low
     status: former
     aliases: []
 
   - name: "Hooper Corp"
     slug: hooper
+    industry: b2b-services  # classifier: low
     status: former
     aliases: ["ab-hooper"]
 
   - name: "Kern's Dumpsters"
     slug: kerns-dumpsters
+    industry: construction-home-services  # classifier: medium
     status: former
     aliases: ["kearns-dumpsters"]
 
   - name: "Mine & Process Service"
     slug: mine-process
+    industry: manufacturing  # classifier: low
     status: former
     aliases: []
 
   - name: "Utility Management Services"
     slug: utility-management
+    industry: b2b-services  # classifier: low
     status: former
     aliases: []
 
   - name: "Vintage Fields"
     slug: vintage-fields
+    industry: food-beverage  # classifier: low
     status: former
     aliases: []
 
   - name: "WALA"
     slug: wala
+    industry: b2b-services  # classifier: low
     status: former
     aliases: []
 
   - name: "WrenchWay"
     slug: wrenchway
+    industry: construction-home-services  # classifier: low
     status: former
     aliases: []
 
   - name: "JBF Concrete & Landscape"
     slug: jbf
+    industry: construction-home-services  # classifier: high
     status: current
     aliases: ["jbf-concrete", "jbf-concrete-landscape", "jbf-site"]
 
   - name: "Three Gaits"
     slug: three-gaits
+    industry: nonprofit  # classifier: high
     status: current
     aliases: ["three-gates"]
 
   - name: "Blue Sky Capital"
     slug: blue-sky
+    industry: financial-services  # classifier: high
     status: current
     aliases: ["bluesky", "blue-sky-capital", "blue-sky-social"]
 
