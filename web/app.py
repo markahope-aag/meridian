@@ -456,8 +456,39 @@ def dashboard():
                 pass
 
     # Synthesis coverage
+    #
+    # The denominator is the set of topics we ACTUALLY intend to
+    # synthesize — i.e. entries in synthesis_queue.json excluding any
+    # that are flagged `skip`. Using a raw filesystem count of
+    # wiki/knowledge/* inflates the denominator with off-registry
+    # legacy directories and makes the metric lie about actual
+    # coverage. The numerator is topics from that same set that now
+    # carry a completed Layer 3 synthesis marker.
     synthesis_coverage = 0
-    if stats.get("knowledge_topics", 0) > 0:
+    queue_path = MERIDIAN_ROOT / "synthesis_queue.json"
+    if queue_path.exists():
+        try:
+            queue_items = json.loads(queue_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            queue_items = []
+        intended = {
+            item.get("topic")
+            for item in queue_items
+            if item.get("status") != "skip" and item.get("topic")
+        }
+        if intended:
+            completed = sum(
+                1
+                for topic in intended
+                if (WIKI_DIR / "knowledge" / topic / "index.md").exists()
+                and "layer: 3"
+                in (WIKI_DIR / "knowledge" / topic / "index.md").read_text(
+                    encoding="utf-8", errors="replace"
+                )
+            )
+            synthesis_coverage = round(completed / len(intended) * 100)
+    elif stats.get("knowledge_topics", 0) > 0:
+        # Fallback: pre-queue legacy path
         synthesis_coverage = round(layer3_count / stats["knowledge_topics"] * 100)
 
     # Pipeline freshness — find latest log entries by operation type

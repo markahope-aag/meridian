@@ -30,6 +30,21 @@ categories:
     category: advertising-media
     aliases: ["amazon-seller", "amazon-fba"]
 
+  - name: "Retargeting"
+    slug: retargeting
+    category: advertising-media
+    aliases: ["remarketing", "retargeting-pixel", "retargeting-audiences"]
+
+  - name: "Influencer Marketing"
+    slug: influencer-marketing
+    category: advertising-media
+    aliases: ["creator-marketing", "influencer-partnerships", "creator-partnerships"]
+
+  - name: "Event Marketing"
+    slug: event-marketing
+    category: advertising-media
+    aliases: ["event-promotion", "event-strategy", "conference-marketing", "trade-show-marketing"]
+
   # === SEO & SEARCH ===
   - name: "SEO"
     slug: seo
@@ -171,6 +186,11 @@ categories:
     slug: attribution
     category: analytics-tracking
     aliases: ["marketing-attribution", "campaign-tracking", "conversion-tracking", "conversion-optimization", "qr-code-tracking"]
+
+  - name: "Data Quality"
+    slug: data-quality
+    category: analytics-tracking
+    aliases: ["data-hygiene", "data-integrity", "data-cleanup", "data-validation", "data-governance"]
 
   # === INTEGRATIONS & TECH ===
   - name: "Zapier"
