@@ -84,8 +84,18 @@
         <div class="label">Last Synthesis</div>
     </div>
     <div class="stat-box">
+        {% if metrics.latest_lint_report %}
+        <a href="/article/{{ metrics.latest_lint_report.path }}" style="text-decoration: none;">
+            <div style="font-size: 16px; font-weight: 600; color: var(--accent);">{{ metrics.latest_lint_report.date }}</div>
+        </a>
+        <div class="label">
+            Last Lint &nbsp;
+            <a href="/article/{{ metrics.latest_lint_report.path }}" style="font-size: 10px; color: var(--text-muted); text-decoration: none;">view report &rarr;</a>
+        </div>
+        {% else %}
         <div style="font-size: 16px; font-weight: 600; color: var(--accent);">{{ metrics.pipeline.lint or '—' }}</div>
         <div class="label">Last Lint</div>
+        {% endif %}
     </div>
 </div>
 

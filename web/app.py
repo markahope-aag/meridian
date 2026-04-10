@@ -575,12 +575,34 @@ def dashboard():
     # Synthesis running detection — check queue for running status
     synth_running = synth_status.get("running", 0) > 0
 
+    # Latest lint report — find the most recent wiki/articles/lint-*.md so the
+    # dashboard can link straight to it from the Pipeline Freshness card. The
+    # filename carries the date (lint-YYYY-MM-DD.md), so a sorted glob picks
+    # the latest deterministically without parsing frontmatter.
+    latest_lint_report: dict | None = None
+    lint_reports_dir = WIKI_DIR / "articles"
+    if lint_reports_dir.exists():
+        lint_files = sorted(lint_reports_dir.glob("lint-*.md"))
+        if lint_files:
+            latest = lint_files[-1]
+            try:
+                rel_path = latest.relative_to(MERIDIAN_ROOT).as_posix()
+            except ValueError:
+                rel_path = ""
+            # Extract YYYY-MM-DD from filename `lint-YYYY-MM-DD.md`
+            m = re.match(r"lint-(\d{4}-\d{2}-\d{2})\.md$", latest.name)
+            latest_lint_report = {
+                "path": rel_path,
+                "date": m.group(1) if m else latest.stem,
+            }
+
     metrics = {
         "total_insights": total_insights,
         "cross_client_topics": cross_client_topics,
         "synthesis_coverage": synthesis_coverage,
         "pipeline": pipeline,
         "synth_running": synth_running,
+        "latest_lint_report": latest_lint_report,
     }
 
     return render_template("dashboard.html",
