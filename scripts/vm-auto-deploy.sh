@@ -131,28 +131,62 @@ fi
         esac
     done <<< "$CHANGED_FILES"
 
-    # Receiver container: identify by the path its gunicorn master was
-    # launched with (`--chdir /meridian/receiver`). Works regardless of
-    # Coolify's hashed container name.
-    reload_container() {
-        local label="$1"
-        local match="$2"
-        local cid
-        cid=$(docker ps --format '{{.ID}} {{.Command}}' 2>/dev/null \
-            | awk -v m="$match" 'index($0, m) { print $1; exit }')
-        if [ -z "$cid" ]; then
-            echo "  (no $label container found — skipping reload)"
-            return
-        fi
-        echo "  reloading $label container $cid"
-        docker exec "$cid" sh -c 'kill -HUP 1' 2>/dev/null || echo "    HUP failed"
+    # Identify containers by their COOLIFY_FQDN env var, which is
+    # stable across restarts and image rebuilds. The docker ps --format
+    # output truncates Command to ~20 chars with "…", so grepping for
+    # `/meridian/receiver` or `app:app` in the command column will miss.
+    # FQDN is authoritative.
+    find_container_by_fqdn() {
+        local want="$1"
+        for cid in $(docker ps --format '{{.ID}}'); do
+            if docker inspect "$cid" --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null \
+                | grep -q "^COOLIFY_FQDN=${want}\$"; then
+                echo "$cid"
+                return
+            fi
+        done
     }
 
+    # Receiver: code is bind-mounted from /meridian/receiver, so a HUP
+    # reloads gunicorn workers and they pick up the new code.
     if [ "$needs_receiver_reload" -eq 1 ]; then
-        reload_container receiver '/meridian/receiver'
+        cid=$(find_container_by_fqdn "meridian.markahope.com")
+        if [ -n "$cid" ]; then
+            echo "  reloading receiver container $cid"
+            docker exec "$cid" sh -c 'kill -HUP 1' 2>/dev/null \
+                || echo "    HUP failed"
+        else
+            echo "  (no receiver container found — skipping reload)"
+        fi
     fi
+
+    # Dashboard: code is BAKED into the image at /app/, not
+    # bind-mounted. A HUP alone wouldn't pick up the new code, so we
+    # also docker cp the changed web/ files into the container before
+    # reloading. This is a hot-patch until Coolify rebuilds the image
+    # on its own cadence.
     if [ "$needs_dashboard_reload" -eq 1 ]; then
-        reload_container dashboard 'app:app'
+        cid=$(find_container_by_fqdn "brain.markahope.com")
+        if [ -n "$cid" ]; then
+            echo "  hot-patching dashboard container $cid"
+            if [ -f "$REPO_DIR/web/app.py" ]; then
+                docker cp "$REPO_DIR/web/app.py" "$cid":/app/app.py 2>/dev/null \
+                    && echo "    copied web/app.py" \
+                    || echo "    app.py copy failed"
+            fi
+            if [ -d "$REPO_DIR/web/templates" ]; then
+                for tmpl in "$REPO_DIR/web/templates"/*.html; do
+                    [ -f "$tmpl" ] || continue
+                    docker cp "$tmpl" "$cid":"/app/templates/$(basename "$tmpl")" 2>/dev/null \
+                        && echo "    copied templates/$(basename "$tmpl")" \
+                        || echo "    templates/$(basename "$tmpl") copy failed"
+                done
+            fi
+            docker exec "$cid" sh -c 'kill -HUP 1' 2>/dev/null \
+                || echo "    HUP failed"
+        else
+            echo "  (no dashboard container found — skipping reload)"
+        fi
     fi
 
     echo "=== $(date -u +%FT%TZ) deploy finished ==="
