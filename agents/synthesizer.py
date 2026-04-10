@@ -49,10 +49,42 @@ import yaml
 ROOT = Path(__file__).parent.parent
 WIKI_DIR = ROOT / "wiki"
 PROMPTS_DIR = ROOT / "prompts"
-CACHE_DIR = ROOT / "cache" / "extractions"
-VERSIONS_DIR = ROOT / "state" / "synthesis_versions"
+CACHE_ROOT = ROOT / "cache" / "extractions"
+VERSIONS_ROOT = ROOT / "state" / "synthesis_versions"
 
 EXTRACT_CACHE_SCHEMA_VERSION = 1
+
+# Dimension = one of "topic" | "industry". Each dimension is an
+# independent Layer 3 synthesis surface with its own fragment tree,
+# extraction cache, version archive, and registry yaml. The default
+# is "topic" so every pre-existing caller keeps working unchanged.
+#
+# Adding a third dimension (e.g. "client" for per-engagement Layer 3)
+# would be as simple as extending DIMENSION_CONFIG below.
+DIMENSION_CONFIG: dict[str, dict] = {
+    "topic": {
+        "fragment_root": WIKI_DIR / "knowledge",
+        "cache_subdir":  "topic",
+        "versions_subdir": "topic",
+        "registry_file": "topics.yaml",
+        "registry_key":  "categories",   # historical — topics.yaml uses "categories"
+        "default_domain_type": "strategy",
+    },
+    "industry": {
+        "fragment_root": WIKI_DIR / "industries",
+        "cache_subdir":  "industry",
+        "versions_subdir": "industry",
+        "registry_file": "industries.yaml",
+        "registry_key":  "industries",
+        "default_domain_type": "strategy",
+    },
+}
+
+
+def dimension_paths(dimension: str) -> dict:
+    if dimension not in DIMENSION_CONFIG:
+        raise ValueError(f"unknown dimension: {dimension!r} (valid: {list(DIMENSION_CONFIG)})")
+    return DIMENSION_CONFIG[dimension]
 
 
 def _sha12(path: Path) -> str:
@@ -76,19 +108,30 @@ def load_config() -> dict:
         return yaml.safe_load(f)
 
 
-def load_topics_registry() -> dict:
-    """Load topics.yaml and return topic slug → metadata."""
-    path = ROOT / "topics.yaml"
+def load_topics_registry(dimension: str = "topic") -> dict:
+    """Load the registry for a dimension and return slug → metadata.
+
+    For topic dimension this reads topics.yaml (historical "categories"
+    key). For industry dimension this reads industries.yaml ("industries"
+    key). Either way the return shape is the same: slug → metadata.
+    """
+    cfg = dimension_paths(dimension)
+    path = ROOT / cfg["registry_file"]
     if not path.exists():
         return {}
     with open(path) as f:
         data = yaml.safe_load(f) or {}
     registry = {}
-    for item in data.get("categories", []):
+    for item in data.get(cfg["registry_key"], []):
+        if not isinstance(item, dict):
+            continue
         slug = item.get("slug", "")
+        if not slug:
+            continue
         registry[slug] = {
             "name": item.get("name", slug),
             "category": item.get("category", ""),
+            "description": item.get("description", ""),
         }
     return registry
 
@@ -131,17 +174,20 @@ def get_monitoring_frequency(domain_type: str, config: dict) -> str:
     return profile.get("web_monitoring", "quarterly")
 
 
-def find_fragments(topic_slug: str) -> list[Path]:
-    """Find all Layer 2 articles for a topic."""
-    fragments = []
+def find_fragments(topic_slug: str, dimension: str = "topic") -> list[Path]:
+    """Find all Layer 2 articles for a slug in the given dimension.
 
-    # Check wiki/knowledge/[topic]/ directory
-    topic_dir = WIKI_DIR / "knowledge" / topic_slug
+    Skips _index.md, index.md (Layer 3 output), and PLACEHOLDER.md
+    (empty-industry marker).
+    """
+    fragments = []
+    cfg = dimension_paths(dimension)
+    topic_dir = cfg["fragment_root"] / topic_slug
     if topic_dir.exists():
         for f in topic_dir.rglob("*.md"):
-            if f.name != "_index.md":
-                fragments.append(f)
-
+            if f.name in ("_index.md", "index.md", "PLACEHOLDER.md"):
+                continue
+            fragments.append(f)
     return fragments
 
 
@@ -235,11 +281,16 @@ def extract_batch(client: anthropic.Anthropic, topic_name: str,
                 "exceptions": [], "evidence": [], "client_mentions": []}
 
 
-def _cache_path(topic_slug: str) -> Path:
-    return CACHE_DIR / f"{topic_slug}.json"
+def _cache_path(topic_slug: str, dimension: str = "topic") -> Path:
+    cfg = dimension_paths(dimension)
+    return CACHE_ROOT / cfg["cache_subdir"] / f"{topic_slug}.json"
 
 
-def load_extraction_cache(topic_slug: str, fragment_paths: list[Path]) -> dict | None:
+def load_extraction_cache(
+    topic_slug: str,
+    fragment_paths: list[Path],
+    dimension: str = "topic",
+) -> dict | None:
     """Return cached extraction data if it is still valid, otherwise None.
 
     Invalidation rules:
@@ -248,7 +299,7 @@ def load_extraction_cache(topic_slug: str, fragment_paths: list[Path]) -> dict |
       - extract prompt hash differs from current prompt
       - any fragment mtime is newer than the cache
     """
-    path = _cache_path(topic_slug)
+    path = _cache_path(topic_slug, dimension)
     if not path.exists():
         return None
     try:
@@ -280,10 +331,11 @@ def save_extraction_cache(
     merged: dict,
     fragment_paths: list[Path],
     extract_model: str,
+    dimension: str = "topic",
 ) -> Path:
     """Persist merged extraction data so the write pass can re-run cheaply."""
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    path = _cache_path(topic_slug)
+    path = _cache_path(topic_slug, dimension)
+    path.parent.mkdir(parents=True, exist_ok=True)
     newest_mtime = max(
         (fp.stat().st_mtime for fp in fragment_paths if fp.exists()),
         default=0.0,
@@ -305,18 +357,20 @@ def save_extraction_cache(
     return path
 
 
-def archive_existing_synthesis(topic_slug: str) -> Path | None:
+def archive_existing_synthesis(topic_slug: str, dimension: str = "topic") -> Path | None:
     """Move a pre-existing index.md to the versions archive before we overwrite.
 
     Returns the path the old file was archived to, or None if there was
     nothing to archive. Keeps a full history of prior renders so a bad
-    prompt iteration can be rolled back without restic.
+    prompt iteration can be rolled back without restic. Versions live
+    under state/synthesis_versions/<dimension>/<slug>/.
     """
-    output_path = WIKI_DIR / "knowledge" / topic_slug / "index.md"
+    cfg = dimension_paths(dimension)
+    output_path = cfg["fragment_root"] / topic_slug / "index.md"
     if not output_path.exists():
         return None
-    VERSIONS_DIR.mkdir(parents=True, exist_ok=True)
-    topic_versions = VERSIONS_DIR / topic_slug
+    dim_versions_root = VERSIONS_ROOT / cfg["versions_subdir"]
+    topic_versions = dim_versions_root / topic_slug
     topic_versions.mkdir(parents=True, exist_ok=True)
     archived = topic_versions / f"{_now_stamp()}.md"
     shutil.copy2(output_path, archived)
@@ -402,14 +456,14 @@ def write_synthesis(client: anthropic.Anthropic, topic_name: str, topic_slug: st
 # Topic loading — shared by extract and write passes
 # ---------------------------------------------------------------------------
 
-def _load_topic_bundle(topic_slug: str) -> dict | None:
+def _load_topic_bundle(topic_slug: str, dimension: str = "topic") -> dict | None:
     """Read fragments + metadata for a topic. Returns None if nothing to do."""
     config = load_config()
-    topics_registry = load_topics_registry()
+    topics_registry = load_topics_registry(dimension)
     topic_info = topics_registry.get(topic_slug, {"name": topic_slug})
     topic_name = topic_info.get("name", topic_slug)
 
-    fragment_paths = find_fragments(topic_slug)
+    fragment_paths = find_fragments(topic_slug, dimension)
     if not fragment_paths:
         return None
 
@@ -427,7 +481,14 @@ def _load_topic_bundle(topic_slug: str) -> dict | None:
     earliest = min(dates) if dates else "unknown"
     latest = max(dates) if dates else "unknown"
 
-    domain_type = get_domain_type(topic_slug, topics_registry, config)
+    # Topic dimension uses the explicit domain_stability mapping in
+    # config.yaml; industries just get "strategy" as a sensible default
+    # since they describe long-lived vertical knowledge that evolves
+    # at the pace of regulatory + platform + cultural shifts.
+    if dimension == "topic":
+        domain_type = get_domain_type(topic_slug, topics_registry, config)
+    else:
+        domain_type = dimension_paths(dimension).get("default_domain_type", "strategy")
     monitoring_freq = get_monitoring_frequency(domain_type, config)
 
     return {
@@ -439,6 +500,7 @@ def _load_topic_bundle(topic_slug: str) -> dict | None:
         "latest": latest,
         "domain_type": domain_type,
         "monitoring_freq": monitoring_freq,
+        "dimension": dimension,
     }
 
 
@@ -446,14 +508,14 @@ def _load_topic_bundle(topic_slug: str) -> dict | None:
 # Pass 1 runner
 # ---------------------------------------------------------------------------
 
-def do_extract(topic_slug: str, re_extract: bool = False) -> dict:
+def do_extract(topic_slug: str, re_extract: bool = False, dimension: str = "topic") -> dict:
     """Run extraction (Pass 1). Writes to the extraction cache.
 
     Returns a summary dict containing either the reused cache metadata
     or the stats of the extraction that was just performed.
     """
     t0 = time.time()
-    bundle = _load_topic_bundle(topic_slug)
+    bundle = _load_topic_bundle(topic_slug, dimension)
     if bundle is None:
         return {"topic": topic_slug, "error": "no fragments found", "fragment_count": 0}
 
@@ -463,7 +525,7 @@ def do_extract(topic_slug: str, re_extract: bool = False) -> dict:
     config = bundle["config"]
 
     if not re_extract:
-        cached = load_extraction_cache(topic_slug, fragment_paths)
+        cached = load_extraction_cache(topic_slug, fragment_paths, dimension)
         if cached is not None:
             print(
                 f"  Extraction cache hit for '{topic_name}' "
@@ -501,7 +563,7 @@ def do_extract(topic_slug: str, re_extract: bool = False) -> dict:
         time.sleep(0.5)
 
     merged = merge_extractions(extractions)
-    save_extraction_cache(topic_slug, topic_name, merged, fragment_paths, extract_model)
+    save_extraction_cache(topic_slug, topic_name, merged, fragment_paths, extract_model, dimension)
 
     print(
         f"  Cached: {len(merged['claims'])} claims, {len(merged['patterns'])} patterns, "
@@ -550,6 +612,7 @@ def do_write(
     topic_slug: str,
     fixture_path: Path | None = None,
     output_path_override: Path | None = None,
+    dimension: str = "topic",
 ) -> dict:
     """Run the write pass (Pass 2). Requires a valid extraction cache.
 
@@ -568,7 +631,7 @@ def do_write(
         production state.
     """
     t0 = time.time()
-    bundle = _load_topic_bundle(topic_slug)
+    bundle = _load_topic_bundle(topic_slug, dimension)
     if bundle is None:
         return {"topic": topic_slug, "error": "no fragments found", "fragment_count": 0}
 
@@ -592,7 +655,7 @@ def do_write(
             file=sys.stderr,
         )
     else:
-        cached = load_extraction_cache(topic_slug, fragment_paths)
+        cached = load_extraction_cache(topic_slug, fragment_paths, dimension)
         cache_hit = cached is not None
         if cached is None:
             # No cache — fall back to running extraction inline so write can proceed.
@@ -600,10 +663,10 @@ def do_write(
                 f"  No extraction cache for '{topic_name}' — running extraction first",
                 file=sys.stderr,
             )
-            extract_result = do_extract(topic_slug, re_extract=True)
+            extract_result = do_extract(topic_slug, re_extract=True, dimension=dimension)
             if extract_result.get("error"):
                 return extract_result
-            cached = load_extraction_cache(topic_slug, fragment_paths)
+            cached = load_extraction_cache(topic_slug, fragment_paths, dimension)
             if cached is None:
                 return {"topic": topic_slug, "error": "extraction cache still missing after rebuild"}
 
@@ -672,9 +735,10 @@ def do_write(
 
     # Archive the previous version before overwriting, so rollbacks and
     # prompt A/B comparisons are one mv away.
-    archived_path = archive_existing_synthesis(topic_slug)
+    archived_path = archive_existing_synthesis(topic_slug, dimension)
 
-    output_path = WIKI_DIR / "knowledge" / topic_slug / "index.md"
+    cfg = dimension_paths(dimension)
+    output_path = cfg["fragment_root"] / topic_slug / "index.md"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(synthesis_content, encoding="utf-8")
 
@@ -723,10 +787,11 @@ def synthesize_topic(
     dry_run: bool = False,
     force: bool = False,
     re_extract: bool = False,
+    dimension: str = "topic",
 ) -> dict:
     """Extract + write. Kept as the public entry point for the scheduler."""
     if dry_run:
-        bundle = _load_topic_bundle(topic_slug)
+        bundle = _load_topic_bundle(topic_slug, dimension)
         if bundle is None:
             return {"topic": topic_slug, "error": "no fragments found", "fragment_count": 0}
         return {
@@ -738,7 +803,8 @@ def synthesize_topic(
         }
 
     # Respect an existing synthesis unless force is set. Matches the old API.
-    output_path = WIKI_DIR / "knowledge" / topic_slug / "index.md"
+    cfg = dimension_paths(dimension)
+    output_path = cfg["fragment_root"] / topic_slug / "index.md"
     if output_path.exists() and not force:
         content = output_path.read_text(encoding="utf-8", errors="replace")
         if "layer: 3" in content:
@@ -748,15 +814,30 @@ def synthesize_topic(
                 "reason": "already synthesized (use --force to overwrite)",
             }
 
-    extract_result = do_extract(topic_slug, re_extract=re_extract)
+    extract_result = do_extract(topic_slug, re_extract=re_extract, dimension=dimension)
     if extract_result.get("error"):
         return extract_result
-    return do_write(topic_slug)
+    return do_write(topic_slug, dimension=dimension)
 
 
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
+DIMENSION_CHOICES = tuple(DIMENSION_CONFIG.keys())
+
+
+def _add_dimension_flag(sub_parser: argparse.ArgumentParser) -> None:
+    sub_parser.add_argument(
+        "--dimension",
+        choices=DIMENSION_CHOICES,
+        default="topic",
+        help="Which knowledge dimension to operate on. "
+             "'topic' uses wiki/knowledge/<slug>/ and topics.yaml; "
+             "'industry' uses wiki/industries/<slug>/ and industries.yaml. "
+             "Default: topic (backward-compat).",
+    )
+
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Meridian Synthesizer")
@@ -765,6 +846,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--re-extract", action="store_true")
+    parser.add_argument("--dimension", choices=DIMENSION_CHOICES, default="topic")
 
     sub = parser.add_subparsers(dest="command")
 
@@ -772,6 +854,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p_extract.add_argument("--topic", required=True)
     p_extract.add_argument("--re-extract", action="store_true",
                            help="Ignore existing cache and re-extract")
+    _add_dimension_flag(p_extract)
 
     p_write = sub.add_parser("write", help="Run write pass only — requires cached extraction")
     p_write.add_argument("--topic", required=True)
@@ -782,9 +865,10 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     p_write.add_argument(
         "--output",
-        help="Write synthesis to this path instead of wiki/knowledge/<slug>/index.md. "
-             "Required when --fixture is set; skips archive + log update.",
+        help="Write synthesis to this path instead of the dimension's default "
+             "output path. Required when --fixture is set; skips archive + log update.",
     )
+    _add_dimension_flag(p_write)
 
     p_run = sub.add_parser("run", help="Extract (or reuse cache) then write")
     p_run.add_argument("--topic", required=True)
@@ -793,6 +877,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("--re-extract", action="store_true",
                        help="Ignore cache and re-run extraction before writing")
     p_run.add_argument("--dry-run", action="store_true")
+    _add_dimension_flag(p_run)
 
     return parser
 
@@ -800,6 +885,8 @@ def _build_parser() -> argparse.ArgumentParser:
 def main():
     parser = _build_parser()
     args = parser.parse_args()
+
+    dimension = getattr(args, "dimension", "topic")
 
     # Legacy form: `synthesizer.py --topic X` with no subcommand.
     if args.command is None:
@@ -810,21 +897,28 @@ def main():
             dry_run=args.dry_run,
             force=args.force,
             re_extract=args.re_extract,
+            dimension=dimension,
         )
     elif args.command == "extract":
-        result = do_extract(args.topic, re_extract=args.re_extract)
+        result = do_extract(args.topic, re_extract=args.re_extract, dimension=dimension)
     elif args.command == "write":
         fixture = Path(args.fixture) if getattr(args, "fixture", None) else None
         output = Path(args.output) if getattr(args, "output", None) else None
         if fixture is not None and output is None:
             parser.error("--output is required when --fixture is set")
-        result = do_write(args.topic, fixture_path=fixture, output_path_override=output)
+        result = do_write(
+            args.topic,
+            fixture_path=fixture,
+            output_path_override=output,
+            dimension=dimension,
+        )
     elif args.command == "run":
         result = synthesize_topic(
             args.topic,
             dry_run=args.dry_run,
             force=args.force,
             re_extract=args.re_extract,
+            dimension=dimension,
         )
     else:
         parser.error(f"unknown command: {args.command}")
