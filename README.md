@@ -202,3 +202,5 @@ meridian debrief                         # debrief last Claude Code session
 | Session capture | Claude Code hooks |
 | CLI | Python, requests |
 | Repo | github.com/markahope-aag/meridian |
+
+<!-- deploy test 2026-04-10T13:30:29Z -->
