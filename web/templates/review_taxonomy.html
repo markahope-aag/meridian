@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Taxonomy Review — Meridian{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 8px;">Taxonomy Review Queue</h1>
+<div style="color: var(--text-muted); margin-bottom: 24px;">
+    Clients flagged by the industry classifier as low-confidence or missing
+    an industry tag. Assigning an industry here writes directly to
+    <code>clients.yaml</code> on the VM and rebrands the row as
+    <code>classifier: manual</code>.
+</div>
+
+{% if message %}
+<div class="card" style="border-left: 3px solid var(--green); margin-bottom: 16px;">
+    <div style="font-size: 14px;">{{ message }}</div>
+</div>
+{% endif %}
+
+<div class="stat-grid" style="margin-bottom: 24px;">
+    <div class="stat-box">
+        <div class="number">{{ needs_review|length }}</div>
+        <div class="label">Needs Review</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ ok_count }}</div>
+        <div class="label">High / Manual</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ total }}</div>
+        <div class="label">Clients Total</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ empty_industries|length }}</div>
+        <div class="label">Empty Industries</div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Clients needing a decision ({{ needs_review|length }})</h2>
+    {% if not needs_review %}
+    <div style="color: var(--text-muted); padding: 12px 0;">
+        Nothing to review — every client has an accepted industry tag.
+    </div>
+    {% else %}
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Pick the correct industry and click Assign. The comment tag
+        will change to <code>classifier: manual</code> so it stays
+        out of this queue next time.
+    </div>
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="text-align: left; border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: 11px; text-transform: uppercase;">
+                <th style="padding: 8px 4px;">Client</th>
+                <th style="padding: 8px 4px;">Status</th>
+                <th style="padding: 8px 4px;">Current Pick</th>
+                <th style="padding: 8px 4px;">Confidence</th>
+                <th style="padding: 8px 4px;">Assign</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in needs_review %}
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 10px 4px;">
+                    <div style="font-weight: 500;">{{ row.name }}</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">{{ row.slug }}</div>
+                </td>
+                <td style="padding: 10px 4px; font-size: 11px; color: var(--text-muted);">{{ row.status }}</td>
+                <td style="padding: 10px 4px; font-size: 12px;">
+                    {% if row.industry %}
+                    <a href="/industry/{{ row.industry }}" style="color: var(--accent); text-decoration: none;">{{ row.industry }}</a>
+                    {% else %}
+                    <span style="color: var(--yellow);">(none)</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 10px 4px;">
+                    {% if row.classifier == 'low' %}
+                    <span style="background: var(--yellow); color: #000; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600;">LOW</span>
+                    {% elif not row.industry %}
+                    <span style="background: var(--red); color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600;">MISSING</span>
+                    {% else %}
+                    <span style="color: var(--text-muted); font-size: 11px;">{{ row.classifier }}</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 10px 4px;">
+                    <form method="POST" action="/review/taxonomy" style="display: flex; gap: 6px; align-items: center;">
+                        <input type="hidden" name="slug" value="{{ row.slug }}" />
+                        <select name="industry" class="fragment-sort" style="font-size: 12px; padding: 4px 8px; min-width: 180px;">
+                            {% for ind in industries %}
+                            <option value="{{ ind.slug }}" {% if ind.slug == row.industry %}selected{% endif %}>{{ ind.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="download-btn" style="cursor: pointer; background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600;">Assign</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+
+{% if empty_industries %}
+<div class="card">
+    <h2>Empty industries ({{ empty_industries|length }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        These industries exist in <code>industries.yaml</code> but have no
+        Layer 2 fragments yet. They'll populate once you assign clients
+        into them and new content flows through the compiler. Placeholder
+        pages render until then.
+    </div>
+    <ul style="list-style: none; padding: 0; margin: 0;">
+        {% for slug in empty_industries %}
+        <li style="padding: 6px 0; border-bottom: 1px solid var(--border);">
+            <a href="/industry/{{ slug }}" style="color: var(--accent); text-decoration: none;">{{ slug }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% endblock %}

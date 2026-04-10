@@ -623,6 +623,181 @@ def search():
     return render_template("search.html", query=query, results=results[:50])
 
 
+# ---------------------------------------------------------------------------
+# Taxonomy review queue — surface clients and industries that need human input
+# ---------------------------------------------------------------------------
+
+def _parse_clients_yaml_for_review() -> list[dict]:
+    """Parse clients.yaml line-by-line so we can capture the `# classifier: X`
+    confidence comments that PyYAML would throw away. Returns a list of
+    client dicts with the extra review metadata attached.
+    """
+    path = MERIDIAN_ROOT / "clients.yaml"
+    if not path.exists():
+        return []
+    lines = path.read_text(encoding="utf-8").splitlines()
+
+    rows: list[dict] = []
+    current: dict | None = None
+    for line in lines:
+        m = re.match(r"^\s*-\s+name:\s*\"?([^\"]+)\"?", line)
+        if m:
+            if current:
+                rows.append(current)
+            current = {
+                "name": m.group(1).strip(),
+                "slug": "",
+                "status": "",
+                "industry": "",
+                "classifier": "",
+            }
+            continue
+        if current is None:
+            continue
+        m = re.match(r"^\s*slug:\s*(\S+)", line)
+        if m:
+            current["slug"] = m.group(1).strip()
+            continue
+        m = re.match(r"^\s*industry:\s*([a-z0-9-]+)(?:\s*#\s*classifier:\s*(\w+))?", line)
+        if m:
+            current["industry"] = m.group(1)
+            if m.group(2):
+                current["classifier"] = m.group(2)
+            continue
+        m = re.match(r"^\s*status:\s*(\S+)", line)
+        if m:
+            current["status"] = m.group(1).strip()
+            continue
+    if current:
+        rows.append(current)
+    return rows
+
+
+def _rewrite_client_industry(slug: str, new_industry: str) -> bool:
+    """Surgically rewrite one client's industry line in clients.yaml.
+
+    Returns True if the file was updated. Idempotent — no-op if the
+    slug already has the requested industry. Comment tag is updated
+    to `# classifier: manual` so the UI no longer shows the row as
+    a review candidate.
+    """
+    path = MERIDIAN_ROOT / "clients.yaml"
+    if not path.exists():
+        return False
+    lines = path.read_text(encoding="utf-8").splitlines()
+
+    out: list[str] = []
+    i = 0
+    touched = False
+    target_slug = slug.strip()
+    in_target = False
+    while i < len(lines):
+        line = lines[i]
+        slug_m = re.match(r"^(\s*)slug:\s*(\S+)", line)
+        if slug_m:
+            in_target = slug_m.group(2).strip() == target_slug
+            out.append(line)
+            # Look ahead for an existing industry line under this entry;
+            # replace it, or insert one if the client has none yet.
+            j = i + 1
+            inserted = False
+            while j < len(lines) and not re.match(r"^\s*-\s+name:", lines[j]):
+                ind_m = re.match(r"^(\s*)industry:\s*\S+", lines[j])
+                if in_target and ind_m:
+                    lines[j] = f"{ind_m.group(1)}industry: {new_industry}  # classifier: manual"
+                    touched = True
+                    inserted = True
+                    break
+                j += 1
+            if in_target and not inserted:
+                indent = slug_m.group(1)
+                out.append(f"{indent}industry: {new_industry}  # classifier: manual")
+                touched = True
+            i += 1
+            continue
+        out.append(line)
+        i += 1
+
+    if touched:
+        final = "\n".join(out)
+        if not final.endswith("\n"):
+            final += "\n"
+        path.write_text(final, encoding="utf-8")
+    return touched
+
+
+@app.route("/review/taxonomy", methods=["GET", "POST"])
+def review_taxonomy():
+    """Review queue for the taxonomy registries.
+
+    GET  renders the review page.
+    POST accepts a form submission of slug=<client>&industry=<industry>
+    and rewrites clients.yaml in place (gitignored file — the dashboard
+    container bind-mounts /meridian so this write is durable and
+    survives deploys).
+    """
+    message = ""
+    if request.method == "POST":
+        slug = (request.form.get("slug") or "").strip()
+        industry = (request.form.get("industry") or "").strip()
+        if slug and industry:
+            if _rewrite_client_industry(slug, industry):
+                message = f"Assigned {industry} to {slug}"
+            else:
+                message = f"No change — {slug} already has this industry or was not found"
+
+    rows = _parse_clients_yaml_for_review()
+
+    # Load the list of valid industries from industries.yaml
+    industries_for_picker: list[dict] = []
+    industries_yaml_path = MERIDIAN_ROOT / "industries.yaml"
+    if industries_yaml_path.exists():
+        try:
+            data = yaml.safe_load(industries_yaml_path.read_text(encoding="utf-8")) or {}
+            for entry in data.get("industries", []):
+                if isinstance(entry, dict) and entry.get("slug"):
+                    industries_for_picker.append(
+                        {"slug": entry["slug"], "name": entry.get("name", entry["slug"])}
+                    )
+        except yaml.YAMLError:
+            pass
+
+    # Classify rows into review buckets
+    needs_review = [
+        r
+        for r in rows
+        if r["classifier"] == "low" or not r["industry"]
+    ]
+    needs_review.sort(key=lambda r: (r["classifier"] != "low", r["slug"]))
+
+    ok_rows = [r for r in rows if r["classifier"] in ("high", "manual")]
+
+    # Industries with no fragment content (placeholder-only)
+    empty_industries: list[str] = []
+    industries_dir = WIKI_DIR / "industries"
+    if industries_dir.exists():
+        for d in sorted(industries_dir.iterdir()):
+            if not d.is_dir():
+                continue
+            real = [
+                f
+                for f in d.glob("*.md")
+                if f.name not in ("index.md", "_index.md", "PLACEHOLDER.md")
+            ]
+            if not real:
+                empty_industries.append(d.name)
+
+    return render_template(
+        "review_taxonomy.html",
+        needs_review=needs_review,
+        ok_count=len(ok_rows),
+        total=len(rows),
+        industries=industries_for_picker,
+        empty_industries=empty_industries,
+        message=message,
+    )
+
+
 def _topic_context_for(filepath: Path) -> dict | None:
     """If `filepath` lives under wiki/knowledge/<slug>/, return a context
     dict with the slug, display name, and total fragment count.
