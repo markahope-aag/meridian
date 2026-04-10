@@ -30,6 +30,12 @@ WIKI_DIR = ROOT / "wiki"
 OUTPUTS_DIR = ROOT / "outputs"
 PROMPTS_DIR = ROOT / "prompts"
 
+# Hard caps to prevent the linter from doing damage on a corpus it
+# doesn't fully understand. These are belt-and-suspenders defenses
+# alongside the prompt-level rules in prompts/linter.md.
+MAX_INDEX_AUTO_ADDS = 50      # never dump more than 50 new entries into _index.md in one run
+MAX_AUTO_STUBS = 20           # never auto-create more than 20 stub files in one run
+
 _write_lock = threading.Lock()
 
 
@@ -52,13 +58,88 @@ def load_backlinks() -> str:
     return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
+# ---------------------------------------------------------------------------
+# Registry loading — used for stub location validation
+# ---------------------------------------------------------------------------
+
+def _load_registry_slugs(filename: str) -> set[str]:
+    """Return the set of canonical slugs in a registry yaml.
+
+    Aliases are NOT included — only canonical slugs. The compiler does
+    alias matching at filing time; the linter only needs to know what
+    paths are valid for stub creation.
+    """
+    path = ROOT / filename
+    if not path.exists():
+        return set()
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        return set()
+    items = (
+        data.get("clients")
+        or data.get("categories")
+        or data.get("industries")
+        or []
+    )
+    return {item["slug"] for item in items if isinstance(item, dict) and item.get("slug")}
+
+
+def load_all_registries() -> dict[str, set[str]]:
+    """Return {dimension: set_of_canonical_slugs} for the three taxonomies."""
+    return {
+        "clients": _load_registry_slugs("clients.yaml"),
+        "topics": _load_registry_slugs("topics.yaml"),
+        "industries": _load_registry_slugs("industries.yaml"),
+    }
+
+
+def format_registry_slugs(registries: dict[str, set[str]]) -> str:
+    """Compact representation of all three registries for the LLM prompt."""
+    parts = []
+    for label, slugs in (
+        ("clients", registries.get("clients", set())),
+        ("topics", registries.get("topics", set())),
+        ("industries", registries.get("industries", set())),
+    ):
+        if not slugs:
+            continue
+        sorted_slugs = ", ".join(sorted(slugs))
+        parts.append(f"### {label}.yaml\n{sorted_slugs}")
+    return "\n\n".join(parts) if parts else "(no registries available)"
+
+
+# ---------------------------------------------------------------------------
+# Article loading with dimensional sampling
+# ---------------------------------------------------------------------------
+
+def _classify_path(rel_path: str) -> str:
+    """Bucket a wiki path into a dimension label for proportional sampling."""
+    if rel_path.startswith("wiki/clients/"):
+        return "clients"
+    if rel_path.startswith("wiki/knowledge/"):
+        return "knowledge"
+    if rel_path.startswith("wiki/industries/"):
+        return "industries"
+    if rel_path.startswith("wiki/concepts/"):
+        return "concepts"
+    if rel_path.startswith("wiki/articles/"):
+        return "articles"
+    return "other"
+
+
 def load_all_articles() -> dict[str, str]:
-    """Load all wiki articles as {relative_path: content}."""
+    """Load all wiki articles as {relative_path: content}.
+
+    Used by find_missing_index_entries and rebuild_backlinks, both of
+    which need the full set, not a sample. The LLM analysis path uses
+    a sampled subset via load_articles_sampled.
+    """
     articles = {}
     if not WIKI_DIR.exists():
         return articles
     for md_file in WIKI_DIR.rglob("*.md"):
-        if md_file.name in ("home.md",):
+        if md_file.name in ("home.md", "PLACEHOLDER.md"):
             continue
         try:
             rel = str(md_file.relative_to(ROOT))
@@ -66,6 +147,43 @@ def load_all_articles() -> dict[str, str]:
         except Exception:
             continue
     return articles
+
+
+def load_articles_sampled(char_budget: int = 150_000) -> dict[str, str]:
+    """Return a representative sample of wiki articles, allocating the
+    char budget proportionally across dimensions.
+
+    The previous implementation walked alphabetically and stopped at the
+    cap, which biased the sample heavily toward dimensions whose names
+    sort early (clients > industries > knowledge). With ~3000 wiki files
+    that meant the LLM only ever saw the first ~10% of content. This
+    spreads the budget across dimensions so industries and knowledge
+    actually get representation.
+    """
+    all_files = load_all_articles()
+    by_dim: dict[str, list[tuple[str, str]]] = {}
+    for path, content in all_files.items():
+        dim = _classify_path(path)
+        by_dim.setdefault(dim, []).append((path, content))
+
+    if not by_dim:
+        return {}
+
+    dimensions = sorted(by_dim.keys())
+    per_dim_budget = char_budget // len(dimensions)
+
+    sampled: dict[str, str] = {}
+    for dim in dimensions:
+        files = sorted(by_dim[dim])
+        spent = 0
+        for path, content in files:
+            if spent >= per_dim_budget:
+                break
+            # Per-file cap: don't let one giant file eat the dimension's budget
+            snippet = content[:8000]
+            sampled[path] = snippet
+            spent += len(snippet)
+    return sampled
 
 
 def now_str():
@@ -78,28 +196,28 @@ def now_str():
 
 def run_llm_analysis(client: anthropic.Anthropic, index_md: str,
                      backlinks_md: str, articles: dict[str, str],
+                     registries: dict[str, set[str]],
                      config: dict, scope: str) -> dict:
     """Send wiki content to LLM for analysis."""
     system_prompt = load_prompt()
 
-    # Build article dump (cap total size)
+    # Articles arrive pre-sampled by load_articles_sampled (proportional
+    # across dimensions). Just dump them with their dimension prefix.
     article_sections = []
-    total_chars = 0
     for path, content in sorted(articles.items()):
-        if total_chars > 150_000:
-            article_sections.append(f"\n### {path}\n[... truncated, {len(articles) - len(article_sections)} more articles ...]")
-            break
         article_sections.append(f"\n### {path}\n\n{content}")
-        total_chars += len(content)
 
     scope_instruction = ""
     if scope != "all":
         scope_instruction = f"\n\nFocus ONLY on: {scope}. Return empty arrays for other categories."
 
+    registry_block = format_registry_slugs(registries)
+
     user_content = (
         f"## wiki/_index.md\n\n{index_md}\n\n"
         f"## wiki/_backlinks.md\n\n{backlinks_md}\n\n"
-        f"## All Wiki Articles\n\n{''.join(article_sections)}"
+        f"## Taxonomy registries (for stub location validation)\n\n{registry_block}\n\n"
+        f"## Wiki Articles (proportional sample across dimensions)\n\n{''.join(article_sections)}"
         f"{scope_instruction}"
     )
 
@@ -116,6 +234,59 @@ def run_llm_analysis(client: anthropic.Anthropic, index_md: str,
     if json_match:
         text = json_match.group(1)
     return json.loads(text)
+
+
+# ---------------------------------------------------------------------------
+# Stub location validation — registry-enforced
+# ---------------------------------------------------------------------------
+
+def validate_stub_location(location: str, registries: dict[str, set[str]]) -> tuple[bool, str]:
+    """Decide whether a suggested stub location is safe to create.
+
+    Returns (allowed, reason). Free-form areas (concepts/, articles/)
+    are always allowed. Registry-bound areas (clients/, knowledge/,
+    industries/) require the slug component of the path to exist in
+    the matching registry. Anything else is rejected.
+
+    Examples:
+        wiki/concepts/foo.md                 -> allowed (free-form)
+        wiki/articles/foo.md                 -> allowed (free-form)
+        wiki/knowledge/seo/foo.md            -> allowed if 'seo' in topics.yaml
+        wiki/knowledge/blockchain/foo.md     -> rejected (not in topics)
+        wiki/industries/healthcare/foo.md    -> allowed if 'healthcare' in industries.yaml
+        wiki/clients/current/aviary/foo.md   -> allowed if 'aviary' in clients.yaml
+        wiki/random/foo.md                   -> rejected (unknown area)
+    """
+    if not location:
+        return False, "empty location"
+    parts = location.strip().lstrip("/").split("/")
+    if len(parts) < 2 or parts[0] != "wiki":
+        return False, f"location must start with wiki/ (got {location})"
+    area = parts[1]
+    if area in ("concepts", "articles"):
+        return True, "free-form area"
+    if area == "knowledge":
+        if len(parts) < 3:
+            return False, "missing topic slug"
+        slug = parts[2]
+        if slug in registries.get("topics", set()):
+            return True, f"topic '{slug}' in registry"
+        return False, f"topic '{slug}' not in topics.yaml"
+    if area == "industries":
+        if len(parts) < 3:
+            return False, "missing industry slug"
+        slug = parts[2]
+        if slug in registries.get("industries", set()):
+            return True, f"industry '{slug}' in registry"
+        return False, f"industry '{slug}' not in industries.yaml"
+    if area == "clients":
+        if len(parts) < 4:
+            return False, "missing client slug"
+        slug = parts[3]
+        if slug in registries.get("clients", set()):
+            return True, f"client '{slug}' in registry"
+        return False, f"client '{slug}' not in clients.yaml"
+    return False, f"unknown wiki area '{area}'"
 
 
 # ---------------------------------------------------------------------------
@@ -174,12 +345,47 @@ def rebuild_backlinks(articles: dict[str, str]) -> str:
 
 
 def find_missing_index_entries(articles: dict[str, str], index_md: str) -> list[str]:
-    """Find articles not mentioned in _index.md."""
+    """Find articles not mentioned in _index.md.
+
+    Scoped to the dimensions where _index.md tracking actually adds
+    value: concepts/, articles/, and Layer 3 indexes (knowledge/<topic>/index.md
+    and industries/<industry>/index.md). Skips:
+
+    - wiki/clients/<status>/<slug>/<file>.md — discoverable via the
+      client's own _index.md, not the wiki-wide one.
+    - wiki/knowledge/<slug>/<not-index>.md — Layer 2 fragments;
+      discoverable via the topic page, not the wiki-wide index.
+    - wiki/industries/<slug>/<not-index>.md — same logic, industry page.
+    - The well-known meta files.
+
+    Without these exclusions the linter would dump 250+ entries into
+    _index.md on the first run after the industries migration.
+    """
+    skip_files = {
+        "wiki/_index.md",
+        "wiki/_backlinks.md",
+        "wiki/log.md",
+        "wiki/home.md",
+    }
     missing = []
     for path in articles:
-        if path in ("wiki/_index.md", "wiki/_backlinks.md", "wiki/log.md", "wiki/home.md"):
+        if path in skip_files:
             continue
-        # Check if any form of the path appears in the index
+        if Path(path).name == "PLACEHOLDER.md":
+            continue
+
+        parts = path.split("/")
+        # parts[0] == "wiki", parts[1] == area
+        if len(parts) >= 2 and parts[1] == "clients":
+            # Client folders are self-indexed via wiki/clients/<status>/<slug>/_index.md
+            continue
+
+        if len(parts) >= 2 and parts[1] in ("knowledge", "industries"):
+            # Only the Layer 3 anchor (index.md) belongs in the global index;
+            # skip every Layer 2 fragment.
+            if Path(path).name != "index.md":
+                continue
+
         short = path.replace("wiki/", "").replace(".md", "")
         if short not in index_md and path not in index_md:
             title_match = re.search(r'^title:\s*["\']?(.+?)["\']?\s*$',
@@ -216,8 +422,8 @@ def create_stub(concept: str, slug: str, mentioned_in: list[str],
 # Report generation
 # ---------------------------------------------------------------------------
 
-def generate_report(analysis: dict, actions: list[str], article_count: int,
-                    dry_run: bool) -> str:
+def generate_report(analysis: dict, actions: list[str], deferred: list[str],
+                    article_count: int, dry_run: bool) -> str:
     """Generate the markdown lint report."""
     now = now_str()
     mode = "DRY RUN" if dry_run else "AUTO-FIX"
@@ -239,6 +445,17 @@ def generate_report(analysis: dict, actions: list[str], article_count: int,
         lines.append("")
     elif not dry_run:
         lines.append("## Actions Taken (0)\n\nNo auto-fixes needed.\n")
+
+    # Deferred items — auto-fixes the linter intentionally skipped for safety
+    if deferred:
+        lines.append(f"## Held For Review ({len(deferred)})\n")
+        lines.append(
+            "_The linter declined to apply these automatically. "
+            "They are flagged here for human triage._\n"
+        )
+        for d in deferred:
+            lines.append(f"- {d}")
+        lines.append("")
 
     # Contradictions
     contradictions = analysis.get("contradictions", [])
@@ -327,6 +544,7 @@ def main():
 
     config = load_config()
     articles = load_all_articles()
+    registries = load_all_registries()
 
     # Filter out index files for article count
     content_articles = {k: v for k, v in articles.items()
@@ -350,13 +568,19 @@ def main():
     index_md = load_index()
     backlinks_md = load_backlinks()
 
-    # Run LLM analysis
-    print(f"Analyzing {len(content_articles)} wiki articles...", file=sys.stderr)
+    # Run LLM analysis on a proportional sample across dimensions, not the
+    # full set. With 3000+ articles the full set would either truncate
+    # alphabetically (biased) or blow the context window.
+    sampled = load_articles_sampled(char_budget=150_000)
+    print(
+        f"Analyzing {len(sampled)} sampled wiki articles (of {len(content_articles)} total)...",
+        file=sys.stderr,
+    )
     client = anthropic.Anthropic()
 
     try:
         analysis = run_llm_analysis(
-            client, index_md, backlinks_md, articles, config, args.scope
+            client, index_md, backlinks_md, sampled, registries, config, args.scope
         )
     except Exception as e:
         print(f"LLM analysis failed: {e}", file=sys.stderr)
@@ -367,52 +591,79 @@ def main():
 
     # Apply auto-fixes (unless dry-run)
     actions = []
+    deferred = []  # human-review items the linter intentionally didn't auto-fix
 
     if not args.dry_run:
-        # 1. Rebuild backlinks
+        # 1. Rebuild backlinks (always cheap, uses full article set)
         new_backlinks = rebuild_backlinks(articles)
         if new_backlinks != backlinks_md:
             bl_path = WIKI_DIR / "_backlinks.md"
             bl_path.write_text(new_backlinks, encoding="utf-8")
             actions.append("Rebuilt _backlinks.md to match actual link state")
 
-        # 2. Add missing index entries
+        # 2. Add missing index entries — capped, dimension-aware.
         missing = find_missing_index_entries(articles, index_md)
         if missing:
-            idx_path = WIKI_DIR / "_index.md"
-            content = idx_path.read_text(encoding="utf-8")
-            if "## Statistics" in content:
-                content = content.replace(
-                    "## Statistics",
-                    "\n".join(missing) + "\n\n## Statistics"
+            if len(missing) > MAX_INDEX_AUTO_ADDS:
+                deferred.append(
+                    f"Skipped _index.md auto-update: {len(missing)} entries "
+                    f"would have been added (cap is {MAX_INDEX_AUTO_ADDS}). "
+                    f"Run a manual review or bump MAX_INDEX_AUTO_ADDS."
                 )
             else:
-                content += "\n" + "\n".join(missing) + "\n"
-            idx_path.write_text(content, encoding="utf-8")
-            actions.append(f"Added {len(missing)} missing _index.md entries")
+                idx_path = WIKI_DIR / "_index.md"
+                content = idx_path.read_text(encoding="utf-8")
+                if "## Statistics" in content:
+                    content = content.replace(
+                        "## Statistics",
+                        "\n".join(missing) + "\n\n## Statistics"
+                    )
+                else:
+                    content += "\n" + "\n".join(missing) + "\n"
+                idx_path.write_text(content, encoding="utf-8")
+                actions.append(f"Added {len(missing)} missing _index.md entries")
 
-        # 3. Create stubs for gaps with 5+ mentions
+        # 3. Create stubs for gaps with 5+ mentions — registry-validated, capped.
         gaps = analysis.get("gaps", [])
+        stubs_created = 0
         for gap in gaps:
-            if gap.get("mention_count", 0) >= 5:
-                location = gap.get("suggested_location", "")
-                if not location:
-                    continue
-                stub_path = ROOT / location
-                if not stub_path.exists():
-                    stub_content = create_stub(
-                        gap["concept"], gap.get("slug", ""),
-                        gap.get("mentioned_in", []), location
-                    )
-                    stub_path.parent.mkdir(parents=True, exist_ok=True)
-                    stub_path.write_text(stub_content, encoding="utf-8")
-                    actions.append(
-                        f"Created stub: {location} — mentioned in "
-                        f"{gap['mention_count']} articles"
-                    )
+            if gap.get("mention_count", 0) < 5:
+                continue
+            if stubs_created >= MAX_AUTO_STUBS:
+                deferred.append(
+                    f"Stub creation cap reached ({MAX_AUTO_STUBS}); "
+                    f"remaining gaps held for review."
+                )
+                break
+            location = gap.get("suggested_location", "")
+            if not location:
+                deferred.append(
+                    f"Gap '{gap.get('concept', '?')}' has no suggested_location — held for human review"
+                )
+                continue
+            allowed, reason = validate_stub_location(location, registries)
+            if not allowed:
+                deferred.append(
+                    f"Rejected stub at {location} — {reason}"
+                )
+                continue
+            stub_path = ROOT / location
+            if stub_path.exists():
+                continue
+            stub_content = create_stub(
+                gap["concept"], gap.get("slug", ""),
+                gap.get("mentioned_in", []), location
+            )
+            stub_path.parent.mkdir(parents=True, exist_ok=True)
+            stub_path.write_text(stub_content, encoding="utf-8")
+            actions.append(
+                f"Created stub: {location} — mentioned in "
+                f"{gap['mention_count']} articles"
+            )
+            stubs_created += 1
 
     # Generate report
-    report = generate_report(analysis, actions, len(content_articles), args.dry_run)
+    report = generate_report(analysis, actions, deferred, len(content_articles), args.dry_run)
 
     # Write reports
     now = now_str()
@@ -445,7 +696,9 @@ def main():
     output = {
         "status": "ok",
         "article_count": len(content_articles),
+        "sampled_count": len(sampled),
         "actions_taken": len(actions),
+        "deferred_for_review": len(deferred),
         "contradictions": len(analysis.get("contradictions", [])),
         "orphans": len(analysis.get("orphans", [])),
         "gaps": len(analysis.get("gaps", [])),
