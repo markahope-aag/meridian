@@ -23,7 +23,36 @@ Thumbs.db
 *.env
 credentials.json
 
-# Meridian runtime data — lives on the VM, not in git
-# capture/, raw/, wiki/, outputs/ contain runtime data
-# but we DO track wiki/_index.md, wiki/_backlinks.md, and raw/_index.md as seeds
+# Meridian runtime data — lives on the VM, not in git.
+#
+# These directories hold the actual content and pipeline state. The
+# VM is the source of truth for this data; git is the source of truth
+# for the code that operates on it. Anything below is deliberately
+# never committed.
+#
+# Leading slash anchors each entry to the repo root so nested paths
+# with the same name (e.g. wiki/clients/) are not affected by rules
+# like /clients/ that target a top-level legacy directory.
+
+/capture/
+/raw/
+/wiki/
+/outputs/
+/cache/
+/state/
+/tools/
+/Clippings/
+/articles/
+/clients/
+/knowledge/
+/.obsidian/
+/.stfolder/
+/synthesis_queue.json
+/Untitled.canvas
+
+# Legacy from an earlier local-mirror attempt
 Meridian/
+
+# Scratch output from the synthesis regression harness (fixtures +
+# baselines ARE committed; only the latest run scratch is not).
+tests/synthesis_corpus/latest/
