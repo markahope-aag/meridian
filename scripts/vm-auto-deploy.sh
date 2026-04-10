@@ -35,11 +35,20 @@ LOG_FILE="${LOG_DIR}/deploy-$(date -u +%Y-%m-%d).log"
 # clobbered wiki/log.md once and we don't want that ever again.
 # Paths are relative to $REPO_DIR. Add new entries whenever an agent
 # starts writing to a file that used to be a seed in git.
+#
+# clients.yaml is in this list because the dashboard's taxonomy
+# review queue at /review/taxonomy writes directly to it when a
+# user assigns an industry. Without checkpoint protection, the
+# next git pull would hard-reset those manual assignments away.
+# The downside: the repo copy of clients.yaml drifts from the live
+# copy over time. Periodically pull the live version back into the
+# repo (scp + git commit) to keep them in sync.
 CHECKPOINT_FILES=(
     "wiki/log.md"
     "wiki/_index.md"
     "wiki/_backlinks.md"
     "raw/_index.md"
+    "clients.yaml"
 )
 
 mkdir -p "$LOG_DIR"
