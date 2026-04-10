@@ -5,13 +5,37 @@
 
 ## Project Overview
 
-Meridian is an LLM-maintained personal knowledge base. Documents flow through a pipeline:
+Meridian is an LLM-maintained personal knowledge base organized in three orthogonal dimensions. Documents flow through a pipeline:
 
 ```
-capture/ → (Daily Distill) → raw/ → (Compiler) → wiki/
+capture/ → (Daily Distill) → raw/ → (Compiler) → wiki/clients/  +  wiki/knowledge/  +  wiki/industries/
+                                                            ↓                   ↓                       ↓
+                                                            └──── (Synthesizer per dimension) ──────────┘
+                                                                              ↓
+                                                                  Layer 3 index.md per slug
 ```
 
-Humans rarely edit `wiki/` directly. The LLM owns it.
+Humans rarely edit `wiki/` directly. The LLM owns it. The user-facing surface is the dashboard at `brain.markahope.com`. Obsidian was retired in April 2026.
+
+## Three-dimensional knowledge model — READ THIS FIRST
+
+A single insight from a client engagement is **cross-filed into all three dimensions** simultaneously. The compiler does this routing automatically based on the client's industry tag in `clients.yaml`.
+
+| Dimension | Path | Question | Registry |
+|---|---|---|---|
+| **Clients** | `wiki/clients/{current,former,prospects}/<slug>/` | "What have we done with X?" | `clients.yaml` |
+| **Topics** | `wiki/knowledge/<slug>/` | "What do we know about doing X?" (function) | `topics.yaml` |
+| **Industries** | `wiki/industries/<slug>/` | "What do we know about working in X?" (vertical) | `industries.yaml` |
+
+**Cross-filing is mandatory, not optional.** A BluePoint state-pages insight produces three files with substantially identical content:
+
+- `wiki/clients/current/bluepoint/2026-04-04-state-pages.md`
+- `wiki/knowledge/website/bluepoint-state-pages-strategy.md`
+- `wiki/industries/financial-services/bluepoint-state-pages-strategy.md`
+
+This is the design. Don't flag it as a duplicate. Don't suggest merging the files. Each one answers a different reader question and they intentionally drift in framing (client view foregrounds the engagement, topic view foregrounds the technique, industry view foregrounds the vertical context).
+
+**Registry-enforced taxonomy**: agents cannot invent new client, topic, or industry slugs. Unmatched names go to the dashboard taxonomy review queue at `/review/taxonomy`, never to a new folder.
 
 ## Architecture
 
@@ -57,10 +81,13 @@ All execution happens on the VM. Clients are thin HTTP wrappers.
 
 | Component | Where | Role |
 |---|---|---|
-| **meridian-receiver** | Coolify container (bind mount to `/meridian/`) | Central API — all writes and agent execution |
-| **meridian CLI** | Any machine (`pip install -e .`) | Thin HTTP client — `meridian ask`, `meridian debrief`, `meridian context` |
-| **n8n** | Coolify container | Event-driven triggers (Fathom webhooks, scheduled distill/lint) |
-| **Obsidian Sync** | VM ↔ all machines | Syncs entire `/meridian/` tree for local viewing |
+| **meridian-receiver** | Coolify container, bind mount to `/meridian/` | Central API — all writes and agent execution |
+| **meridian-dashboard** | Coolify container, bind mount to `/meridian/` | Read-side UI at `brain.markahope.com` — three-dim browsing, search, Q&A, taxonomy review |
+| **meridian CLI** | Any machine (`pip install -e .`) | Thin HTTP client — `meridian ask`, `debrief`, `context`, `capture`, `lint`, `status` |
+| **n8n** | Coolify container | Event-driven triggers (Fathom webhooks, scheduled distill/compile/lint/watchdog) |
+| **vm-auto-deploy** | Cron on the VM, every minute | `git pull` + checkpoint + reload — `git push` is the deploy trigger |
+| **restic + Cloudflare R2** | Cron on the VM, 03:00 UTC | Encrypted nightly snapshots, retention 7d/4w/12m |
+| **Sieve** | Separate project | Pre-Meridian human review for inbound documents (Google Drive, etc.) |
 | **Claude Code hooks** | Any machine | Post-session debrief via HTTP to receiver |
 
 ### Auth
@@ -81,76 +108,77 @@ token: <MERIDIAN_RECEIVER_TOKEN>
 
 ```
 /meridian/
-├── AGENTS.md          ← you are here
-├── capture/           # unfiltered intake — everything lands here first
-├── raw/               # promoted source docs with normalized frontmatter
-├── wiki/              # LLM-maintained knowledge base
-│   ├── _index.md      # master index — ALWAYS read before filing
-│   ├── _backlinks.md  # auto-maintained backlink registry
-│   ├── log.md         # append-only operations log
-│   ├── concepts/      # concept explainers (one concept per file)
-│   ├── articles/      # summaries and analyses of source material
-│   ├── categories/    # category index pages
-│   ├── clients/       # per-client folders, organized by status
-│   │   ├── current/   # active client engagements
-│   │   │   └── [name]/
-│   │   │       └── _index.md
-│   │   ├── former/    # completed engagements
-│   │   │   └── [name]/
-│   │   │       └── _index.md
-│   │   └── prospects/ # potential clients
-│   │       └── [name]/
-│   │           └── _index.md
-│   ├── knowledge/     # transferable learnings by topic
-│   │   ├── _index.md  # knowledge topic index
-│   │   └── [topic]/   # e.g. paid-social/, seo-strategy/
-│   └── dev/           # Claude Code learnings
-│       ├── patterns/  # reusable approaches that worked
-│       ├── decisions/ # architectural choices and reasoning
-│       └── dead-ends/ # things that failed and why
-├── outputs/           # reports, slides, charts filed back by agents
-├── tools/             # CLI scripts (used by humans and agents)
-├── agents/            # agent loop scripts
-├── prompts/           # all LLM system prompts as .md files
-├── receiver/          # meridian-receiver HTTP service (deployed on Coolify)
-│   ├── app.py         # Flask app — capture, ask, debrief, context endpoints
-│   ├── Dockerfile     # production image with gunicorn
-│   └── README.md      # deployment and Fathom webhook setup
-├── cli/               # thin meridian CLI (pip-installable)
-│   ├── pyproject.toml
-│   └── meridian_cli/
-│       ├── __init__.py
-│       └── main.py
-├── scripts/           # setup and hook scripts
-│   ├── setup-machine.sh   # one-time machine onboarding
-│   └── hooks/
-│       └── post-session.sh # Claude Code post-session hook
-└── config.yaml        # paths and settings (no secrets)
+├── AGENTS.md             ← you are here
+├── README.md
+├── STATUS.md             # current state snapshot
+├── capture/              # unfiltered intake — drained by daily distill
+├── raw/                  # promoted source docs with normalized frontmatter
+├── wiki/                 # LLM-maintained knowledge base — three dimensions
+│   ├── _index.md         # master index — ALWAYS read before filing
+│   ├── _backlinks.md     # auto-maintained backlink registry
+│   ├── log.md            # append-only operations log
+│   ├── concepts/         # free-form concept explainers
+│   ├── articles/         # source summaries and analyses
+│   ├── clients/          # CLIENT DIMENSION
+│   │   ├── current/<slug>/
+│   │   ├── former/<slug>/
+│   │   └── prospects/<slug>/
+│   ├── knowledge/        # TOPIC DIMENSION
+│   │   └── <slug>/
+│   │       ├── index.md          # Layer 3 synthesis (the dimension's anchor)
+│   │       ├── client-extractions.md
+│   │       └── *.md              # Layer 2 fragments
+│   ├── industries/       # INDUSTRY DIMENSION (added 2026-04-10)
+│   │   └── <slug>/               # same shape as knowledge/<slug>/
+│   └── dev/              # Claude Code learnings
+├── outputs/              # reports, lint output, audit artifacts
+├── cache/                # gitignored, runtime
+│   └── extractions/{topic,industry}/<slug>.json
+├── state/                # gitignored, runtime
+│   ├── jobs.db                       # SQLite job store
+│   └── synthesis_versions/<dim>/<slug>/<timestamp>.md
+├── agents/               # Python agent scripts
+├── prompts/              # all LLM system prompts as .md files
+├── receiver/             # meridian-receiver Flask service
+├── web/                  # meridian-dashboard Flask service
+├── cli/                  # pip-installable thin client
+├── scripts/              # setup, deploy, backup, ops
+├── tests/synthesis_corpus/   # frozen extraction fixtures + baselines + rubric
+├── n8n/                  # importable workflow JSONs
+├── clients.yaml          # CLIENT REGISTRY — name, slug, aliases, industry tag
+├── topics.yaml           # TOPIC REGISTRY
+├── industries.yaml       # INDUSTRY REGISTRY (added 2026-04-10)
+└── config.yaml           # paths and settings (no secrets)
 ```
 
 ## Receiver API
 
-All endpoints require `Authorization: Bearer <token>`.
+All endpoints except `/health` require `Authorization: Bearer <token>`. All capture endpoints enforce a 1 MB content limit and return JSON 413 envelopes when exceeded so upstream callers (Sieve, Fathom, etc.) can surface the rejection.
 
 ### Capture endpoints
 
 | Endpoint | Method | Purpose |
 |---|---|---|
-| `POST /capture` | Generic | Write any `.md` payload to `capture/` |
-| `POST /capture/fathom` | Fathom-specific | Format `new-meeting-content-ready` webhook payload as `.md` |
+| `POST /capture` | Generic | Write any `.md` payload to `capture/` (1 MB cap) |
+| `POST /capture/fathom` | Fathom-specific | Format `new-meeting-content-ready` webhook payload (with dedup by `recording_id`) |
 | `POST /capture/claude-session` | Claude Code | Convert JSONL session transcript to `.md` in `capture/` |
+| `POST /capture/gdrive` | Sieve | Ingest a Google Drive file by ID (with dedup by `gdrive_file_id`) |
+| `GET  /check` | Sieve | Check if a `gdrive_file_id` already exists in `capture/`, `raw/`, or `wiki/` |
 
 ### Pipeline endpoints (async)
 
-These return `202 Accepted` with a `job_id` by default. Poll `GET /jobs/<id>` for results.
-Add `?sync=true` for synchronous execution (blocks until complete).
+Return `202 Accepted` with a `job_id` by default. Poll `GET /jobs/<id>` for results. Add `?sync=true` for synchronous execution. Job state is SQLite-backed at `/meridian/state/jobs.db` and survives gunicorn worker restarts.
 
 | Endpoint | Purpose |
 |---|---|
-| `POST /distill` | Run Daily Distill — score capture docs, promote to raw |
-| `POST /compile` | Run Compiler — compile raw docs into wiki articles |
-| `POST /lint` | Run Linter — wiki health checks, auto-fix + flag for review |
-| `GET /jobs/<id>` | Poll job status: `running`, `completed`, or `failed` |
+| `POST /distill` | Run Daily Distill — always-promote `capture/` → `raw/` (Sieve handles human review upstream) |
+| `POST /compile` | Run Compiler — cross-files raw docs into clients/, knowledge/, and industries/ |
+| `POST /synthesize` | Run synthesizer for one slug. Body: `{"topic": "<slug>", "dimension": "topic|industry"}` |
+| `POST /synthesize/schedule` | Process the synthesis queue. Body: `{"limit": 5}` |
+| `GET  /synthesize/queue` | Synthesis queue status (no auth required) |
+| `POST /lint` | Run Linter — dimension-aware wiki health check + sanity-capped auto-fix |
+| `POST /watchdog` | Detect + repair stuck pipeline state |
+| `GET  /jobs/<id>` | Poll job status: `running`, `completed`, or `failed` |
 
 ### Agent endpoints
 
@@ -275,11 +303,11 @@ provides. The Daily Distill agent normalizes them when promoting to `raw/`.
 2. **One concept per file.** Don't create monolithic pages. If a topic has distinct
    subtopics, each gets its own file with cross-links.
 
-3. **File names are kebab-case.** Examples: `transformer-architecture.md`,
-   `attention-mechanism.md`, `2026-04-04-team-standup.md`.
+3. **File names are kebab-case.** Examples: `bluepoint-state-pages-strategy.md`,
+   `2026-04-04-team-standup.md`.
 
 4. **Backlinks are mandatory.** When article A references article B, both files must
-   reflect the link. Update `_backlinks.md` accordingly.
+   reflect the link. The linter rebuilds `_backlinks.md` from actual link state.
 
 5. **Categories are emergent.** Don't pre-create categories. When 3+ articles share a
    theme, create a category page that links to them.
@@ -290,58 +318,70 @@ provides. The Daily Distill agent normalizes them when promoting to `raw/`.
 7. **Source attribution.** Every wiki article must list its source documents in the
    `source_docs` frontmatter field.
 
-8. **Update `_index.md` after every write.** Any time you create or modify a wiki article,
-   update the index to reflect the change.
+8. **Append to `wiki/log.md` after every operation.** Every agent must log what it did.
 
-9. **Append to `wiki/log.md` after every operation.** Every agent must log what it did.
+9. **Registry-enforced taxonomy — non-negotiable.** The compiler validates every file
+   path against three registries before writing:
 
-10. **Client detection.** The compiler detects client references dynamically — no static
-    list. Signals to look for:
-    - Company names in context of "our client", "the client", "we're working with",
-      "their campaign", "their account"
-    - Names appearing in meeting attendee lists from Fathom
-    - Email domains of meeting participants (e.g. `@acme.com` → Acme)
-    - Recurring named entities across multiple documents
-    
-    On detecting a **new client** not yet in the wiki, the compiler flags it for approval:
-    `"new_client": {"name": "Acme Corp", "slug": "acme", "status": "current"}`
-    The calling agent creates the folder after human confirmation.
+    - **Client paths** — `wiki/clients/<status>/<slug>/...` — `<slug>` MUST exist in `clients.yaml`
+    - **Topic paths** — `wiki/knowledge/<slug>/...` — `<slug>` MUST exist in `topics.yaml`
+    - **Industry paths** — `wiki/industries/<slug>/...` — `<slug>` MUST exist in `industries.yaml`
+
+    Aliases listed under each registry entry let the compiler match variant phrasings.
+    On detecting an unmatched name, the compiler emits an `unmatched_*` flag in its plan
+    output and the dashboard surfaces it in the `/review/taxonomy` queue. Never invent
+    a new slug. The cleanup of 37 orphan directories on 2026-04-10 was the cost of one
+    earlier era of unenforced taxonomy.
+
+10. **Cross-filing into all three dimensions.** Every client-tied insight produces three
+    plan entries with the same body and identical filenames across the topic and
+    industry dimensions:
+
+    ```
+    wiki/clients/current/<client-slug>/<date>-<headline>.md
+    wiki/knowledge/<topic-slug>/<client-slug>-<headline>.md
+    wiki/industries/<industry-slug>/<client-slug>-<headline>.md
+    ```
+
+    The industry slug comes from the client's `industry` field in `clients.yaml`. If the
+    client has no industry tag, skip the industry entry — never guess. Internal
+    meetings (ops-sync, weekly-call, sprint-planning) are not client-tied and get filed
+    only to `wiki/articles/`, no cross-files.
 
 11. **Client status.** The compiler infers status from context:
-    - **Current** — active campaigns, recent meetings, ongoing work, present tense
+
+    - **Current** — active campaigns, recent meetings, ongoing work
     - **Former** — past tense, "when we worked with", closed projects, no recent activity
-    - **Prospect** — proposal language, discovery calls, "potential", RFP references
-    
-    File under `wiki/clients/current/`, `wiki/clients/former/`, or `wiki/clients/prospects/`
-    accordingly. Use lowercase hyphenated folder names (e.g. "Acme Corp" → `acme`).
+    - **Prospect** — proposal language, discovery calls, RFP references
+
+    File under `wiki/clients/{current,former,prospects}/<slug>/`. Use the canonical
+    slug from `clients.yaml`. Never invent.
 
 12. **Client status transitions.** If the compiler sees signals that a client's status has
-    changed (e.g. "we've wrapped up with X", or a prospect becomes a client), it flags
-    the transition for review rather than moving the folder automatically:
+    changed (e.g. "we've wrapped up with X"), it flags the transition for review rather
+    than moving the folder automatically:
     `"status_change": {"client": "acme", "from": "current", "to": "former", "signal": "..."}`
+    The linter independently checks `last_activity` dates against engagement signals
+    and surfaces stale `current` clients for `current → former` reclassification.
 
-13. **Transferable learning detection.** If a document contains insights applicable beyond
-    one client — platform strategies, channel learnings, what works/doesn't work, industry
-    patterns — also create or update a page in `wiki/knowledge/[topic]/`. Topics use
-    kebab-case (e.g. `paid-social`, `seo-strategy`, `pitch-deck-structure`).
-
-14. **Cross-filing.** When both client and knowledge apply, file in `wiki/clients/` AND
-    extract the transferable learning to `wiki/knowledge/`. Add backlinks in both
-    directions so client pages reference the general knowledge and knowledge pages
-    reference the client examples.
-
-15. **Client index.** Each `wiki/clients/[status]/[name]/_index.md` is maintained by the
+13. **Client index.** Each `wiki/clients/<status>/<slug>/_index.md` is maintained by the
     compiler and must track:
+
     - Status (current / former / prospect)
+    - **Industry** (the slug from `industries.yaml` — used by the compiler for cross-filing)
     - First seen date
     - Last activity date
     - Key contacts (extracted from meeting attendees)
     - Active projects
-    - Links to all related docs and knowledge/ extractions
+    - Links to all related docs
 
-16. **Knowledge index.** `wiki/knowledge/_index.md` lists all knowledge topics with
-    one-line summaries, maintained by the compiler. Updated every time a knowledge
-    page is created or modified.
+14. **Knowledge index.** `wiki/knowledge/<slug>/index.md` is the Layer 3 synthesis for
+    a topic, written by the synthesizer. Don't write to it from the compiler — the
+    compiler only writes Layer 2 fragments. The synthesizer aggregates them.
+
+15. **Industry index.** `wiki/industries/<slug>/index.md` is the Layer 3 synthesis for an
+    industry, written by the synthesizer with `--dimension industry`. Same rule:
+    compiler writes fragments, synthesizer writes the index.
 
 ## Operations Log (`wiki/log.md`)
 
@@ -361,10 +401,13 @@ Details of what was done.
 | Operation | Agent | Description |
 |---|---|---|
 | `ingest` | receiver | Document captured to `capture/` |
-| `distill` | daily_distill | Document scored and promoted/skipped |
-| `compile` | compiler | Raw document compiled into wiki article(s) |
+| `distill` | daily_distill | Document scored and promoted to `raw/` |
+| `compile` | compiler | Raw document compiled into wiki article(s) across 3 dimensions |
+| `synthesize` | synthesizer | Layer 3 article generated for one topic or industry |
+| `watchdog` | watchdog | Stuck pipeline state detected and repaired |
+| `lint` | linter | Wiki health check completed |
 | `query` | qa_agent | Question answered against the wiki |
-| `lint` | linter | Consistency check or gap identified |
+| `extract` | scripts/extract-client-learnings | Layer 2 extraction (one-shot, historical) |
 
 ### Example entry
 
@@ -399,43 +442,51 @@ Every tool and agent script must:
 
 The compiler uses a two-pass architecture for speed:
 
-**Pass 1 — Planning (Haiku, fast):** Reads the raw document and `wiki/_index.md`,
-decides what files to create/update and where. Detects clients, infers status,
-identifies transferable learnings. Returns a filing plan as JSON.
+**Pass 1 — Planning (Haiku, fast):** Reads the raw document and `wiki/_index.md` plus
+all three registries (`clients.yaml`, `topics.yaml`, `industries.yaml`) and a compact
+client→industry lookup. Decides what files to create/update across all three dimensions.
+Detects clients, infers status, identifies transferable learnings. Returns a filing plan
+as JSON. Every path is then validated against the registries — unmatched slugs get an
+alias-match attempt, then a `validation_warnings` entry if still no match.
 
-**Pass 2 — Writing (Sonnet, parallel):** Takes the plan and writes each wiki file
-concurrently (3 workers). Each worker gets the raw document and one plan entry.
+**Pass 2 — Writing (Sonnet, parallel):** Takes the validated plan and writes each wiki
+file concurrently (3 workers). Each worker gets the raw document and one plan entry.
 
-**After all files:** Index and backlinks are updated once in a batch.
+**After all files:** Index and backlinks are updated once in a batch. Append to
+`wiki/log.md`.
 
 Multiple documents compile in parallel (3 concurrent). Target: 5 documents < 60 seconds.
 
-### Compilation steps
+### Cross-filing into the three dimensions
 
-1. Load `wiki/_index.md` once (read-only context for all workers)
-2. For each raw document, run Pass 1 (planning)
-3. For each plan entry, run Pass 2 (writing) in parallel
-4. Mark each raw document as compiled (`compiled_at` in frontmatter)
-5. Batch-update `wiki/_index.md` and `wiki/_backlinks.md` after all workers complete
-6. Append to `wiki/log.md`
+For every client-tied insight, the planner emits **three plan entries** with the same
+filename across the topic and industry dimensions:
+
+```json
+{
+  "plan": [
+    {"path": "wiki/clients/current/bluepoint/2026-04-04-state-pages.md", "title": "..."},
+    {"path": "wiki/knowledge/website/bluepoint-state-pages-strategy.md", "title": "..."},
+    {"path": "wiki/industries/financial-services/bluepoint-state-pages-strategy.md", "title": "..."}
+  ]
+}
+```
+
+The third entry's industry slug is looked up from the client's `industry` field in
+`clients.yaml`. If the client has no industry tag, the third entry is skipped — never
+guess. Internal meetings (ops-sync, weekly-call) are not client-tied and produce only
+a `wiki/articles/` entry, no cross-files.
 
 ### Source type routing
 
 | Source type | Destination | Notes |
 |---|---|---|
 | article, paper, note | `wiki/articles/` or `wiki/concepts/` | Standard routing |
-| meeting | `wiki/articles/` | Extract decisions + action items as cross-links |
+| meeting | `wiki/articles/` + cross-files if client-tied | Extract decisions + action items as cross-links |
 | claude-session | `wiki/dev/` | Route by content type (see below) |
-| any (client-specific) | `wiki/clients/[status]/[name]/` | If document mentions a client (see detection rules) |
-| any (transferable) | `wiki/knowledge/[topic]/` | If insights apply beyond one client |
-
-**Client and knowledge routing is additive** — a single document may produce files in
-`wiki/articles/` AND `wiki/clients/` AND `wiki/knowledge/`. The compiler should always
-check for client references and transferable learnings regardless of source type.
+| any (client-tied) | All three dimensions | See cross-filing rules above |
 
 ### Claude Code session routing (`claude-session`)
-
-Session debriefs contain structured sections. Route each to the appropriate `wiki/dev/` subdirectory:
 
 | Content | Destination | Filename pattern |
 |---|---|---|
@@ -443,46 +494,134 @@ Session debriefs contain structured sections. Route each to the appropriate `wik
 | Reusable patterns | `wiki/dev/patterns/` | `pattern-{slug}.md` |
 | Failed approaches | `wiki/dev/dead-ends/` | `dead-end-{slug}.md` |
 
-A single debrief may produce multiple files. Each decision, pattern, or dead-end gets its own file.
+A single debrief may produce multiple files.
 
 ## Daily Distill Protocol
 
-When reviewing `capture/` for promotion to `raw/`:
+**Always-promote** as of 2026-04-09. Sieve handles human review upstream of Meridian
+(see https://github.com/.../sieve), so every capture item flows to `raw/`. Distill
+scoring is recorded as metadata for downstream signals but never blocks promotion.
 
-1. Read every new/unprocessed file in `capture/`
-2. Score each on relevance (0-10) and quality (0-10)
-3. For items scoring 6+ on both: propose promotion to `raw/` with normalized frontmatter
-4. During bootstrap: send proposal for human approval (via n8n email)
-5. During steady state (20+ wiki articles): auto-promote for scores >= 8, propose for 6-7
-6. During bootstrap (<20 wiki articles): auto-promote for scores >= 6 (more permissive to seed the wiki)
-7. Delete from `capture/` after processing. Promoted files are copied to `raw/`
-   first, then the capture copy is deleted. Skipped files are deleted immediately.
-   Pending-approval files remain in `capture/` until approved or manually deleted.
+Steps for each unprocessed file in `capture/`:
+
+1. Read the file content
+2. Call the LLM with the distill scoring prompt (Sonnet, temperature 0.3)
+3. On success: stamp `distill_status: promote` + scores in the frontmatter, then
+   call `promote_to_raw` which carries provenance keys (`gdrive_file_id`,
+   `recording_id`, `session_id`, etc.) into the normalized raw frontmatter
+4. On scoring failure: stamp `distill_status: error` with the error message,
+   STILL promote to raw (Sieve already vetted it; Meridian's job is to ingest
+   what it receives). The error stamp prevents the next run from re-looping.
+5. Delete the source file from `capture/` after the raw copy lands
+
+The receiver enforces a 1 MB content cap on `/capture/*` so corrupt or
+pathologically large files are rejected at the boundary, not at distill time.
+
+## Synthesizer Protocol
+
+Two-pass cached architecture, dimension-aware. Triggered manually or by the
+synthesis scheduler.
+
+**CLI shape:**
+
+```
+synthesizer.py extract --topic <slug> [--dimension topic|industry] [--re-extract]
+synthesizer.py write   --topic <slug> [--dimension topic|industry]
+synthesizer.py run     --topic <slug> [--dimension topic|industry] [--force] [--re-extract]
+```
+
+`synthesize_topic(slug, dimension)` is the public function the scheduler imports.
+
+**Pass 1 — Extraction (Haiku):** Reads all Layer 2 fragments under
+`wiki/{knowledge|industries}/<slug>/` (skipping `index.md`, `_index.md`,
+`PLACEHOLDER.md`). Batches them into groups of 20 and asks Haiku to extract
+claims, patterns, contradictions, exceptions, evidence, and client mentions.
+Merges the per-batch output and writes a JSON cache file at
+`cache/extractions/<dimension>/<slug>.json` with the schema version,
+extraction prompt SHA, fragment count, and newest fragment mtime.
+
+**Cache invalidation:** Pass 1 reuses an existing cache if and only if (a) the
+schema version matches, (b) the extract prompt SHA matches, and (c) every
+fragment's mtime is older than the cache file. Any failure invalidates and
+re-extracts.
+
+**Pass 2 — Writing (Sonnet):** Reads the cache, calls Sonnet with the write
+prompt + extracted data + topic metadata, gets back a complete markdown article
+(frontmatter + body). Stamps Meridian provenance fields into the frontmatter
+(`generated_at`, `run_id`, `synthesizer_prompt_sha`, `extract_prompt_sha`,
+`writer_model`, `extract_model`, `extraction_cache_hit`).
+
+**Output versioning:** Before overwriting the existing `index.md`, copy it to
+`state/synthesis_versions/<dimension>/<slug>/<timestamp>.md`. Rollback is
+`mv` away — restic only matters for full disk failures.
+
+**Test harness flags:** `--fixture <path>` and `--output <path>` let the
+regression harness in `tests/synthesis_corpus/` run the write pass against
+frozen extraction inputs without touching production state.
 
 ## Linter Protocol
 
-Weekly wiki health check (Sundays 7 AM via n8n). Reads all wiki content and
-performs four checks: contradictions, orphans, gaps, and suggested connections.
+Weekly wiki health check (Sundays 07:00 UTC via n8n). Dimension-aware as of
+2026-04-10. Reads a **proportional sample** of wiki content across all
+dimensions (not alphabetical-first within a 150K cap), pulls all three
+registries for stub validation, and asks the LLM for four reports.
 
-### Auto-fix (linter acts directly)
-- Rebuild `_backlinks.md` to match actual link state
-- Add missing `_index.md` entries
-- Create stub articles for concepts mentioned in 5+ articles with no existing page
-- Link orphan articles to related content where the connection is unambiguous
+### Three-dimensional awareness
 
-### Flag for review (report only)
-- Contradictions between articles
-- Client status changes detected
-- Article merge candidates
-- Orphans with no clear home
-- New article candidates (3-4 mentions, below auto-stub threshold)
+The linter must NOT flag:
+- **Identical content across the three dimensions** as a contradiction. Each
+  insight is intentionally cross-filed.
+- **Cross-dimension copies** as orphans. A `wiki/industries/` file may have
+  no inbound wikilinks but still be valid because it's a mirror.
+- **Cross-dimension copies** as suggested connections.
+- **`index.md`, `_index.md`, `_backlinks.md`, or `PLACEHOLDER.md`** as orphans.
+  Layer 3 indexes are anchor pages reached by browsing, not by wikilink.
+
+### Auto-fix (linter acts directly, with safety caps)
+
+- **Rebuild `_backlinks.md`** from actual wikilink state. Always safe.
+- **Add missing `_index.md` entries** — but only for `wiki/concepts/`,
+  `wiki/articles/`, and Layer 3 anchor `index.md` files in the topic /
+  industry dimensions. Layer 2 fragments under `wiki/clients/`,
+  `wiki/knowledge/`, and `wiki/industries/` are intentionally NOT in the
+  global index — they're discoverable via their parent dimension page.
+  **Sanity cap: 50 additions per run.** Anything over goes to the deferred
+  list for human review.
+- **Create stub articles** for concepts mentioned in 5+ articles. Stub
+  location MUST validate against the registries:
+  - `wiki/concepts/*` and `wiki/articles/*` are free-form, allowed
+  - `wiki/clients/<status>/<slug>/*` requires `<slug>` in `clients.yaml`
+  - `wiki/knowledge/<slug>/*` requires `<slug>` in `topics.yaml`
+  - `wiki/industries/<slug>/*` requires `<slug>` in `industries.yaml`
+  - Anything else is rejected and held for review
+  **Sanity cap: 20 stubs per run.**
+
+### Flag for review (no auto-fix)
+
+- Contradictions between distinct insights (across dimensions OK if content differs)
+- Client status changes (current → former signals)
+- Orphans with no clear home in any dimension
+- Sub-5-mention gaps (article candidates)
 - Suggested connections between unlinked articles
+- Anything held due to a sanity cap or registry validation failure
 
 ### Output
-- Full report: `outputs/lint-[date].md`
-- Wiki copy: `wiki/articles/lint-[date].md`
+
+- Full report: `outputs/lint-<date>.md`
+- Wiki copy: `wiki/articles/lint-<date>.md`
+- New "Held For Review" section enumerating deferred items
 - Log entry appended to `wiki/log.md`
 
-### Scope
 The linter owns structural fixes (links, index, stubs). The compiler owns content.
 The linter never modifies wiki article content directly.
+
+## Watchdog Protocol
+
+Hourly via n8n. Detects pipeline state that the normal flow has left stuck:
+
+- **`capture/` files with `distill_status: error`** older than 24 hours — log a warning so they show up in the dashboard
+- **`raw/` files with empty `compiled_at`** older than 3 days — re-trigger compile for them
+- **`synthesis_queue.json` items in `running` state** older than 2 hours — flip to `pending` (a previous run was killed mid-synthesis)
+- **Orphan extraction caches** referencing fragments that no longer exist — log + mark for cleanup
+
+The watchdog never deletes content. It only re-triggers, resets state, or logs.
