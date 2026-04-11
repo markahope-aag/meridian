@@ -541,12 +541,20 @@ def check_confidence_decay(
     new_fragment_count: int,
     evo_cfg: EvolutionConfig,
 ) -> Detection | None:
-    """Check 4 — old article in a fast-moving domain with no new evidence."""
-    last_updated = article.last_updated
-    if not last_updated:
+    """Check 4 — old article in a fast-moving domain with no new evidence.
+
+    Uses `synthesis_cutoff` (generated_at preferred) as the "when was
+    this last touched" marker, not `last_updated`. The LLM writes
+    last_updated based on the freshest source date, which for
+    back-dated corpora produces a very stale-looking number even
+    when the article was synthesized today. generated_at is the
+    real synthesis timestamp.
+    """
+    cutoff = article.synthesis_cutoff
+    if not cutoff:
         return None
 
-    days_stale = (datetime.utcnow().date() - last_updated).days
+    days_stale = (datetime.utcnow().date() - cutoff).days
     if days_stale < evo_cfg.stale_threshold_days:
         return None
 
@@ -559,7 +567,8 @@ def check_confidence_decay(
         return None
 
     signal = (
-        f"no new evidence in {days_stale} days and domain_type="
+        f"no new evidence in {days_stale} days (since synthesis on "
+        f"{cutoff.strftime('%Y-%m-%d')}) and domain_type="
         f"{article.domain_type} — knowledge may be going stale"
     )
     return Detection(
