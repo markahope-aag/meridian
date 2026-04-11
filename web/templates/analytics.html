@@ -3,57 +3,170 @@
 {% block content %}
 <h1 style="margin-bottom: 8px;">Analytics</h1>
 <div style="color: var(--text-muted); margin-bottom: 24px;">
-    Deep insights into {{ '{:,}'.format(analytics.total_fragments) }} fragments —
-    where they came from, how rich each slice is, how fresh, where the gaps are.
+    Six Meridian-specific views over the knowledge corpus. Built around
+    the question "what synthesis work should I do next" rather than
+    generic knowledge-base charts.
 </div>
 
 <!-- ================================================================= -->
-<!-- A. Source Provenance                                                -->
+<!-- SECTION 1: Knowledge Health (overview strip)                        -->
+<!-- ================================================================= -->
+<div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Knowledge Health</div>
+<div class="stat-grid">
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(analytics.overview.total_fragments) }}</div>
+        <div class="label">Total Fragments</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ analytics.overview.topics_with_fragments }}<span style="font-size: 16px; color: var(--text-muted); font-weight: 400;"> / {{ analytics.overview.total_registered_topics }}</span></div>
+        <div class="label">Topics with Content</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ analytics.overview.l3_coverage_pct }}%</div>
+        <div class="label">L3 Coverage ({{ analytics.overview.l3_count }}/{{ analytics.overview.total_registered_topics }})</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ analytics.overview.median_fragments_per_topic }}</div>
+        <div class="label">Median Fragments / Topic</div>
+    </div>
+    <div class="stat-box"{% if analytics.overview.stalest_l3_days > 60 %} style="border-color: var(--yellow);"{% endif %}>
+        <div class="number"{% if analytics.overview.stalest_l3_days > 60 %} style="color: var(--yellow);"{% endif %}>
+            {% if analytics.overview.stalest_l3 %}{{ analytics.overview.stalest_l3_days }}d{% else %}—{% endif %}
+        </div>
+        <div class="label">
+            Stalest Synthesis
+            {% if analytics.overview.stalest_l3 %}
+            <div style="font-size: 9px; opacity: 0.75;">{{ analytics.overview.stalest_l3.slug }}</div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="stat-box">
+        <div class="number" style="font-size: 20px;">{{ analytics.overview.most_recent_date or '—' }}</div>
+        <div class="label">Most Recent Ingest</div>
+    </div>
+</div>
+
+<!-- ================================================================= -->
+<!-- SECTION 2: Synthesis Coverage                                       -->
 <!-- ================================================================= -->
 <div class="card">
-    <h2>Source Provenance</h2>
+    <h2>Synthesis Coverage</h2>
     <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 16px;">
-        Where fragments come from, broken down three ways.
+        The actionable "what to synthesize next" view. Layer 3 coverage
+        per namespace, stale syntheses, topics that have grown since
+        their last synthesis, and the ready-to-synthesize backlog.
     </div>
 
-    <div class="two-col">
+    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Coverage by namespace</div>
+    {% for ns in analytics.synthesis.per_namespace %}
+    <div style="margin-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+            <span style="text-transform: capitalize;">{{ ns.namespace }}</span>
+            <span style="color: var(--text-muted);">{{ ns.synthesized }} / {{ ns.registered }} ({{ ns.pct }}%)</span>
+        </div>
+        <div style="height: 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 3px; overflow: hidden;">
+            <div style="height: 100%; width: {{ ns.pct }}%; background: {% if ns.pct >= 75 %}var(--green){% elif ns.pct >= 40 %}var(--accent){% else %}var(--yellow){% endif %};"></div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="two-col" style="margin-top: 24px;">
         <div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">By namespace</div>
-            <canvas id="chart-namespace" style="max-height: 220px;"></canvas>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+                Stale syntheses (&gt;60 days old) — {{ analytics.synthesis.stale_total }} total
+            </div>
+            {% if analytics.synthesis.stale %}
+            <ul class="fragment-list">
+                {% for s in analytics.synthesis.stale %}
+                <li class="fragment-item" style="padding: 6px 0;">
+                    <div class="fragment-head">
+                        <a href="/{% if s.namespace == 'engineering' %}engineering{% elif s.namespace == 'industries' %}industry{% elif s.namespace == 'interests' %}interests{% else %}topic{% endif %}/{{ s.slug }}" class="fragment-title">{{ s.slug }}</a>
+                        <span class="fragment-client-tag" style="color: var(--yellow);">{{ s.age_days }}d</span>
+                    </div>
+                    <div class="fragment-meta">{{ s.namespace }} · last synthesized {{ s.last_updated }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div style="color: var(--text-muted); font-size: 13px;">None — all syntheses are fresh.</div>
+            {% endif %}
         </div>
         <div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">By source type</div>
-            <canvas id="chart-source-type" style="max-height: 220px;"></canvas>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+                Grown since last synthesis (&gt;20% growth) — {{ analytics.synthesis.grown_total }} total
+            </div>
+            {% if analytics.synthesis.grown %}
+            <ul class="fragment-list">
+                {% for g in analytics.synthesis.grown %}
+                <li class="fragment-item" style="padding: 6px 0;">
+                    <div class="fragment-head">
+                        <a href="/{% if g.namespace == 'engineering' %}engineering{% elif g.namespace == 'industries' %}industry{% elif g.namespace == 'interests' %}interests{% else %}topic{% endif %}/{{ g.slug }}" class="fragment-title">{{ g.slug }}</a>
+                        <span class="fragment-client-tag" style="color: var(--green);">+{{ g.growth_pct }}%</span>
+                    </div>
+                    <div class="fragment-meta">{{ g.namespace }} · {{ g.stored }} → {{ g.current }} fragments</div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div style="color: var(--text-muted); font-size: 13px;">None — existing syntheses are still current.</div>
+            {% endif %}
         </div>
     </div>
 
     <div style="margin-top: 24px;">
-        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Fragments per month (last 24 months)</div>
-        <canvas id="chart-time-series" style="max-height: 260px;"></canvas>
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+            Ready to synthesize (5+ fragments, no L3 yet) — {{ analytics.synthesis.ready_total }} topics
+        </div>
+        {% if analytics.synthesis.ready %}
+        <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+            {% for r in analytics.synthesis.ready %}
+            <div class="stat-box" style="text-align: left; padding: 10px;">
+                <div style="font-size: 13px; font-weight: 600;">
+                    <a href="/{% if r.namespace == 'engineering' %}engineering{% elif r.namespace == 'industries' %}industry{% elif r.namespace == 'interests' %}interests{% else %}topic{% endif %}/{{ r.slug }}" style="color: var(--accent); text-decoration: none;">{{ r.slug }}</a>
+                </div>
+                <div class="fragment-meta">{{ r.namespace }} · {{ r.count }} fragments</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% if analytics.synthesis.ready_total > analytics.synthesis.ready|length %}
+        <div style="padding: 8px 0; color: var(--text-muted); font-size: 12px;">
+            … and {{ analytics.synthesis.ready_total - analytics.synthesis.ready|length }} more
+        </div>
+        {% endif %}
+        {% else %}
+        <div style="color: var(--text-muted); font-size: 13px;">None — all dense topics already have syntheses.</div>
+        {% endif %}
     </div>
 </div>
 
 <!-- ================================================================= -->
-<!-- B. Coverage & Density                                               -->
+<!-- SECTION 3: Density & Gaps                                           -->
 <!-- ================================================================= -->
 <div class="card">
-    <h2>Coverage & Density</h2>
+    <h2>Density &amp; Gaps</h2>
     <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 16px;">
-        {{ analytics.coverage.topic_count }} topics total. How fragments distribute across them.
+        How fragments distribute across topics, and where the gaps are.
     </div>
 
     <div class="two-col">
         <div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Topic fragment-count histogram</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Topic fragment-count distribution</div>
             <canvas id="chart-histogram" style="max-height: 220px;"></canvas>
         </div>
         <div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">By namespace</div>
+            <canvas id="chart-namespace" style="max-height: 220px;"></canvas>
+        </div>
+    </div>
+
+    <div class="two-col" style="margin-top: 24px;">
+        <div>
             <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Top 10 densest topics</div>
-            <ul class="fragment-list" style="margin-top: 4px;">
-                {% for t in analytics.coverage.top_topics %}
+            <ul class="fragment-list">
+                {% for t in analytics.density.top_topics %}
                 <li class="fragment-item" style="padding: 6px 0;">
                     <div class="fragment-head">
-                        <a href="/{% if t.namespace == 'engineering' %}engineering{% else %}topic{% endif %}/{{ t.slug }}" class="fragment-title">{{ t.slug }}</a>
+                        <a href="/{% if t.namespace == 'engineering' %}engineering{% elif t.namespace == 'industries' %}industry{% elif t.namespace == 'interests' %}interests{% else %}topic{% endif %}/{{ t.slug }}" class="fragment-title">{{ t.slug }}</a>
                         <span class="fragment-client-tag">{{ t.count }}</span>
                     </div>
                     <div class="fragment-meta">{{ t.namespace }}</div>
@@ -61,19 +174,125 @@
                 {% endfor %}
             </ul>
         </div>
+        <div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Sparse topics (1-4 fragments — too thin for L3)</div>
+            {% if analytics.density.sparse_topics %}
+            <ul class="fragment-list">
+                {% for t in analytics.density.sparse_topics[:15] %}
+                <li class="fragment-item" style="padding: 6px 0;">
+                    <div class="fragment-head">
+                        <a href="/{% if t.namespace == 'engineering' %}engineering{% elif t.namespace == 'industries' %}industry{% elif t.namespace == 'interests' %}interests{% else %}topic{% endif %}/{{ t.slug }}" class="fragment-title">{{ t.slug }}</a>
+                        <span class="fragment-client-tag" style="color: var(--yellow);">{{ t.count }}</span>
+                    </div>
+                    <div class="fragment-meta">{{ t.namespace }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div style="color: var(--text-muted); font-size: 13px;">None — all topics with content have 5+ fragments.</div>
+            {% endif %}
+        </div>
     </div>
+
+    {% if analytics.density.orphan_registry_entries %}
+    <div style="margin-top: 24px;">
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+            Registry orphans — {{ analytics.density.orphan_registry_entries|length }} entries in YAML with 0 fragments on disk
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); line-height: 1.6;">
+            {% for o in analytics.density.orphan_registry_entries[:40] %}
+            <span style="display: inline-block; margin-right: 10px; margin-bottom: 4px;">
+                <span style="opacity: 0.6;">{{ o.namespace }}:</span> {{ o.slug }}
+            </span>
+            {% endfor %}
+            {% if analytics.density.orphan_registry_entries|length > 40 %}
+            <span style="opacity: 0.6;">… +{{ analytics.density.orphan_registry_entries|length - 40 }} more</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if analytics.density.unclassified_count > 0 %}
+    <div style="margin-top: 16px; padding: 12px; background: var(--bg); border: 1px solid var(--yellow); border-radius: 6px; font-size: 13px;">
+        <strong style="color: var(--yellow);">{{ analytics.density.unclassified_count }} unclassified commits</strong>
+        sitting in capture/external/commits/. Candidates for classifier re-run with an expanded topic registry.
+    </div>
+    {% endif %}
 </div>
 
 <!-- ================================================================= -->
-<!-- C. Freshness                                                        -->
+<!-- SECTION 4: Client Density                                           -->
+<!-- ================================================================= -->
+<div class="card">
+    <h2>Client Contributors</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 16px;">
+        Who's driving the business knowledge base. Insight counts parsed
+        from client <code>_index.md</code> wikilinks to knowledge topics.
+    </div>
+
+    <div class="two-col">
+        <div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+                Top 10 clients by insight count ({{ analytics.clients.total }} total)
+            </div>
+            {% if analytics.clients.top %}
+            <ul class="fragment-list">
+                {% for c in analytics.clients.top %}
+                <li class="fragment-item" style="padding: 6px 0;">
+                    <div class="fragment-head">
+                        <a href="/client/{{ c.slug }}" class="fragment-title">{{ c.name }}</a>
+                        <span class="fragment-client-tag">{{ '{:,}'.format(c.insight_count) }}</span>
+                    </div>
+                    <div class="fragment-meta">{{ c.topic_count }} topic{{ 's' if c.topic_count != 1 else '' }} touched</div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div style="color: var(--text-muted); font-size: 13px;">No client data yet.</div>
+            {% endif %}
+        </div>
+        <div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+                Fragments by industry
+            </div>
+            {% if analytics.clients.industry_fragments %}
+            <ul class="fragment-list">
+                {% for i in analytics.clients.industry_fragments %}
+                <li class="fragment-item" style="padding: 6px 0;">
+                    <div class="fragment-head">
+                        <a href="/industry/{{ i.slug }}" class="fragment-title">{{ i.slug }}</a>
+                        <span class="fragment-client-tag">{{ i.count }}</span>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div style="color: var(--text-muted); font-size: 13px;">No industry data yet.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if analytics.clients.empty_count > 0 %}
+    <div style="margin-top: 16px; font-size: 12px; color: var(--text-muted);">
+        <span style="color: var(--yellow);">{{ analytics.clients.empty_count }}</span>
+        client{{ 's' if analytics.clients.empty_count != 1 else '' }}
+        with zero insights —
+        {% for c in analytics.clients.empty[:20] %}<span style="opacity: 0.7;">{{ c.slug }}{% if not loop.last %}, {% endif %}</span>{% endfor %}
+        {% if analytics.clients.empty_count > 20 %}<span style="opacity: 0.7;"> …+{{ analytics.clients.empty_count - 20 }}</span>{% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- ================================================================= -->
+<!-- SECTION 5: Freshness                                                -->
 <!-- ================================================================= -->
 <div class="card">
     <h2>Freshness</h2>
     <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 16px;">
-        Ingestion activity over the last 180 days, and topics going stale.
+        Ingestion activity over the last 180 days, stalest topics, and most recent fragment per namespace.
     </div>
 
-    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Daily fragment ingestion (GitHub-style)</div>
+    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Daily fragment ingestion</div>
     {% set cell_size = 11 %}
     {% set cell_gap = 2 %}
     {% set heatmap_max = analytics.freshness.heatmap_max %}
@@ -96,64 +315,69 @@
         {% endfor %}
     </svg>
 
-    <div style="margin-top: 24px;">
-        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Top 10 stalest topics (oldest last-fragment date)</div>
-        <ul class="fragment-list">
-            {% for t in analytics.freshness.stalest_topics %}
-            <li class="fragment-item" style="padding: 6px 0;">
-                <div class="fragment-head">
-                    <a href="/{% if t.namespace == 'engineering' %}engineering{% else %}topic{% endif %}/{{ t.slug }}" class="fragment-title">{{ t.slug }}</a>
-                    <span class="fragment-client-tag">{{ t.days_since }} days</span>
-                </div>
-                <div class="fragment-meta">{{ t.namespace }} · last activity {{ t.last_date }}</div>
-            </li>
-            {% endfor %}
-        </ul>
+    <div class="two-col" style="margin-top: 24px;">
+        <div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Top 10 stalest topics (no new content)</div>
+            <ul class="fragment-list">
+                {% for t in analytics.freshness.stalest_topics %}
+                <li class="fragment-item" style="padding: 6px 0;">
+                    <div class="fragment-head">
+                        <a href="/{% if t.namespace == 'engineering' %}engineering{% elif t.namespace == 'industries' %}industry{% elif t.namespace == 'interests' %}interests{% else %}topic{% endif %}/{{ t.slug }}" class="fragment-title">{{ t.slug }}</a>
+                        <span class="fragment-client-tag">{{ t.days_since }}d</span>
+                    </div>
+                    <div class="fragment-meta">{{ t.namespace }} · last activity {{ t.last_date }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Most recent ingest per namespace</div>
+            <ul class="fragment-list">
+                {% for ns, date in analytics.freshness.recent_per_namespace.items() %}
+                <li class="fragment-item" style="padding: 6px 0;">
+                    <div class="fragment-head">
+                        <span class="fragment-title" style="text-transform: capitalize;">{{ ns }}</span>
+                        <span class="fragment-client-tag">{{ date }}</span>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
 </div>
 
 <!-- ================================================================= -->
-<!-- D. Gaps & Opportunities                                             -->
+<!-- SECTION 6: Session Notes & Other Buckets                            -->
 <!-- ================================================================= -->
 <div class="card">
-    <h2>Gaps & Opportunities</h2>
+    <h2>Session Notes &amp; Other Buckets</h2>
     <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 16px;">
-        The actionable view — what's thin, what's unchallenged, what needs attention.
+        Content that lives outside the main topic namespaces. Session
+        Notes are meeting transcripts and standalone writeups;
+        Concepts are meta-documentation about the system itself.
     </div>
 
     <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
         <div class="stat-box">
-            <div class="number" style="font-size: 24px;">{{ analytics.gaps.topics_internal_only }}</div>
-            <div class="label">Internal-only topics</div>
+            <div class="number">{{ '{:,}'.format(analytics.session_notes.session_notes_count) }}</div>
+            <div class="label">Session Notes</div>
         </div>
         <div class="stat-box">
-            <div class="number" style="font-size: 24px;">{{ analytics.gaps.topics_both }}</div>
-            <div class="label">Topics with both evidence types</div>
+            <div class="number">{{ '{:,}'.format(analytics.session_notes.concepts_count) }}</div>
+            <div class="label">Concepts</div>
         </div>
         <div class="stat-box">
-            <div class="number" style="font-size: 24px;">{{ analytics.gaps.sparse_topics|length }}</div>
-            <div class="label">Sparse topics (&lt;5 frags)</div>
-        </div>
-        <div class="stat-box"{% if analytics.gaps.unclassified_commits > 0 %} style="border-color: var(--yellow);"{% endif %}>
-            <div class="number" style="font-size: 24px;{% if analytics.gaps.unclassified_commits > 0 %} color: var(--yellow);{% endif %}">{{ analytics.gaps.unclassified_commits }}</div>
-            <div class="label">Unclassified commits</div>
+            <div class="number">{{ '{:,}'.format(analytics.session_notes.other_count) }}</div>
+            <div class="label">Other</div>
         </div>
     </div>
 
-    {% if analytics.gaps.sparse_topics %}
-    <div style="margin-top: 24px;">
-        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Sparse topics needing more fragments</div>
-        <ul class="fragment-list">
-            {% for t in analytics.gaps.sparse_topics[:15] %}
-            <li class="fragment-item" style="padding: 6px 0;">
-                <div class="fragment-head">
-                    <a href="/{% if t.namespace == 'engineering' %}engineering{% else %}topic{% endif %}/{{ t.slug }}" class="fragment-title">{{ t.slug }}</a>
-                    <span class="fragment-client-tag" style="color: var(--yellow);">{{ t.count }} frags</span>
-                </div>
-                <div class="fragment-meta">{{ t.namespace }}</div>
-            </li>
-            {% endfor %}
-        </ul>
+    {% if analytics.session_notes.other_count > 0 %}
+    <div style="margin-top: 16px; font-size: 11px; color: var(--text-muted);">
+        Other breakdown:
+        {% for bucket, count in analytics.session_notes.other_breakdown.items() %}
+            {% if count > 0 %}<span style="margin-right: 10px;">{{ bucket }}: {{ count }}</span>{% endif %}
+        {% endfor %}
     </div>
     {% endif %}
 </div>
@@ -164,91 +388,12 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 (function () {
-    // Dark theme defaults
     Chart.defaults.color = '#8b949e';
     Chart.defaults.borderColor = '#30363d';
     Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
 
-    const namespaceColors = {
-        knowledge:   '#58a6ff',
-        engineering: '#f0883e',
-        industries:  '#a371f7',
-        clients:     '#3fb950',
-        unclassified:'#d29922',
-    };
-
-    // A.1 — By namespace
-    const nsData = {{ analytics.provenance.by_namespace | tojson }};
-    new Chart(document.getElementById('chart-namespace'), {
-        type: 'bar',
-        data: {
-            labels: Object.keys(nsData),
-            datasets: [{
-                label: 'Fragments',
-                data: Object.values(nsData),
-                backgroundColor: Object.keys(nsData).map(k => namespaceColors[k] || '#8b949e'),
-                borderWidth: 0,
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { grid: { color: '#30363d' } },
-                y: { grid: { display: false } }
-            }
-        }
-    });
-
-    // A.2 — By source type
-    const stData = {{ analytics.provenance.by_source_type | tojson }};
-    const stLabels = Object.keys(stData).slice(0, 10);
-    const stValues = stLabels.map(k => stData[k]);
-    new Chart(document.getElementById('chart-source-type'), {
-        type: 'bar',
-        data: {
-            labels: stLabels,
-            datasets: [{
-                label: 'Fragments',
-                data: stValues,
-                backgroundColor: '#58a6ff',
-                borderWidth: 0,
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { grid: { color: '#30363d' } },
-                y: { grid: { display: false } }
-            }
-        }
-    });
-
-    // A.3 — Time series per namespace (stacked bar by month)
-    const tsMonths = {{ analytics.provenance.time_series.months | tojson }};
-    const tsByNs = {{ analytics.provenance.time_series.by_namespace | tojson }};
-    const tsDatasets = Object.keys(tsByNs)
-        .filter(ns => tsByNs[ns].some(v => v > 0))
-        .map(ns => ({
-            label: ns,
-            data: tsByNs[ns],
-            backgroundColor: namespaceColors[ns] || '#8b949e',
-            borderWidth: 0,
-        }));
-    new Chart(document.getElementById('chart-time-series'), {
-        type: 'bar',
-        data: { labels: tsMonths, datasets: tsDatasets },
-        options: {
-            scales: {
-                x: { stacked: true, grid: { display: false } },
-                y: { stacked: true, grid: { color: '#30363d' } }
-            }
-        }
-    });
-
-    // B.1 — Topic fragment-count histogram
-    const hist = {{ analytics.coverage.histogram | tojson }};
+    // Histogram
+    const hist = {{ analytics.density.histogram | tojson }};
     new Chart(document.getElementById('chart-histogram'), {
         type: 'bar',
         data: {
@@ -264,7 +409,42 @@
             plugins: { legend: { display: false } },
             scales: {
                 x: { grid: { display: false } },
-                y: { grid: { color: '#30363d' } }
+                y: { grid: { color: '#30363d' }, ticks: { precision: 0 } }
+            }
+        }
+    });
+
+    // By namespace
+    const nsData = {{ analytics.density.by_namespace | tojson }};
+    const nsLabels = Object.keys(nsData).filter(k => nsData[k] > 0);
+    const nsValues = nsLabels.map(k => nsData[k]);
+    const nsColors = {
+        knowledge:     '#58a6ff',
+        engineering:   '#f0883e',
+        industries:    '#bc8cff',
+        interests:     '#d29922',
+        'session-notes':'#3fb950',
+        concepts:      '#8b949e',
+        other:         '#6e7681',
+        unclassified:  '#f85149',
+    };
+    new Chart(document.getElementById('chart-namespace'), {
+        type: 'bar',
+        data: {
+            labels: nsLabels,
+            datasets: [{
+                label: 'Fragments',
+                data: nsValues,
+                backgroundColor: nsLabels.map(k => nsColors[k] || '#8b949e'),
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: '#30363d' } },
+                y: { grid: { display: false } }
             }
         }
     });

@@ -1819,46 +1819,81 @@ def _read_frontmatter_only(path: Path) -> dict:
     return fm if isinstance(fm, dict) else {}
 
 
-def _compute_analytics() -> dict:
-    """Walk wiki/ and capture/ and aggregate analytics.
+def _fragment_date(fm: dict) -> str:
+    """Return the most meaningful date from a fragment's frontmatter as a
+    YYYY-MM-DD string, or "" if no date field is set.
 
-    Returns a dict with four sections: provenance, coverage, freshness, gaps.
-    Currently recomputes on every request. For 4500 files this is fast
-    enough (~1s). Add caching if it becomes a bottleneck.
+    Priority order: source_date (engineering), updated, created, first_seen.
+    Handles both str and datetime.date forms (PyYAML parses dates eagerly).
     """
-    # -----------------------------------------------------------------
-    # Gather every fragment we care about with its namespace + frontmatter
-    # -----------------------------------------------------------------
-    fragments: list[dict] = []
+    for key in ("source_date", "updated", "created", "first_seen"):
+        v = fm.get(key)
+        if v:
+            s = _coerce_date_str(v)
+            if s:
+                return s
+    return ""
 
+
+def _compute_analytics() -> dict:
+    """Walk wiki/ and capture/ and build Meridian-specific analytics.
+
+    Six sections: overview, synthesis coverage, density, clients, freshness,
+    and session notes. Designed around "what synthesis work to do next"
+    rather than generic knowledge-base metrics. Recomputes on every request
+    (~1-2s on ~4,200 files).
+    """
+    from datetime import timedelta
+    today = datetime.now().date()
+
+    # Namespaces we walk. Business content lives in several top-level dirs;
+    # the small misc buckets (hiring, operations, org, etc.) roll up into
+    # "other" so they're visible but don't clutter the main view.
     namespace_dirs = [
         ("knowledge",   WIKI_DIR / "knowledge"),
         ("industries",  WIKI_DIR / "industries"),
-        ("clients",     WIKI_DIR / "clients"),
         ("engineering", WIKI_DIR / "engineering"),
+        ("interests",   WIKI_DIR / "interests"),
     ]
-    for ns, d in namespace_dirs:
-        if not d.exists():
-            continue
-        for f in d.rglob("*.md"):
+    # Session notes live in wiki/articles/ and wiki/concepts/, with
+    # other small buckets rolled up separately.
+    session_notes_dirs = [
+        ("session-notes", WIKI_DIR / "articles"),
+        ("concepts",      WIKI_DIR / "concepts"),
+    ]
+    misc_namespaces = [
+        "hiring", "internal-tools", "operations", "org", "partnerships",
+        "projects", "prospects", "team", "tools-internal", "vendors",
+    ]
+
+    fragments: list[dict] = []
+
+    def harvest(namespace: str, directory: Path) -> None:
+        if not directory.exists():
+            return
+        for f in directory.rglob("*.md"):
             if f.name in ("_index.md", "README.md", "PLACEHOLDER.md"):
                 continue
             fm = _read_frontmatter_only(f)
             layer = fm.get("layer", 2)
+            is_synthesis = f.name == "index.md" and layer == 3
             fragments.append({
                 "path": f.relative_to(MERIDIAN_ROOT).as_posix(),
-                "namespace": ns,
-                "is_synthesis": f.name == "index.md" and layer == 3,
+                "namespace": namespace,
+                "is_synthesis": is_synthesis,
                 "layer": layer,
-                "source_type": fm.get("source_type", ""),
-                "source_origin": fm.get("source_origin", ""),
-                "source_date": _coerce_date_str(fm.get("source_date", "")),
-                "source_project": fm.get("source_project", ""),
-                "topic_slug": fm.get("topic_slug", ""),
-                "classification_confidence": fm.get("classification_confidence", ""),
+                "date": _fragment_date(fm),
+                "fm": fm,
             })
 
-    # Unclassified capture
+    for ns, d in namespace_dirs:
+        harvest(ns, d)
+    for ns, d in session_notes_dirs:
+        harvest(ns, d)
+    for bucket in misc_namespaces:
+        harvest("other", WIKI_DIR / bucket)
+
+    # Unclassified engineering commits sitting in capture/
     if COMMITS_CAPTURE_DIR.exists():
         for f in COMMITS_CAPTURE_DIR.rglob("*.md"):
             fm = _read_frontmatter_only(f)
@@ -1867,73 +1902,197 @@ def _compute_analytics() -> dict:
                 "namespace": "unclassified",
                 "is_synthesis": False,
                 "layer": 2,
-                "source_type": fm.get("source_type", "internal-commit"),
-                "source_origin": fm.get("source_origin", "git"),
-                "source_date": _coerce_date_str(fm.get("source_date", "")),
-                "source_project": fm.get("source_project", ""),
-                "topic_slug": "unclassified",
-                "classification_confidence": "",
+                "date": _fragment_date(fm),
+                "fm": fm,
             })
 
-    total_fragments = len(fragments)
-
     # -----------------------------------------------------------------
-    # A. Source Provenance
+    # Per-namespace + per-topic aggregates (shared across sections)
     # -----------------------------------------------------------------
     by_namespace: dict[str, int] = defaultdict(int)
-    by_source_type: dict[str, int] = defaultdict(int)
-    by_source_origin: dict[str, int] = defaultdict(int)
-    for frag in fragments:
-        by_namespace[frag["namespace"]] += 1
-        st = frag["source_type"] or "(unspecified)"
-        by_source_type[st] += 1
-        so = frag["source_origin"] or "(unspecified)"
-        by_source_origin[so] += 1
-
-    # Time series: fragments per month (last 24 months that have data)
-    per_month: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
-    for frag in fragments:
-        d = frag["source_date"]
-        if isinstance(d, str) and len(d) >= 7:
-            month = d[:7]  # YYYY-MM
-            per_month[month][frag["namespace"]] += 1
-    # Sort + take last 24 months with any data
-    months_sorted = sorted(per_month.keys())[-24:]
-    time_series = {
-        "months": months_sorted,
-        "by_namespace": {
-            ns: [per_month[m].get(ns, 0) for m in months_sorted]
-            for ns in ("knowledge", "engineering", "industries", "clients", "unclassified")
-        },
-    }
-
-    provenance = {
-        "total": total_fragments,
-        "by_namespace": dict(sorted(by_namespace.items(), key=lambda x: -x[1])),
-        "by_source_type": dict(sorted(by_source_type.items(), key=lambda x: -x[1])),
-        "by_source_origin": dict(sorted(by_source_origin.items(), key=lambda x: -x[1])),
-        "time_series": time_series,
-    }
-
-    # -----------------------------------------------------------------
-    # B. Coverage & Density
-    # -----------------------------------------------------------------
     topic_counts: dict[tuple[str, str], int] = defaultdict(int)
-    for frag in fragments:
-        if frag["is_synthesis"]:
-            continue
-        parts = frag["path"].split("/")
-        if len(parts) >= 3 and parts[0] == "wiki":
-            ns = parts[1]
-            topic_slug = parts[2]
-            topic_counts[(ns, topic_slug)] += 1
+    topic_latest_date: dict[tuple[str, str], str] = {}
+    l3_by_namespace: dict[str, list[dict]] = defaultdict(list)
 
-    # Histogram buckets
-    buckets = {"0": 0, "1-4": 0, "5-19": 0, "20-49": 0, "50-99": 0, "100+": 0}
+    for frag in fragments:
+        ns = frag["namespace"]
+        parts = frag["path"].split("/")
+        # Only "real" namespaces produce topic entries (ns/topic/file.md)
+        is_topicful = ns in ("knowledge", "industries", "engineering", "interests")
+
+        if frag["is_synthesis"]:
+            # Collect L3 metadata for the synthesis-coverage section
+            if len(parts) >= 3:
+                slug = parts[2]
+                fm = frag["fm"]
+                l3_by_namespace[ns].append({
+                    "namespace": ns,
+                    "slug": slug,
+                    "fragment_count": fm.get("fragment_count") or fm.get("evidence_count") or 0,
+                    "last_updated": _coerce_date_str(fm.get("last_updated")),
+                    "confidence": fm.get("confidence", ""),
+                })
+            # L3 index files don't count as fragments in the density views
+            continue
+
+        by_namespace[ns] += 1
+
+        if is_topicful and len(parts) >= 3 and parts[0] == "wiki":
+            slug = parts[2]
+            topic_counts[(ns, slug)] += 1
+            d = frag["date"]
+            if d:
+                existing = topic_latest_date.get((ns, slug), "")
+                if d > existing:
+                    topic_latest_date[(ns, slug)] = d
+
+    total_fragments = sum(by_namespace.values())
+
+    # -----------------------------------------------------------------
+    # SECTION 1: Knowledge Health (overview)
+    # -----------------------------------------------------------------
+    # Topics registered (from YAML) vs topics with fragments (from disk)
+    registered_topics = {
+        "knowledge":   len(TOPIC_NAMES),
+        "engineering": len(ENGINEERING_TOPIC_NAMES),
+        "interests":   len(INTERESTS_TOPIC_NAMES),
+    }
+    # industries isn't a TOPIC_NAMES-style global; read from the YAML directly
+    industries_yaml = MERIDIAN_ROOT / "industries.yaml"
+    if industries_yaml.exists():
+        try:
+            idata = yaml.safe_load(industries_yaml.read_text(encoding="utf-8")) or {}
+            registered_topics["industries"] = len(idata.get("industries", []))
+        except yaml.YAMLError:
+            registered_topics["industries"] = 0
+    else:
+        registered_topics["industries"] = 0
+
+    l3_count = sum(len(v) for v in l3_by_namespace.values())
+    total_registered = sum(registered_topics.values())
+    l3_coverage_pct = round(l3_count / total_registered * 100) if total_registered else 0
+
+    topics_with_frags = len(topic_counts)
+    median_per_topic = 0
+    if topic_counts:
+        sorted_counts = sorted(topic_counts.values())
+        mid = len(sorted_counts) // 2
+        median_per_topic = (
+            sorted_counts[mid]
+            if len(sorted_counts) % 2
+            else (sorted_counts[mid - 1] + sorted_counts[mid]) // 2
+        )
+
+    # Find the stalest Layer 3 synthesis (oldest last_updated across all namespaces)
+    all_l3 = [l3 for items in l3_by_namespace.values() for l3 in items]
+    stalest_l3 = None
+    stalest_l3_days = 0
+    if all_l3:
+        dated = [(l3, l3["last_updated"]) for l3 in all_l3 if l3.get("last_updated")]
+        if dated:
+            dated.sort(key=lambda x: x[1])
+            oldest_l3, oldest_date = dated[0]
+            try:
+                oldest_dt = datetime.strptime(oldest_date, "%Y-%m-%d").date()
+                stalest_l3_days = (today - oldest_dt).days
+                stalest_l3 = oldest_l3
+            except ValueError:
+                pass
+
+    # Most recent ingest date across all fragments
+    most_recent_date = ""
+    for frag in fragments:
+        if frag["date"] and frag["date"] > most_recent_date:
+            most_recent_date = frag["date"]
+
+    overview = {
+        "total_fragments": total_fragments,
+        "topics_with_fragments": topics_with_frags,
+        "total_registered_topics": total_registered,
+        "l3_count": l3_count,
+        "l3_coverage_pct": l3_coverage_pct,
+        "median_fragments_per_topic": median_per_topic,
+        "stalest_l3": stalest_l3,
+        "stalest_l3_days": stalest_l3_days,
+        "most_recent_date": most_recent_date,
+    }
+
+    # -----------------------------------------------------------------
+    # SECTION 2: Synthesis Coverage — the actionable "what next"
+    # -----------------------------------------------------------------
+    # Per-namespace L3 coverage (count and percentage)
+    per_ns_coverage = []
+    for ns in ("knowledge", "industries", "engineering", "interests"):
+        total = registered_topics.get(ns, 0)
+        done = len(l3_by_namespace.get(ns, []))
+        pct = round(done / total * 100) if total else 0
+        per_ns_coverage.append({
+            "namespace": ns,
+            "registered": total,
+            "synthesized": done,
+            "pct": pct,
+        })
+
+    # Stale syntheses — L3 articles whose last_updated is > 60 days old
+    stale_syntheses = []
+    for l3 in all_l3:
+        if not l3.get("last_updated"):
+            continue
+        try:
+            d = datetime.strptime(l3["last_updated"], "%Y-%m-%d").date()
+        except ValueError:
+            continue
+        age_days = (today - d).days
+        if age_days > 60:
+            stale_syntheses.append({**l3, "age_days": age_days})
+    stale_syntheses.sort(key=lambda x: -x["age_days"])
+
+    # Grown since synthesis — L3 articles where current fragment count
+    # has grown >20% above the fragment_count stored at synthesis time
+    grown_since = []
+    for l3 in all_l3:
+        key = (l3["namespace"], l3["slug"])
+        current = topic_counts.get(key, 0)
+        stored = int(l3.get("fragment_count", 0) or 0)
+        if stored and current > 0:
+            growth_pct = round((current - stored) / stored * 100)
+            if growth_pct >= 20:
+                grown_since.append({
+                    "namespace": l3["namespace"],
+                    "slug": l3["slug"],
+                    "stored": stored,
+                    "current": current,
+                    "growth_pct": growth_pct,
+                    "last_updated": l3.get("last_updated", ""),
+                })
+    grown_since.sort(key=lambda x: -x["growth_pct"])
+
+    # Ready to synthesize — topics with 5+ fragments but no L3 yet
+    synthesized_keys = {(l3["namespace"], l3["slug"]) for l3 in all_l3}
+    ready_to_synthesize = [
+        {"namespace": ns, "slug": slug, "count": count}
+        for (ns, slug), count in topic_counts.items()
+        if count >= 5 and (ns, slug) not in synthesized_keys
+    ]
+    ready_to_synthesize.sort(key=lambda x: -x["count"])
+
+    synthesis = {
+        "per_namespace": per_ns_coverage,
+        "stale": stale_syntheses[:10],
+        "stale_total": len(stale_syntheses),
+        "grown": grown_since[:10],
+        "grown_total": len(grown_since),
+        "ready": ready_to_synthesize[:15],
+        "ready_total": len(ready_to_synthesize),
+    }
+
+    # -----------------------------------------------------------------
+    # SECTION 3: Density & Gaps
+    # -----------------------------------------------------------------
+    # Histogram
+    buckets = {"1-4": 0, "5-19": 0, "20-49": 0, "50-99": 0, "100+": 0}
     for count in topic_counts.values():
-        if count == 0:
-            buckets["0"] += 1
-        elif count < 5:
+        if count < 5:
             buckets["1-4"] += 1
         elif count < 20:
             buckets["5-19"] += 1
@@ -1945,66 +2104,121 @@ def _compute_analytics() -> dict:
             buckets["100+"] += 1
 
     top_topics = sorted(topic_counts.items(), key=lambda x: -x[1])[:10]
-    bottom_topics = [
-        (k, v) for k, v in sorted(topic_counts.items(), key=lambda x: x[1])[:10] if v > 0
-    ]
+    sparse_topics = sorted(
+        [(k, v) for k, v in topic_counts.items() if 0 < v < 5],
+        key=lambda x: x[1],
+    )
 
-    coverage = {
-        "topic_count": len(topic_counts),
+    # Registry orphans — entries in *.yaml with 0 fragments on disk
+    orphan_entries = []
+    for slug in TOPIC_NAMES:
+        if ("knowledge", slug) not in topic_counts:
+            orphan_entries.append({"namespace": "knowledge", "slug": slug,
+                                    "name": TOPIC_NAMES.get(slug, slug)})
+    for slug in ENGINEERING_TOPIC_NAMES:
+        if ("engineering", slug) not in topic_counts:
+            orphan_entries.append({"namespace": "engineering", "slug": slug,
+                                    "name": ENGINEERING_TOPIC_NAMES.get(slug, slug)})
+    for slug in INTERESTS_TOPIC_NAMES:
+        if ("interests", slug) not in topic_counts:
+            orphan_entries.append({"namespace": "interests", "slug": slug,
+                                    "name": INTERESTS_TOPIC_NAMES.get(slug, slug)})
+
+    density = {
         "histogram": buckets,
         "top_topics": [
             {"namespace": ns, "slug": slug, "count": count}
             for (ns, slug), count in top_topics
         ],
-        "bottom_topics": [
+        "sparse_topics": [
             {"namespace": ns, "slug": slug, "count": count}
-            for (ns, slug), count in bottom_topics
+            for (ns, slug), count in sparse_topics
         ],
+        "orphan_registry_entries": orphan_entries,
         "unclassified_count": by_namespace.get("unclassified", 0),
+        "by_namespace": {
+            ns: by_namespace.get(ns, 0)
+            for ns in ("knowledge", "industries", "engineering",
+                       "interests", "session-notes", "concepts",
+                       "other", "unclassified")
+        },
     }
 
     # -----------------------------------------------------------------
-    # C. Freshness — calendar heatmap data + stalest topics
+    # SECTION 4: Client Density
     # -----------------------------------------------------------------
-    # Last 180 days of activity, one bucket per day
-    from datetime import timedelta
-    today = datetime.now().date()
+    # Parse client _index.md files for wikilinks + insight counts
+    # (mirrors the dashboard client list logic).
+    client_rows = []
+    clients_dir = WIKI_DIR / "clients" / "current"
+    if clients_dir.exists():
+        for d in sorted(clients_dir.iterdir()):
+            if not d.is_dir():
+                continue
+            topic_count = 0
+            insight_count = 0
+            index_file = d / "_index.md"
+            if index_file.exists():
+                try:
+                    content = index_file.read_text(encoding="utf-8", errors="replace")
+                    topic_links = re.findall(r"\[\[knowledge/[^|\]]+", content)
+                    topic_count = len(set(topic_links))
+                    insight_nums = re.findall(r"\((\d+)\s+insights?\)", content)
+                    insight_count = sum(int(n) for n in insight_nums)
+                except Exception:
+                    pass
+            client_rows.append({
+                "slug": d.name,
+                "name": CLIENT_NAMES.get(d.name, d.name.replace("-", " ").title()),
+                "topic_count": topic_count,
+                "insight_count": insight_count,
+            })
+    client_rows.sort(key=lambda x: -x["insight_count"])
+
+    top_clients = client_rows[:10]
+    empty_clients = [c for c in client_rows if c["insight_count"] == 0]
+
+    # Industry fragment counts
+    industry_fragments = []
+    for (ns, slug), count in topic_counts.items():
+        if ns == "industries":
+            industry_fragments.append({"slug": slug, "count": count})
+    industry_fragments.sort(key=lambda x: -x["count"])
+
+    clients_section = {
+        "total": len(client_rows),
+        "top": top_clients,
+        "empty": empty_clients,
+        "empty_count": len(empty_clients),
+        "industry_fragments": industry_fragments,
+    }
+
+    # -----------------------------------------------------------------
+    # SECTION 5: Freshness
+    # -----------------------------------------------------------------
     earliest = today - timedelta(days=180)
     per_day: dict[str, int] = defaultdict(int)
     for frag in fragments:
-        d = frag["source_date"]
-        if isinstance(d, str) and len(d) >= 10:
+        d = frag["date"]
+        if d and len(d) >= 10:
             try:
-                frag_date = datetime.strptime(d[:10], "%Y-%m-%d").date()
+                fd = datetime.strptime(d[:10], "%Y-%m-%d").date()
             except ValueError:
                 continue
-            if frag_date >= earliest:
+            if fd >= earliest:
                 per_day[d[:10]] += 1
 
-    # Build ordered day list for the heatmap
     heatmap_days = []
     cur = earliest
     while cur <= today:
         heatmap_days.append({
             "date": cur.strftime("%Y-%m-%d"),
             "count": per_day.get(cur.strftime("%Y-%m-%d"), 0),
-            "weekday": cur.weekday(),  # 0=Mon
+            "weekday": cur.weekday(),
         })
         cur = cur + timedelta(days=1)
 
-    # Stalest topics: latest source_date per topic, sorted ascending (oldest first)
-    topic_latest_date: dict[tuple[str, str], str] = {}
-    for frag in fragments:
-        if frag["is_synthesis"]:
-            continue
-        parts = frag["path"].split("/")
-        if len(parts) >= 3 and parts[0] == "wiki":
-            ns, slug = parts[1], parts[2]
-            d = frag["source_date"]
-            if isinstance(d, str) and len(d) >= 10:
-                existing = topic_latest_date.get((ns, slug), "")
-                if d > existing:
-                    topic_latest_date[(ns, slug)] = d[:10]
+    # Stalest topics: oldest latest-date per topic
     stalest = sorted(
         [(k, v) for k, v in topic_latest_date.items() if v],
         key=lambda x: x[1],
@@ -2023,59 +2237,45 @@ def _compute_analytics() -> dict:
             "days_since": days_since,
         })
 
+    # Most recent ingest per namespace
+    recent_per_ns: dict[str, str] = {}
+    for frag in fragments:
+        ns = frag["namespace"]
+        d = frag["date"]
+        if d and d > recent_per_ns.get(ns, ""):
+            recent_per_ns[ns] = d
+
     freshness = {
         "heatmap": heatmap_days,
         "heatmap_max": max((d["count"] for d in heatmap_days), default=1),
         "stalest_topics": stalest_list,
+        "recent_per_namespace": recent_per_ns,
     }
 
     # -----------------------------------------------------------------
-    # D. Gaps & Opportunities
+    # SECTION 6: Session Notes & Other Buckets
     # -----------------------------------------------------------------
-    # Topics with 0 external evidence (all currently — placeholder until Readwise)
-    external_source_types = {"external-blog", "external-academic", "external-vendor",
-                              "external-case-study", "external-whitepaper", "external-book",
-                              "external-platform-docs"}
-    topics_with_external: set[tuple[str, str]] = set()
-    topics_with_internal: set[tuple[str, str]] = set()
-    for frag in fragments:
-        if frag["is_synthesis"]:
-            continue
-        parts = frag["path"].split("/")
-        if len(parts) >= 3 and parts[0] == "wiki":
-            ns, slug = parts[1], parts[2]
-            if frag["source_type"] in external_source_types:
-                topics_with_external.add((ns, slug))
-            else:
-                topics_with_internal.add((ns, slug))
-
-    all_topic_keys = set(topic_counts.keys())
-    topics_internal_only = all_topic_keys - topics_with_external
-    topics_external_only = all_topic_keys - topics_with_internal
-    topics_both = topics_with_internal & topics_with_external
-
-    sparse_topics = sorted(
-        [(k, v) for k, v in topic_counts.items() if 0 < v < 10],
-        key=lambda x: x[1],
-    )
-
-    gaps = {
-        "topics_internal_only": len(topics_internal_only),
-        "topics_external_only": len(topics_external_only),
-        "topics_both": len(topics_both),
-        "sparse_topics": [
-            {"namespace": ns, "slug": slug, "count": count}
-            for (ns, slug), count in sparse_topics
-        ],
-        "unclassified_commits": by_namespace.get("unclassified", 0),
+    session_notes = {
+        "session_notes_count": by_namespace.get("session-notes", 0),
+        "concepts_count": by_namespace.get("concepts", 0),
+        "other_count": by_namespace.get("other", 0),
+        "other_breakdown": {
+            bucket: sum(
+                1 for f in (WIKI_DIR / bucket).rglob("*.md")
+                if f.name not in ("_index.md", "README.md", "PLACEHOLDER.md")
+            ) if (WIKI_DIR / bucket).exists() else 0
+            for bucket in misc_namespaces
+        },
     }
 
     return {
         "total_fragments": total_fragments,
-        "provenance": provenance,
-        "coverage": coverage,
+        "overview": overview,
+        "synthesis": synthesis,
+        "density": density,
+        "clients": clients_section,
         "freshness": freshness,
-        "gaps": gaps,
+        "session_notes": session_notes,
     }
 
 
