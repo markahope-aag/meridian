@@ -1,0 +1,92 @@
+# Meridian Interests Topics Registry
+#
+# The fourth knowledge namespace (wiki/interests/) — personal topics
+# Mark cares about for himself, alongside wiki/knowledge/ (business),
+# wiki/engineering/ (technical), and wiki/industries/ (cross-cutting).
+#
+# Interests are reading-driven. Evidence is weighted toward external
+# sources (books, articles, papers, traditions) with personal
+# reflections as a distinct source_type. The synthesis voice is
+# study-journal — tradition-aware, scholarly, comfortable with
+# "sources disagree" as a terminal state.
+#
+# Privacy: the entire Meridian system is private to Mark. Nothing in
+# this namespace is ever published to ClientBrain or shared with the
+# team. Freemasonry notes live alongside Health & Fitness notes
+# because the whole wiki is single-reader.
+#
+# The compiler MUST match against this taxonomy before filing into
+# wiki/interests/<slug>/. New topics require human approval.
+#
+# Each entry:
+#   name         — display name
+#   slug         — kebab-case, unique
+#   description  — scope statement
+#   aliases      — common variants to normalize
+
+topics:
+
+  - name: "Religion"
+    slug: religion
+    description: "Comparative religion, theology across traditions, spirituality, religious history. Deliberately broad — not tied to any one tradition."
+    aliases:
+      - theology
+      - spirituality
+      - comparative-religion
+      - religious-history
+      - faith
+      - spiritual-practice
+
+  - name: "Freemasonry"
+    slug: freemasonry
+    description: "Masonic tradition, ritual, symbolism, history, and philosophy. Craft, York Rite, Scottish Rite, and allied bodies."
+    aliases:
+      - masonry
+      - masonic
+      - craft-lodge
+      - york-rite
+      - scottish-rite
+      - blue-lodge
+
+  - name: "Outdoors"
+    slug: outdoors
+    description: "Hiking, camping, backpacking, wilderness skills, navigation, conservation, and the natural world."
+    aliases:
+      - hiking
+      - camping
+      - backpacking
+      - wilderness
+      - nature
+      - conservation
+
+  - name: "Ancient Wisdom"
+    slug: ancient-wisdom
+    description: "Classical and pre-modern philosophy, Stoicism, Eastern traditions, wisdom literature, perennial philosophy."
+    aliases:
+      - philosophy
+      - classical-philosophy
+      - stoicism
+      - eastern-philosophy
+      - wisdom-literature
+      - perennial-philosophy
+
+  - name: "Health & Fitness"
+    slug: health-fitness
+    description: "Physical training, nutrition, longevity research, movement practice, recovery, and evidence-based health."
+    aliases:
+      - fitness
+      - health
+      - nutrition
+      - training
+      - longevity
+      - exercise
+
+  - name: "Horses"
+    slug: horses
+    description: "Equestrian knowledge, horsemanship, training, therapeutic riding, horse care, and equine partnership. Connects to the Stride project."
+    aliases:
+      - equestrian
+      - horsemanship
+      - equine
+      - riding
+      - therapeutic-riding

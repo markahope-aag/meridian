@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}{{ topic_name }} — Interests — Meridian{% endblock %}
+{% block content %}
+<div class="topic-backlink">
+    <a href="/interests/">&larr; Interests</a>
+    <span class="topic-backlink-meta">
+        {{ articles|length }} fragment{{ 's' if articles|length != 1 else '' }}
+        {% if sources_on_topic %} from {{ sources_on_topic|length }} source{{ 's' if sources_on_topic|length != 1 else '' }}{% endif %}
+    </span>
+</div>
+
+<h1 style="margin-bottom: 8px;">{{ topic_name }}</h1>
+<div style="color: var(--text-muted); margin-bottom: 24px;">
+    {{ articles|length }} fragment{{ 's' if articles|length != 1 else '' }}
+    {% if synthesis %}
+    · <span style="background: var(--green); color: #000; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;">Layer 3 Synthesized</span>
+    <span style="font-size: 12px; margin-left: 4px;">
+        {{ synthesis.frontmatter.confidence }} · {{ synthesis.frontmatter.evidence_count }} evidence · updated {{ synthesis.frontmatter.last_updated }}
+    </span>
+    {% elif articles %}
+    · <span style="color: var(--yellow); font-size: 12px;">No synthesis yet</span>
+    {% else %}
+    · <span style="color: var(--text-muted); font-size: 12px;">Empty — no fragments filed yet</span>
+    {% endif %}
+</div>
+
+{% if not articles and not synthesis %}
+<div class="card" style="border-left: 3px solid var(--yellow);">
+    <h2 style="margin-bottom: 12px;">Nothing here yet</h2>
+    <div style="color: var(--text-muted); font-size: 14px; line-height: 1.6;">
+        This topic is registered but hasn't accumulated any fragments.
+        Content will flow in once Readwise sync is wired (for books and articles)
+        or when you drop manual notes into <code>wiki/interests/{{ slug }}/</code>.
+    </div>
+</div>
+{% endif %}
+
+{% if synthesis_html %}
+<div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 8px;">
+    <a href="/download/md/wiki/interests/{{ slug }}/index.md" class="download-btn">&#8595; MD</a>
+    <a href="/download/pdf/wiki/interests/{{ slug }}/index.md" class="download-btn">&#8595; PDF</a>
+</div>
+<div class="card article-content" style="border-left: 3px solid var(--green);">
+    {{ synthesis_html | safe }}
+</div>
+{% endif %}
+
+{% if articles %}
+<div class="card" id="fragments-card">
+    <div class="fragments-header">
+        <h2>Fragments ({{ articles|length }})</h2>
+        <div class="fragments-controls">
+            <input type="search" id="fragment-search" class="fragment-search"
+                   placeholder="Filter fragments…" autocomplete="off" />
+            <select id="fragment-sort" class="fragment-sort" aria-label="Sort fragments">
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="title-asc">Title A→Z</option>
+                <option value="source">By source</option>
+            </select>
+        </div>
+    </div>
+
+    {% if sources_on_topic %}
+    <div class="client-chips" id="client-chips">
+        <button type="button" class="chip active" data-client="">All ({{ articles|length }})</button>
+        {% for s in sources_on_topic %}
+        <button type="button" class="chip" data-client="{{ s|lower }}">{{ s }}</button>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div id="fragment-match-count" class="fragment-match-count"></div>
+
+    <ul id="fragment-list" class="fragment-list">
+        {% for a in articles %}
+        <li class="fragment-item"
+            data-title="{{ a.title|lower }}"
+            data-client="{{ a.source_display|lower }}"
+            data-text="{{ (a.title + ' ' + a.source_display + ' ' + a.preview)|lower }}"
+            data-date="{{ a.sort_date }}">
+            <div class="fragment-head">
+                <a href="/article/{{ a.path }}" class="fragment-title">{{ a.title }}</a>
+                {% if a.source_display %}
+                <span class="fragment-client-tag">{{ a.source_display }}</span>
+                {% endif %}
+            </div>
+            {% if a.preview %}
+            <div class="fragment-preview">{{ a.preview }}</div>
+            {% endif %}
+            <div class="fragment-meta">
+                {% if a.source_type %}{{ a.source_type }} · {% endif %}
+                {% if a.sort_date %}{{ a.sort_date }}{% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<script>
+(function () {
+    const list = document.getElementById('fragment-list');
+    if (!list) return;
+    const items = Array.from(list.querySelectorAll('.fragment-item'));
+    const search = document.getElementById('fragment-search');
+    const sortSel = document.getElementById('fragment-sort');
+    const chips = document.querySelectorAll('#client-chips .chip');
+    const matchCount = document.getElementById('fragment-match-count');
+
+    let activeSource = '';
+    let query = '';
+
+    function applyFilter() {
+        const q = query.trim();
+        let visible = 0;
+        items.forEach((el) => {
+            const matchesSource = !activeSource || el.dataset.client === activeSource;
+            const matchesText = !q || el.dataset.text.indexOf(q) !== -1;
+            const show = matchesSource && matchesText;
+            el.style.display = show ? '' : 'none';
+            if (show) visible += 1;
+        });
+        if (matchCount) {
+            matchCount.textContent = (q || activeSource)
+                ? `Showing ${visible} of ${items.length} fragments` : '';
+        }
+    }
+
+    function applySort(mode) {
+        const sorted = items.slice().sort((a, b) => {
+            switch (mode) {
+                case 'oldest':    return (a.dataset.date || '').localeCompare(b.dataset.date || '');
+                case 'title-asc': return a.dataset.title.localeCompare(b.dataset.title);
+                case 'source':    return (a.dataset.client || '\uFFFF').localeCompare(b.dataset.client || '\uFFFF');
+                case 'newest':
+                default:          return (b.dataset.date || '').localeCompare(a.dataset.date || '');
+            }
+        });
+        sorted.forEach((el) => list.appendChild(el));
+    }
+
+    if (search) search.addEventListener('input', (e) => { query = e.target.value.toLowerCase(); applyFilter(); });
+    if (sortSel) sortSel.addEventListener('change', (e) => applySort(e.target.value));
+    chips.forEach((chip) => {
+        chip.addEventListener('click', () => {
+            chips.forEach((c) => c.classList.remove('active'));
+            chip.classList.add('active');
+            activeSource = chip.dataset.client || '';
+            applyFilter();
+        });
+    });
+})();
+</script>
+{% endif %}
+{% endblock %}

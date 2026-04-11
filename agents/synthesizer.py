@@ -89,6 +89,15 @@ DIMENSION_CONFIG: dict[str, dict] = {
         "default_domain_type": "platform-mechanics",  # engineering tends to change fast
         "write_prompt": "synthesizer_write_engineering.md",
     },
+    "interests": {
+        "fragment_root": WIKI_DIR / "interests",
+        "cache_subdir":  "interests",
+        "versions_subdir": "interests",
+        "registry_file": "interests-topics.yaml",
+        "registry_key":  "topics",
+        "default_domain_type": "fundamental",  # interests move on decades-scale
+        "write_prompt": "synthesizer_write_interests.md",
+    },
 }
 
 

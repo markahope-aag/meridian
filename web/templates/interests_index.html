@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Interests — Meridian{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 8px;">Personal Interests</h1>
+<div style="color: var(--text-muted); margin-bottom: 24px;">
+    {{ stats.interests_topics_registered }} topics, {{ stats.interests_fragments }} fragments,
+    {{ stats.interests_l3 }} syntheses. Reading-driven knowledge —
+    books, traditions, reflections. Fragments accumulate as you read and highlight.
+</div>
+
+<div class="card">
+    <h2>Topics ({{ interests_topics|length }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Personal study areas. Click into a topic to browse its fragments or read the synthesis.
+    </div>
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+        {% for t in interests_topics %}
+        <div class="stat-box" style="text-align: left; padding: 14px;">
+            <div style="font-size: 15px; font-weight: 600; margin-bottom: 6px;">
+                <a href="/interests/{{ t.slug }}" style="color: var(--accent); text-decoration: none;">{{ t.name }}</a>
+                {% if t.layer3 %}
+                <span style="background: var(--green); color: #000; padding: 1px 8px; border-radius: 10px; font-size: 10px; margin-left: 6px; font-weight: 600;">L3</span>
+                {% endif %}
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-bottom: 6px;">
+                {{ t.fragment_count }} fragment{{ 's' if t.fragment_count != 1 else '' }}
+            </div>
+            {% if t.description %}
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5; opacity: 0.85;">
+                {{ t.description[:140] }}{% if t.description|length > 140 %}…{% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

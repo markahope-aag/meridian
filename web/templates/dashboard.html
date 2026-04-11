@@ -3,35 +3,41 @@
 {% block content %}
 <h1 style="margin-bottom: 24px;">Dashboard</h1>
 
+{#
+    Each namespace row uses the SAME six metrics in the SAME order so
+    rows are directly comparable top-to-bottom:
+
+        Topics | w/ Fragments | Fragments | Layer 3 | Contributors | Queue
+
+    "Contributors" is the namespace-specific axis (Clients for business,
+    Projects for engineering, Sources for interests).
+#}
+
 <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Business Knowledge</div>
 <div class="stat-grid">
     <div class="stat-box">
-        <div class="number">{{ '{:,}'.format(stats.wiki_total) }}</div>
-        <div class="label">Wiki Articles</div>
+        <div class="number">{{ '{:,}'.format(stats.business_topics_registered or stats.knowledge_topics) }}</div>
+        <div class="label">Topics</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(stats.business_topics_with_fragments) }}</div>
+        <div class="label">With Fragments</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(stats.business_fragments) }}</div>
+        <div class="label">Fragments</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(stats.business_l3) }}</div>
+        <div class="label">Layer 3</div>
     </div>
     <div class="stat-box">
         <div class="number">{{ '{:,}'.format(stats.client_folders) }}</div>
         <div class="label">Clients</div>
     </div>
     <div class="stat-box">
-        <div class="number">{{ '{:,}'.format(stats.knowledge_topics) }}</div>
-        <div class="label">Knowledge Topics</div>
-    </div>
-    <div class="stat-box">
-        <div class="number">{{ '{:,}'.format(stats.industries) }}</div>
-        <div class="label">Industries</div>
-    </div>
-    <div class="stat-box">
-        <div class="number">{{ '{:,}'.format(stats.concepts) }}</div>
-        <div class="label">Concepts</div>
-    </div>
-    <div class="stat-box">
-        <div class="number">{{ '{:,}'.format(stats.raw) }}</div>
-        <div class="label">Raw Sources</div>
-    </div>
-    <div class="stat-box">
-        <div class="number">{{ '{:,}'.format(stats.capture) }}</div>
-        <div class="label">Capture Queue</div>
+        <div class="number">{{ '{:,}'.format(stats.business_capture_queue) }}</div>
+        <div class="label">Queue</div>
     </div>
 </div>
 
@@ -39,31 +45,75 @@
 <div class="stat-grid">
     <div class="stat-box">
         <div class="number">{{ '{:,}'.format(stats.engineering_topics_registered) }}</div>
-        <div class="label">Engineering Topics</div>
+        <div class="label">Topics</div>
     </div>
     <div class="stat-box">
         <div class="number">{{ '{:,}'.format(stats.engineering_topics_with_fragments) }}</div>
-        <div class="label">Topics with Fragments</div>
+        <div class="label">With Fragments</div>
     </div>
     <div class="stat-box">
         <div class="number">{{ '{:,}'.format(stats.engineering_fragments) }}</div>
-        <div class="label">Engineering Fragments</div>
+        <div class="label">Fragments</div>
     </div>
     <div class="stat-box">
         <div class="number">{{ '{:,}'.format(stats.engineering_l3) }}</div>
-        <div class="label">Engineering L3</div>
+        <div class="label">Layer 3</div>
     </div>
     <div class="stat-box">
         <div class="number">{{ '{:,}'.format(stats.projects_registered) }}</div>
         <div class="label">Projects</div>
     </div>
-    <div class="stat-box">
-        <div class="number">{{ '{:,}'.format(stats.commits_ingested_total) }}</div>
-        <div class="label">Commits Ingested</div>
-    </div>
     <div class="stat-box"{% if stats.capture_commits_queue > 0 %} style="border-color: var(--yellow);"{% endif %}>
         <div class="number"{% if stats.capture_commits_queue > 0 %} style="color: var(--yellow);"{% endif %}>{{ '{:,}'.format(stats.capture_commits_queue) }}</div>
-        <div class="label">Unclassified</div>
+        <div class="label">Queue</div>
+    </div>
+</div>
+
+<div style="font-size: 11px; color: var(--text-muted); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">Interests Knowledge</div>
+<div class="stat-grid">
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(stats.interests_topics_registered) }}</div>
+        <div class="label">Topics</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(stats.interests_topics_with_fragments) }}</div>
+        <div class="label">With Fragments</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(stats.interests_fragments) }}</div>
+        <div class="label">Fragments</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(stats.interests_l3) }}</div>
+        <div class="label">Layer 3</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(stats.interests_sources) }}</div>
+        <div class="label">Sources</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(stats.interests_capture_queue) }}</div>
+        <div class="label">Queue</div>
+    </div>
+</div>
+
+<div style="font-size: 11px; color: var(--text-muted); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">Industries &middot; Cross-Cutting</div>
+<div class="stat-grid">
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(stats.industries) }}</div>
+        <div class="label">Industries</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(stats.industries_with_content) }}</div>
+        <div class="label">With Content</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(stats.raw) }}</div>
+        <div class="label">Raw Sources</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(stats.wiki_total) }}</div>
+        <div class="label">Wiki Articles (Total)</div>
     </div>
 </div>
 
@@ -131,40 +181,39 @@
     </div>
 </div>
 
-<div class="two-col">
-    <div class="card">
-        <h2>Clients ({{ clients|length }})</h2>
-        {% for c in clients %}
-        <div class="list-item">
-            <div>
-                <a href="/client/{{ c.slug }}">{{ c.slug }}</a>
-                <span style="font-size: 11px; color: var(--text-muted); margin-left: 4px;">{{ c.articles }} topics</span>
-            </div>
-            <span class="count">{{ '{:,}'.format(c.insights) }}</span>
-        </div>
-        {% endfor %}
-    </div>
+{#
+    Browse sections below — all use the same full-width card-grid
+    pattern with consistent card styling. Replaces the old two-col
+    list layout for Clients + Knowledge Topics.
+#}
 
-    <div class="card">
-        <h2>Knowledge Topics ({{ topics|length }})</h2>
-        {% for t in topics[:30] %}
-        <div class="list-item">
-            <div>
-                <a href="/topic/{{ t.slug }}">{{ t.slug }}</a>
+<div class="card">
+    <h2>Knowledge Topics ({{ topics|length }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Business and marketing topics — client-driven, with institutional insights from Asymmetric engagements.
+    </div>
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        {% for t in topics[:60] %}
+        <div class="stat-box" style="text-align: left; padding: 12px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">
+                <a href="/topic/{{ t.slug }}" style="color: var(--accent); text-decoration: none;">{{ t.slug }}</a>
                 {% if t.layer3 %}
                 <span style="background: var(--green); color: #000; padding: 1px 8px; border-radius: 10px; font-size: 10px; margin-left: 6px; font-weight: 600;">L3</span>
-                <span style="font-size: 11px; color: var(--text-muted); margin-left: 4px;">{{ t.confidence }} · {{ t.evidence_count }} evidence</span>
                 {% endif %}
             </div>
-            <span class="count">{{ t.articles }}</span>
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+                {{ t.articles }} fragments
+                {% if t.layer3 and t.confidence %} · {{ t.confidence }}{% endif %}
+                {% if t.layer3 and t.evidence_count %} · {{ t.evidence_count }} evidence{% endif %}
+            </div>
         </div>
         {% endfor %}
-        {% if topics|length > 30 %}
-        <div style="padding: 8px 0; color: var(--text-muted); font-size: 13px;">
-            ... and {{ topics|length - 30 }} more
-        </div>
-        {% endif %}
     </div>
+    {% if topics|length > 60 %}
+    <div style="padding: 8px 0 0; color: var(--text-muted); font-size: 13px;">
+        … and {{ topics|length - 60 }} more
+    </div>
+    {% endif %}
 </div>
 
 <div class="card">
@@ -193,7 +242,7 @@
 <div class="card">
     <h2>Engineering Topics ({{ engineering_topics|length }})</h2>
     <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
-        Technical knowledge organized by technology, framework, and workflow — feeds from commits, debugging sessions, and external reading.
+        Technical knowledge by technology, framework, and workflow — from commits, debugging sessions, and external reading.
     </div>
     <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
         {% for t in engineering_topics %}
@@ -207,6 +256,28 @@
             <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
                 {{ t.fragment_count }} fragments
                 {% if t.category %} · {{ t.category }}{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <h2>Interests Topics ({{ interests_topics|length }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Personal study areas — reading-driven, from books and articles and reflection.
+    </div>
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        {% for t in interests_topics %}
+        <div class="stat-box" style="text-align: left; padding: 12px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">
+                <a href="/interests/{{ t.slug }}" style="color: var(--accent); text-decoration: none;">{{ t.name }}</a>
+                {% if t.layer3 %}
+                <span style="background: var(--green); color: #000; padding: 1px 8px; border-radius: 10px; font-size: 10px; margin-left: 6px; font-weight: 600;">L3</span>
+                {% endif %}
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+                {{ t.fragment_count }} fragments
             </div>
         </div>
         {% endfor %}
@@ -235,6 +306,26 @@
             </div>
             <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px; opacity: 0.75;">
                 {{ p.description[:80] }}{% if p.description|length > 80 %}…{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <h2>Clients ({{ clients|length }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Asymmetric client engagements — each one contributes insights to the business topics above.
+    </div>
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+        {% for c in clients %}
+        <div class="stat-box" style="text-align: left; padding: 12px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">
+                <a href="/client/{{ c.slug }}" style="color: var(--accent); text-decoration: none;">{{ c.slug }}</a>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+                {{ c.articles }} topic{{ 's' if c.articles != 1 else '' }}
+                {% if c.insights %} · {{ '{:,}'.format(c.insights) }} insight{{ 's' if c.insights != 1 else '' }}{% endif %}
             </div>
         </div>
         {% endfor %}

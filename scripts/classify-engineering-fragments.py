@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import sys
@@ -31,12 +32,17 @@ from pathlib import Path
 import anthropic
 import yaml
 
-ROOT = Path(__file__).resolve().parent.parent
-CAPTURE_DIR = ROOT / "capture" / "external" / "commits"
-WIKI_ENG_DIR = ROOT / "wiki" / "engineering"
-TOPICS_YAML = ROOT / "engineering-topics.yaml"
-PROJECTS_YAML = ROOT / "projects.yaml"
-ERROR_LOG = ROOT / "outputs" / "engineering-classification-errors.log"
+# MERIDIAN_ROOT env var points at the runtime data root (Syncthing vault
+# on Mark's local machine, /meridian on the VM). Registries live in the
+# git repo, output lives under MERIDIAN_ROOT.
+SCRIPT_ROOT = Path(__file__).resolve().parent.parent
+MERIDIAN_ROOT = Path(os.environ.get("MERIDIAN_ROOT", SCRIPT_ROOT))
+
+CAPTURE_DIR = MERIDIAN_ROOT / "capture" / "external" / "commits"
+WIKI_ENG_DIR = MERIDIAN_ROOT / "wiki" / "engineering"
+TOPICS_YAML = SCRIPT_ROOT / "engineering-topics.yaml"
+PROJECTS_YAML = SCRIPT_ROOT / "projects.yaml"
+ERROR_LOG = MERIDIAN_ROOT / "outputs" / "engineering-classification-errors.log"
 
 HAIKU_MODEL = "claude-haiku-4-5-20251001"
 DEFAULT_BATCH_SIZE = 10

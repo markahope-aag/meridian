@@ -203,8 +203,11 @@ CLIENTS_YAML = MERIDIAN_ROOT / "clients.yaml"
 TOPICS_YAML = MERIDIAN_ROOT / "topics.yaml"
 ENGINEERING_TOPICS_YAML = MERIDIAN_ROOT / "engineering-topics.yaml"
 PROJECTS_YAML = MERIDIAN_ROOT / "projects.yaml"
+INTERESTS_TOPICS_YAML = MERIDIAN_ROOT / "interests-topics.yaml"
 ENGINEERING_DIR = WIKI_DIR / "engineering"
+INTERESTS_DIR = WIKI_DIR / "interests"
 COMMITS_CAPTURE_DIR = CAPTURE_DIR / "external" / "commits"
+INTERESTS_CAPTURE_DIR = CAPTURE_DIR / "external" / "interests"
 RECEIVER_URL = os.environ.get("MERIDIAN_RECEIVER_URL", "http://localhost:8000")
 RECEIVER_TOKEN = os.environ.get("MERIDIAN_RECEIVER_TOKEN", "")
 
@@ -231,7 +234,12 @@ def _load_client_names() -> dict:
 
 
 def _load_topic_names() -> dict:
-    """Map topic slug -> display name. Falls back to title-cased slug."""
+    """Map topic slug -> display name. Falls back to title-cased slug.
+
+    topics.yaml uses the historical `categories` key at the top level
+    (a carryover from when the taxonomy was organized as categories).
+    Also accept `topics` for forward compatibility with future files.
+    """
     if not TOPICS_YAML.exists():
         return {}
     try:
@@ -239,7 +247,10 @@ def _load_topic_names() -> dict:
     except yaml.YAMLError:
         return {}
     lookup: dict[str, str] = {}
-    for entry in data.get("topics", []):
+    entries = data.get("categories") or data.get("topics") or []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
         slug = (entry.get("slug") or "").strip()
         name = (entry.get("name") or "").strip()
         if slug and name:
@@ -275,9 +286,27 @@ def _load_projects() -> list[dict]:
     return data.get("projects", [])
 
 
+def _load_interests_topic_names() -> dict:
+    """Map interests topic slug -> display name. Reads interests-topics.yaml."""
+    if not INTERESTS_TOPICS_YAML.exists():
+        return {}
+    try:
+        data = yaml.safe_load(INTERESTS_TOPICS_YAML.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        return {}
+    lookup: dict[str, str] = {}
+    for entry in data.get("topics", []):
+        slug = (entry.get("slug") or "").strip()
+        name = (entry.get("name") or "").strip()
+        if slug and name:
+            lookup[slug] = name
+    return lookup
+
+
 CLIENT_NAMES: dict = _load_client_names()
 TOPIC_NAMES: dict = _load_topic_names()
 ENGINEERING_TOPIC_NAMES: dict = _load_engineering_topic_names()
+INTERESTS_TOPIC_NAMES: dict = _load_interests_topic_names()
 PROJECTS: list = _load_projects()
 
 
@@ -344,7 +373,7 @@ def get_stats() -> dict:
     commit fragments waiting to be classified are visible too.
     """
     stats = {
-        "wiki_total": 0,           # business domain only (excludes engineering)
+        "wiki_total": 0,           # business domain only (excludes engineering + interests)
         "articles": 0,
         "concepts": 0,
         "knowledge": 0,
@@ -358,6 +387,12 @@ def get_stats() -> dict:
         "client_folders": 0,
         "industries": 0,
         "industries_with_content": 0,
+        # === Business namespace (symmetric metrics matching engineering + interests) ===
+        "business_topics_registered": 0,
+        "business_topics_with_fragments": 0,
+        "business_fragments": 0,
+        "business_l3": 0,
+        "business_capture_queue": 0,
         # === Engineering namespace ===
         "engineering_topics_registered": 0,
         "engineering_topics_with_fragments": 0,
@@ -366,6 +401,13 @@ def get_stats() -> dict:
         "projects_registered": 0,
         "projects_active": 0,
         "commits_ingested_total": 0,
+        # === Interests namespace ===
+        "interests_topics_registered": 0,
+        "interests_topics_with_fragments": 0,
+        "interests_fragments": 0,
+        "interests_l3": 0,
+        "interests_sources": 0,     # books / articles / reflections ingested
+        "interests_capture_queue": 0,
     }
     if WIKI_DIR.exists():
         # Count business-domain wiki entries only. Engineering is excluded
@@ -387,8 +429,32 @@ def get_stats() -> dict:
         if knowledge_dir.exists():
             stats["knowledge"] = sum(1 for _ in knowledge_dir.rglob("*.md")
                                      if _.name != "_index.md")
-            stats["knowledge_topics"] = sum(1 for d in knowledge_dir.iterdir()
-                                            if d.is_dir())
+            knowledge_topic_dirs = [d for d in knowledge_dir.iterdir() if d.is_dir()]
+            stats["knowledge_topics"] = len(knowledge_topic_dirs)
+            # Business namespace metrics matching the engineering/interests pattern
+            stats["business_topics_with_fragments"] = sum(
+                1 for d in knowledge_topic_dirs
+                if any(
+                    f.name not in ("_index.md", "index.md")
+                    for f in d.rglob("*.md")
+                )
+            )
+            # Fragments = everything except the index.md (L3 synthesis) and _index.md
+            stats["business_fragments"] = sum(
+                1 for f in knowledge_dir.rglob("*.md")
+                if f.name not in ("_index.md", "index.md")
+            )
+            # L3 = count of <topic>/index.md files that actually contain layer: 3
+            l3_count = 0
+            for d in knowledge_topic_dirs:
+                idx = d / "index.md"
+                if idx.exists():
+                    try:
+                        if "layer: 3" in idx.read_text(encoding="utf-8", errors="replace"):
+                            l3_count += 1
+                    except Exception:
+                        pass
+            stats["business_l3"] = l3_count
         clients_dir = WIKI_DIR / "clients"
         if clients_dir.exists():
             current = clients_dir / "current"
@@ -431,13 +497,33 @@ def get_stats() -> dict:
                 if any(f.name not in ("README.md", "_index.md", "index.md")
                        for f in d.glob("*.md"))
             )
+        # Interests namespace
+        if INTERESTS_DIR.exists():
+            int_fragments = [
+                f for f in INTERESTS_DIR.rglob("*.md")
+                if f.name not in ("README.md", "_index.md")
+            ]
+            stats["interests_fragments"] = sum(
+                1 for f in int_fragments if f.name != "index.md"
+            )
+            stats["interests_l3"] = sum(
+                1 for f in int_fragments if f.name == "index.md"
+            )
+            int_topic_dirs = [d for d in INTERESTS_DIR.iterdir() if d.is_dir()]
+            stats["interests_topics_with_fragments"] = sum(
+                1 for d in int_topic_dirs
+                if any(f.name not in ("README.md", "_index.md", "index.md")
+                       for f in d.glob("*.md"))
+            )
     # Engineering + project registry counts (drive from registry files,
     # not filesystem, so empty topics still show as registered)
+    stats["business_topics_registered"] = len(TOPIC_NAMES) or stats.get("knowledge_topics", 0)
     stats["engineering_topics_registered"] = len(ENGINEERING_TOPIC_NAMES)
     stats["projects_registered"] = len(PROJECTS)
     stats["projects_active"] = sum(
         1 for p in PROJECTS if p.get("status") == "active"
     )
+    stats["interests_topics_registered"] = len(INTERESTS_TOPIC_NAMES)
 
     if RAW_DIR.exists():
         stats["raw"] = sum(1 for _ in RAW_DIR.glob("*.md") if _.name != "_index.md")
@@ -452,6 +538,12 @@ def get_stats() -> dict:
         stats["commits_ingested_total"] = (
             stats["capture_commits_queue"] + stats["engineering_fragments"]
         )
+    if INTERESTS_CAPTURE_DIR.exists():
+        stats["interests_capture_queue"] = sum(
+            1 for _ in INTERESTS_CAPTURE_DIR.rglob("*.md")
+        )
+    # Business capture queue = the top-level manual capture minus commits + interests
+    stats["business_capture_queue"] = stats.get("capture", 0)
     return stats
 
 
@@ -705,12 +797,15 @@ def dashboard():
     engineering_topics = _load_engineering_topics_with_counts()
     # Projects — list from registry, enriched with fragment counts
     projects = _load_projects_with_counts()
+    # Interests topics — list from registry, enriched with fragment counts
+    interests_topics = _load_interests_topics_with_counts()
 
     return render_template("dashboard.html",
                            stats=stats, recent_log=recent_log,
                            clients=clients, topics=topics, industries=industries,
                            engineering_topics=engineering_topics,
                            projects=projects,
+                           interests_topics=interests_topics,
                            synth_status=synth_status, layer3_count=layer3_count,
                            metrics=metrics)
 
@@ -755,6 +850,48 @@ def _load_engineering_topics_with_counts() -> list[dict]:
         })
     # Sort: L3 first, then by fragment count descending
     result.sort(key=lambda x: (not x["layer3"], -x["fragment_count"]))
+    return result
+
+
+def _load_interests_topics_with_counts() -> list[dict]:
+    """Return interests topics from registry, enriched with fragment counts."""
+    result = []
+    if not INTERESTS_TOPICS_YAML.exists():
+        return result
+    try:
+        data = yaml.safe_load(INTERESTS_TOPICS_YAML.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        return result
+    for entry in data.get("topics", []):
+        if not isinstance(entry, dict):
+            continue
+        slug = entry.get("slug", "")
+        if not slug:
+            continue
+        topic_dir = INTERESTS_DIR / slug
+        fragment_count = 0
+        has_l3 = False
+        if topic_dir.exists():
+            fragment_count = sum(
+                1 for f in topic_dir.glob("*.md")
+                if f.name not in ("README.md", "_index.md", "index.md")
+            )
+            if (topic_dir / "index.md").exists():
+                try:
+                    idx = (topic_dir / "index.md").read_text(encoding="utf-8", errors="replace")
+                    if "layer: 3" in idx:
+                        has_l3 = True
+                except Exception:
+                    pass
+        result.append({
+            "slug": slug,
+            "name": entry.get("name", slug),
+            "description": entry.get("description", ""),
+            "fragment_count": fragment_count,
+            "layer3": has_l3,
+        })
+    # Sort: L3 first, then by fragment count descending, then by name
+    result.sort(key=lambda x: (not x["layer3"], -x["fragment_count"], x["name"]))
     return result
 
 
@@ -1363,6 +1500,97 @@ def _enrich_engineering_fragment(article: dict) -> dict:
     article["preview"] = preview
     article["word_count"] = len(body.split())
     # Path for link construction
+    path = article.get("path", "")
+    if isinstance(path, Path):
+        try:
+            article["path"] = path.relative_to(MERIDIAN_ROOT).as_posix()
+        except ValueError:
+            article["path"] = str(path)
+    return article
+
+
+@app.route("/interests/")
+def interests_index():
+    """Interests topics browse page."""
+    interests_topics = _load_interests_topics_with_counts()
+    stats = get_stats()
+    return render_template(
+        "interests_index.html",
+        interests_topics=interests_topics,
+        stats=stats,
+    )
+
+
+@app.route("/interests/<slug>")
+def view_interests_topic(slug):
+    """Render a single interests topic page."""
+    topic_dir = INTERESTS_DIR / slug
+    if not topic_dir.exists():
+        # The directory may not exist yet if nothing has been filed there.
+        # Render an empty-state page instead of 404 so you can still navigate.
+        topic_name = INTERESTS_TOPIC_NAMES.get(slug, slug.replace("-", " ").title())
+        return render_template(
+            "interests_topic.html",
+            slug=slug,
+            topic_name=topic_name,
+            articles=[],
+            synthesis=None,
+            synthesis_html="",
+            sources_on_topic=[],
+        )
+
+    topic_name = INTERESTS_TOPIC_NAMES.get(slug, slug.replace("-", " ").title())
+
+    synthesis = None
+    synthesis_html = ""
+    index_file = topic_dir / "index.md"
+    if index_file.exists():
+        synthesis = read_article(index_file)
+        if synthesis.get("frontmatter", {}).get("layer") == 3:
+            topic_name = synthesis.get("title", topic_name)
+            synthesis_html = render_markdown(synthesis["body"])
+        else:
+            synthesis = None
+
+    articles = []
+    for f in sorted(topic_dir.rglob("*.md")):
+        if f.name in ("_index.md", "index.md", "README.md"):
+            continue
+        articles.append(_enrich_interests_fragment(read_article(f)))
+    articles.sort(key=lambda a: a.get("sort_date", ""), reverse=True)
+
+    # Distinct source set for filter chips (books/articles/reflections)
+    sources_on_topic = sorted(
+        {a["source_display"] for a in articles if a.get("source_display")}
+    )
+
+    return render_template(
+        "interests_topic.html",
+        slug=slug,
+        topic_name=topic_name,
+        articles=articles,
+        synthesis=synthesis,
+        synthesis_html=synthesis_html,
+        sources_on_topic=sources_on_topic,
+    )
+
+
+def _enrich_interests_fragment(article: dict) -> dict:
+    """Enrich an interests fragment with source display metadata."""
+    fm = article.get("frontmatter", {}) or {}
+    source_type = fm.get("source_type", "")
+    source_author = fm.get("source_author", "")
+    # Display label: author if we have one, else source_type tag
+    source_display = source_author or source_type.replace("external-", "").replace("internal-", "")
+    article["source_display"] = source_display
+    article["source_type"] = source_type
+    article["source_date"] = fm.get("source_date", "")
+    article["sort_date"] = str(fm.get("source_date", ""))[:10] if fm.get("source_date") else ""
+    article["title"] = fm.get("title") or article.get("title", "")
+    body = article.get("body", "")
+    preview = body[:300].replace("\n", " ").strip()
+    article["preview"] = preview
+    article["word_count"] = len(body.split())
     path = article.get("path", "")
     if isinstance(path, Path):
         try:

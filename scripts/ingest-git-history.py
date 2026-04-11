@@ -21,6 +21,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -30,9 +31,18 @@ from typing import Iterable
 
 import yaml
 
-ROOT = Path(__file__).resolve().parent.parent
-PROJECTS_YAML = ROOT / "projects.yaml"
-CAPTURE_DIR = ROOT / "capture" / "external" / "commits"
+# Resolve MERIDIAN_ROOT the same way the web app does: env var wins,
+# falls back to the git repo's root (script parent-parent). This matters
+# on Mark's local machine where the Syncthing vault lives at a
+# different path than the git repo — set MERIDIAN_ROOT to the vault
+# so ingestion output goes straight to the path Syncthing replicates.
+SCRIPT_ROOT = Path(__file__).resolve().parent.parent
+MERIDIAN_ROOT = Path(os.environ.get("MERIDIAN_ROOT", SCRIPT_ROOT))
+
+# projects.yaml is always in the git repo (it's tracked code), even if
+# output goes to the vault via MERIDIAN_ROOT. Read from SCRIPT_ROOT.
+PROJECTS_YAML = SCRIPT_ROOT / "projects.yaml"
+CAPTURE_DIR = MERIDIAN_ROOT / "capture" / "external" / "commits"
 
 # Minimum commit message length (subject + body) to be considered signal
 MIN_MESSAGE_LENGTH = 80
