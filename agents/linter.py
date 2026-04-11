@@ -27,6 +27,7 @@ import yaml
 
 ROOT = Path(__file__).parent.parent
 WIKI_DIR = ROOT / "wiki"
+CAPTURE_DIR = ROOT / "capture"
 OUTPUTS_DIR = ROOT / "outputs"
 PROMPTS_DIR = ROOT / "prompts"
 
@@ -80,27 +81,65 @@ def _load_registry_slugs(filename: str) -> set[str]:
         data.get("clients")
         or data.get("categories")
         or data.get("industries")
+        or data.get("topics")
         or []
     )
     return {item["slug"] for item in items if isinstance(item, dict) and item.get("slug")}
 
 
+def _load_non_synthesizable_slugs(filename: str) -> set[str]:
+    """Return the subset of slugs in a registry flagged `synthesize: false`.
+
+    These topics (like engineering `unclassified`) are canonical and
+    registered, but deliberately never synthesized. The linter must
+    recognize them so it doesn't flag them as "thin" or "needs synthesis."
+    """
+    path = ROOT / filename
+    if not path.exists():
+        return set()
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        return set()
+    items = (
+        data.get("clients")
+        or data.get("categories")
+        or data.get("industries")
+        or data.get("topics")
+        or []
+    )
+    return {
+        item["slug"]
+        for item in items
+        if isinstance(item, dict) and item.get("slug") and item.get("synthesize") is False
+    }
+
+
 def load_all_registries() -> dict[str, set[str]]:
-    """Return {dimension: set_of_canonical_slugs} for the three taxonomies."""
+    """Return {dimension: set_of_canonical_slugs} for every taxonomy.
+
+    After the April rebuild and the engineering + interests namespace
+    work, there are five registered dimensions: clients, topics,
+    industries, engineering-topics, interests-topics.
+    """
     return {
         "clients": _load_registry_slugs("clients.yaml"),
         "topics": _load_registry_slugs("topics.yaml"),
         "industries": _load_registry_slugs("industries.yaml"),
+        "engineering-topics": _load_registry_slugs("engineering-topics.yaml"),
+        "interests-topics": _load_registry_slugs("interests-topics.yaml"),
     }
 
 
 def format_registry_slugs(registries: dict[str, set[str]]) -> str:
-    """Compact representation of all three registries for the LLM prompt."""
+    """Compact representation of all registries for the LLM prompt."""
     parts = []
     for label, slugs in (
         ("clients", registries.get("clients", set())),
         ("topics", registries.get("topics", set())),
         ("industries", registries.get("industries", set())),
+        ("engineering-topics", registries.get("engineering-topics", set())),
+        ("interests-topics", registries.get("interests-topics", set())),
     ):
         if not slugs:
             continue
@@ -114,13 +153,22 @@ def format_registry_slugs(registries: dict[str, set[str]]) -> str:
 # ---------------------------------------------------------------------------
 
 def _classify_path(rel_path: str) -> str:
-    """Bucket a wiki path into a dimension label for proportional sampling."""
+    """Bucket a wiki path into a dimension label for proportional sampling.
+
+    Five content namespaces + four flat areas. Proportional sampling
+    gives each bucket equal char budget, so engineering gets the same
+    attention as knowledge even though the file counts differ.
+    """
     if rel_path.startswith("wiki/clients/"):
         return "clients"
     if rel_path.startswith("wiki/knowledge/"):
         return "knowledge"
     if rel_path.startswith("wiki/industries/"):
         return "industries"
+    if rel_path.startswith("wiki/engineering/"):
+        return "engineering"
+    if rel_path.startswith("wiki/interests/"):
+        return "interests"
     if rel_path.startswith("wiki/concepts/"):
         return "concepts"
     if rel_path.startswith("wiki/articles/"):
@@ -279,6 +327,20 @@ def validate_stub_location(location: str, registries: dict[str, set[str]]) -> tu
         if slug in registries.get("industries", set()):
             return True, f"industry '{slug}' in registry"
         return False, f"industry '{slug}' not in industries.yaml"
+    if area == "engineering":
+        if len(parts) < 3:
+            return False, "missing engineering topic slug"
+        slug = parts[2]
+        if slug in registries.get("engineering-topics", set()):
+            return True, f"engineering topic '{slug}' in registry"
+        return False, f"engineering topic '{slug}' not in engineering-topics.yaml"
+    if area == "interests":
+        if len(parts) < 3:
+            return False, "missing interests topic slug"
+        slug = parts[2]
+        if slug in registries.get("interests-topics", set()):
+            return True, f"interests topic '{slug}' in registry"
+        return False, f"interests topic '{slug}' not in interests-topics.yaml"
     if area == "clients":
         if len(parts) < 4:
             return False, "missing client slug"
@@ -380,9 +442,9 @@ def find_missing_index_entries(articles: dict[str, str], index_md: str) -> list[
             # Client folders are self-indexed via wiki/clients/<status>/<slug>/_index.md
             continue
 
-        if len(parts) >= 2 and parts[1] in ("knowledge", "industries"):
+        if len(parts) >= 2 and parts[1] in ("knowledge", "industries", "engineering", "interests"):
             # Only the Layer 3 anchor (index.md) belongs in the global index;
-            # skip every Layer 2 fragment.
+            # skip every Layer 2 fragment across all topic-bearing namespaces.
             if Path(path).name != "index.md":
                 continue
 
@@ -393,6 +455,144 @@ def find_missing_index_entries(articles: dict[str, str], index_md: str) -> list[
             title = title_match.group(1) if title_match else Path(path).stem
             missing.append(f"- [[{short}]] — {title}")
     return missing
+
+
+def _registry_area_map() -> list[tuple[str, str, str]]:
+    """Return triples of (wiki_area, registry_key, display_name) for the
+    four topic-bearing namespaces that have a matching registry file.
+    Clients are handled separately because their directory layout is
+    clients/<status>/<slug>/ not clients/<slug>/.
+    """
+    return [
+        ("knowledge",   "topics",             "business topic"),
+        ("industries",  "industries",         "industry"),
+        ("engineering", "engineering-topics", "engineering topic"),
+        ("interests",   "interests-topics",   "interests topic"),
+    ]
+
+
+def detect_registry_drift(registries: dict[str, set[str]]) -> list[dict]:
+    """Find directories on disk that exist in wiki/<area>/<slug>/ but
+    aren't present in the matching registry YAML.
+
+    These are the same kind of off-registry directories that the April
+    rebuild fixed by enforcing registry matching at compile time. If
+    any reappear, something upstream is creating them silently (a
+    compiler regression, a manual mkdir, a rename that left the old
+    folder behind).
+
+    Returns a list of dicts: {area, slug, fragment_count, path}
+    """
+    drift: list[dict] = []
+    for area, registry_key, _ in _registry_area_map():
+        area_dir = WIKI_DIR / area
+        if not area_dir.exists():
+            continue
+        canonical = registries.get(registry_key, set())
+        for child in sorted(area_dir.iterdir()):
+            if not child.is_dir():
+                continue
+            slug = child.name
+            if slug in canonical:
+                continue
+            frag_count = sum(
+                1 for f in child.rglob("*.md")
+                if f.name not in ("_index.md", "index.md", "README.md", "PLACEHOLDER.md")
+            )
+            drift.append({
+                "area": area,
+                "slug": slug,
+                "fragment_count": frag_count,
+                "path": f"wiki/{area}/{slug}",
+            })
+    return drift
+
+
+def detect_untouched_captures() -> list[dict]:
+    """Find fragments in capture/external/ that the classifier never
+    touched. These have content but no `classification_confidence`
+    field in frontmatter — meaning they were ingested but the
+    classifier hasn't run, or ran and crashed before writing back.
+
+    After today's classifier fix this should always be empty: the
+    classifier now routes unclassified fragments to
+    wiki/engineering/unclassified/ directly, leaving capture empty.
+    Worth detecting anyway so we notice if a future ingest fails
+    silently.
+    """
+    untouched: list[dict] = []
+    external_dir = CAPTURE_DIR / "external"
+    if not external_dir.exists():
+        return untouched
+    for f in external_dir.rglob("*.md"):
+        try:
+            text = f.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        if not text.startswith("---"):
+            continue
+        try:
+            end = text.index("\n---\n", 4)
+        except ValueError:
+            continue
+        try:
+            fm = yaml.safe_load(text[4:end]) or {}
+        except yaml.YAMLError:
+            continue
+        if not isinstance(fm, dict):
+            continue
+        if fm.get("classification_confidence"):
+            continue  # classifier has seen it
+        untouched.append({
+            "path": str(f.relative_to(ROOT)),
+            "title": fm.get("title", f.stem),
+            "source_project": fm.get("source_project", ""),
+            "source_date": str(fm.get("source_date", ""))[:10],
+        })
+    return untouched
+
+
+def detect_empty_registry_entries(registries: dict[str, set[str]]) -> list[dict]:
+    """Find registry entries (slugs in *.yaml) with zero fragments on
+    disk. These are candidates for either:
+      - Cleanup (slug is genuinely unused, remove from registry)
+      - Content backfill (slug is a real topic but has no material yet)
+
+    Topics flagged `synthesize: false` (like engineering `unclassified`)
+    are skipped because they're expected to accumulate content over
+    time without being synthesized — an empty `unclassified` bucket
+    is a healthy state, not a drift warning.
+
+    Returns a list of {area, slug, registry} dicts.
+    """
+    # Build the set of non-synth slugs per registry so we can skip them
+    non_synth = {
+        "engineering-topics": _load_non_synthesizable_slugs("engineering-topics.yaml"),
+        "interests-topics":   _load_non_synthesizable_slugs("interests-topics.yaml"),
+    }
+
+    empty: list[dict] = []
+    for area, registry_key, _ in _registry_area_map():
+        area_dir = WIKI_DIR / area
+        canonical = registries.get(registry_key, set())
+        skip = non_synth.get(registry_key, set())
+        for slug in sorted(canonical):
+            if slug in skip:
+                continue
+            topic_dir = area_dir / slug
+            frag_count = 0
+            if topic_dir.exists():
+                frag_count = sum(
+                    1 for f in topic_dir.rglob("*.md")
+                    if f.name not in ("_index.md", "index.md", "README.md", "PLACEHOLDER.md")
+                )
+            if frag_count == 0:
+                empty.append({
+                    "area": area,
+                    "slug": slug,
+                    "registry": f"{registry_key}.yaml",
+                })
+    return empty
 
 
 def create_stub(concept: str, slug: str, mentioned_in: list[str],
@@ -515,6 +715,64 @@ def generate_report(analysis: dict, actions: list[str], deferred: list[str],
             )
         lines.append("")
 
+    # === Deterministic structural checks ===
+
+    # Registry drift — directories on disk not in the registry
+    drift = analysis.get("registry_drift", [])
+    if drift:
+        lines.append(f"## Registry Drift ({len(drift)})\n")
+        lines.append(
+            "_Directories that exist on disk but aren't in the matching registry. "
+            "Either add them to the registry, merge their content into a canonical "
+            "topic, or delete them. Left unchecked, these silently inflate filesystem "
+            "counts above registered-topic counts._\n"
+        )
+        for d in drift:
+            lines.append(
+                f"- `{d['path']}` — {d['fragment_count']} fragment"
+                f"{'s' if d['fragment_count'] != 1 else ''} "
+                f"(not in {d['area']} registry)"
+            )
+        lines.append("")
+
+    # Untouched capture fragments — ingested but never classified
+    untouched = analysis.get("untouched_captures", [])
+    if untouched:
+        lines.append(f"## Untouched Capture Fragments ({len(untouched)})\n")
+        lines.append(
+            "_Fragments in capture/external/ that have content but no "
+            "`classification_confidence` field — meaning the classifier "
+            "hasn't run against them. Usually means an ingest succeeded "
+            "but the follow-up classification pass was skipped or failed._\n"
+        )
+        for u in untouched[:30]:
+            proj = f" [{u['source_project']}]" if u.get("source_project") else ""
+            date = f" {u['source_date']}" if u.get("source_date") else ""
+            lines.append(f"- `{u['path']}`{proj}{date} — {u['title']}")
+        if len(untouched) > 30:
+            lines.append(f"- … and {len(untouched) - 30} more")
+        lines.append("")
+
+    # Empty registry entries — slugs in YAML with no fragments on disk
+    empty_entries = analysis.get("empty_registry_entries", [])
+    if empty_entries:
+        lines.append(f"## Empty Registry Entries ({len(empty_entries)})\n")
+        lines.append(
+            "_Slugs registered in a taxonomy YAML that have zero fragments "
+            "on disk. Candidates for cleanup (remove from registry) or "
+            "backfill (add content). Topics flagged `synthesize: false` "
+            "are excluded from this check._\n"
+        )
+        # Group by area for readability
+        by_area: dict[str, list[dict]] = {}
+        for e in empty_entries:
+            by_area.setdefault(e["area"], []).append(e)
+        for area in sorted(by_area):
+            entries = by_area[area]
+            slugs = ", ".join(f"`{e['slug']}`" for e in entries)
+            lines.append(f"- **{area}** ({len(entries)}): {slugs}")
+        lines.append("")
+
     # Summary
     lines.append("## Summary\n")
     lines.append(f"- {len(actions)} auto-fixes applied")
@@ -524,6 +782,9 @@ def generate_report(analysis: dict, actions: list[str], deferred: list[str],
     lines.append(f"- {len(flag_gaps)} new article candidates")
     lines.append(f"- {len(connections)} connections suggested")
     lines.append(f"- {len(status_changes)} client status changes flagged")
+    lines.append(f"- {len(drift)} off-registry directories")
+    lines.append(f"- {len(untouched)} untouched capture fragments")
+    lines.append(f"- {len(empty_entries)} empty registry entries")
     lines.append("")
 
     return "\n".join(lines)
@@ -588,6 +849,13 @@ def main():
             "contradictions": [], "orphans": [], "gaps": [],
             "suggested_connections": [], "client_status_changes": [],
         }
+
+    # Deterministic structural checks that don't need the LLM. These
+    # detect issues the compiler + classifier shouldn't be producing
+    # anymore — the linter is the safety net that surfaces drift.
+    analysis["registry_drift"] = detect_registry_drift(registries)
+    analysis["untouched_captures"] = detect_untouched_captures()
+    analysis["empty_registry_entries"] = detect_empty_registry_entries(registries)
 
     # Apply auto-fixes (unless dry-run)
     actions = []
