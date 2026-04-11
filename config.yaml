@@ -32,38 +32,73 @@ compiler:
   planning_model: claude-haiku-4-5-20251001   # fast model for filing decisions
   writing_model: claude-sonnet-4-6            # quality model for article content
 
-# Domain stability profiles — how fast different knowledge domains change
+# Domain stability profiles — how fast different knowledge domains change.
+# Used by both the synthesizer (to set default rate_of_change and
+# web_monitoring_frequency on new Layer 3 articles) and the evolution
+# detector (to set per-domain contradiction sensitivity thresholds).
 domain_stability:
   fundamental:
     description: "Human psychology, direct response, core principles"
-    change_sensitivity: 0.5
+    change_sensitivity: 0.5     # contradiction threshold for evolution detector (50% of new fragments must contradict)
     web_monitoring: quarterly
     expected_half_life: decades
+    rate_of_change: stable
     examples: [copywriting, direct-response, brand-psychology]
   strategy:
     description: "Marketing strategy, channel strategy, buyer journey"
     change_sensitivity: 0.3
     web_monitoring: quarterly
     expected_half_life: years
+    rate_of_change: slow
     examples: [content-marketing, brand-strategy, go-to-market]
   platform-tactics:
     description: "How to use platforms effectively"
     change_sensitivity: 0.2
     web_monitoring: monthly
     expected_half_life: years-to-months
+    rate_of_change: moderate
     examples: [google-ads, seo, meta-ads, email-marketing]
   platform-mechanics:
     description: "Specific platform rules, settings, algorithms"
     change_sensitivity: 0.1
     web_monitoring: weekly
     expected_half_life: months
+    rate_of_change: high
     examples: [google-ads-bidding, meta-targeting, algorithm-specifics]
   regulatory:
     description: "Laws, policies, compliance requirements"
-    change_sensitivity: 0.0
+    change_sensitivity: 0.0     # any contradicting fragment triggers evolution
     web_monitoring: continuous
     expected_half_life: unpredictable
+    rate_of_change: volatile
     examples: [fda-compliance, hipaa, privacy-law, platform-policies]
+
+# Evolution detector — weekly scan for signs Layer 3 knowledge is changing
+evolution:
+  schedule: "0 8 * * 0"         # Sundays at 08:00 UTC (after the Saturday lint)
+  stale_threshold_days: 180     # Check 4 (confidence decay): article is "old" if last_updated > this many days ago
+  platform_trigger_keywords:    # Check 3: explicit platform/regulatory change language
+    - "announced"
+    - "policy change"
+    - "algorithm update"
+    - "new requirement"
+    - "effective "
+    - "banned"
+    - "required as of"
+    - "google announced"
+    - "meta changed"
+    - "as of [date]"
+  contradiction_keywords:       # Check 1: language signaling disagreement with established patterns
+    - "no longer"
+    - "deprecated"
+    - "changed"
+    - "previously"
+    - "used to"
+    - "now requires"
+    - "recent update"
+    - "as of"
+    - "replaced by"
+    - "superseded by"
 
 # Synthesis settings — Layer 3 knowledge generation
 synthesis:

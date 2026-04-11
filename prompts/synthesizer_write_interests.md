@@ -225,18 +225,37 @@ Z tertiary, W personal reflections. Material spans [earliest] to
 title: "[Topic Name]"
 layer: 3
 namespace: interests
-domain_type: fundamental  # interests are slow-moving, decades-scale
+domain_type: fundamental              # interests are slow-moving, decades-scale
 current_status: current
 confidence: [low | medium | high | established]
 evidence_count: [N]
 supporting_sources: [top 10 primary + secondary paths]
+contradicting_sources: []
+contradicting_count: 0
 first_seen: "[earliest source date]"
 last_updated: "[today]"
 hypothesis: [true if fewer than 3 primary sources]
+rate_of_change: stable                # interests domain is typically multi-generational
+web_monitoring_frequency: quarterly   # minimal — the classics don't change weekly
 fragment_count: [total fragments read]
+# Evolution tracking (auto-maintained by agents/evolution_detector.py)
+evolution_timeline: []
+evolution_start: null
+superseded_by: null
+superseded_date: null
+deprecation_notice: null
 tags: []
 ---
 ```
+
+**Evolution tracking for interests.** The interests namespace
+rarely needs evolution tracking because the material itself is
+slow-moving — Seneca's letters don't get deprecated. But your
+*understanding* of them can evolve as you read more primary and
+secondary sources, so the fields exist and will be updated if the
+evolution detector finds new contradicting evidence in later
+readings. Leave them empty/null at synthesis time; the detector
+owns them.
 
 ## Confidence Rules
 

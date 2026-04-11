@@ -267,12 +267,25 @@ first_seen: "2025-10-15"              # earliest source date
 last_updated: "2026-04-06"
 supporting_sources: []                 # source docs that support this knowledge
 contradicting_sources: []              # source docs that contradict
+contradicting_count: 0                 # count of contradicting_sources (auto-computed)
 hypothesis: false                      # true if unvalidated theory
-evolution_timeline: []                 # chronological changes tracked
+evolution_timeline: []                 # list of {date, event, note} — auto-appended by evolution_detector
+evolution_start: null                  # date first detected that knowledge is changing
 superseded_by: null                    # link to replacement article if deprecated
+superseded_date: null                  # date the article was superseded
+deprecation_notice: null               # banner text shown at top of article if superseded
 web_monitoring_frequency: monthly      # none | quarterly | monthly | weekly | continuous
 ---
 ```
+
+**Evolution tracking fields** (`evolution_timeline`, `evolution_start`,
+`current_status`, `contradicting_count`, `superseded_by`,
+`superseded_date`, `deprecation_notice`) are set or updated
+automatically by `agents/evolution_detector.py` on its weekly run
+(Sundays 08:00 UTC). They track when a Layer 3 article's knowledge
+is changing and flag it for re-synthesis or supersession. The
+synthesizer's write prompt sets the default values at synthesis
+time; the detector mutates them over time as new evidence arrives.
 
 ### Layer 4 articles (`wiki/layer4/`)
 

@@ -250,13 +250,31 @@ confidence: [based on evidence_count rules]
 evidence_count: [N]
 supporting_projects: [list of project slugs that contributed fragments]
 supporting_sources: [top 10 most relevant paths]
+contradicting_sources: []
+contradicting_count: 0
 first_seen: "[earliest source date]"
 last_updated: "[today]"
 hypothesis: [true if evidence_count < 3]
+rate_of_change: [from domain_stability profile — engineering default is "high"]
+web_monitoring_frequency: [from domain_stability profile]
 fragment_count: [total fragments read]
+# Evolution tracking (auto-maintained by agents/evolution_detector.py)
+evolution_timeline: []
+evolution_start: null
+superseded_by: null
+superseded_date: null
+deprecation_notice: null
 tags: []
 ---
 ```
+
+**Evolution tracking defaults.** The evolution-related fields are
+initialized empty/null at synthesis time. `agents/evolution_detector.py`
+mutates them weekly as new commits arrive. Do not populate these
+fields yourself — the detector owns them. Engineering topics tend
+to evolve fast (Next.js 14 → 15, Supabase auth changes, Anthropic
+SDK v0.30 → v0.40), so this namespace will see more
+`current_status: evolving` transitions than the business namespace.
 
 ## Confidence Rules
 

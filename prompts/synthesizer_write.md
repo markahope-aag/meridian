@@ -301,15 +301,30 @@ confidence: [based on evidence_count rules]
 evidence_count: [N]
 supporting_sources: [top 10 most relevant paths]
 contradicting_sources: []
+contradicting_count: 0                 # count of contradicting_sources
 first_seen: "[earliest source date]"
 last_updated: "[today]"
 hypothesis: [true if evidence_count < 5]
-rate_of_change: [stable|slow|moderate|high|volatile]
-web_monitoring_frequency: [from domain_stability]
+rate_of_change: [from domain_stability profile — stable|slow|moderate|high|volatile]
+web_monitoring_frequency: [from domain_stability profile]
 fragment_count: [total Layer 2 articles read]
+# Evolution tracking (auto-maintained by agents/evolution_detector.py)
+evolution_timeline: []                 # chronological changes — detector appends entries
+evolution_start: null                  # date first detected that knowledge is changing
+superseded_by: null                    # path to replacement article if superseded
+superseded_date: null                  # date the article was superseded
+deprecation_notice: null               # banner text at top of article if superseded
 tags: []
 ---
 ```
+
+**Evolution tracking defaults.** The evolution-related fields
+(`evolution_timeline`, `evolution_start`, `superseded_by`,
+`superseded_date`, `deprecation_notice`, `contradicting_count`) are
+initialized to empty/null at synthesis time. `agents/evolution_detector.py`
+mutates them over time as new evidence arrives and contradictions
+accumulate. Do not populate these fields yourself — the detector
+owns them.
 
 ## Confidence Rules
 
