@@ -2,27 +2,46 @@
 {% block title %}Knowledge Graph — Meridian{% endblock %}
 {% block content %}
 <h1 style="margin-bottom: 8px;">Knowledge Graph</h1>
-<div style="color: var(--text-muted); margin-bottom: 16px;">
-    Force-directed view of topics, industries, clients, and projects.
-    Node size reflects fragment count. Click a node to navigate.
+<div style="color: var(--text-muted); margin-bottom: 16px; font-size: 13px;">
+    Topics, industries, clients, and projects and the relationships between them.
+    Click a node to focus its neighborhood. Zoom in to see labels.
 </div>
 
 <div id="graph-controls" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center;">
-    <input type="search" id="graph-search" class="fragment-search" placeholder="Search nodes…" autocomplete="off" style="min-width: 240px;">
+    <input type="search" id="graph-search" class="fragment-search" placeholder="Search nodes…" autocomplete="off" style="min-width: 220px;">
     <button type="button" class="chip active" data-ns="all">All</button>
-    <button type="button" class="chip" data-ns="business">Business topics</button>
-    <button type="button" class="chip" data-ns="engineering">Engineering topics</button>
+    <button type="button" class="chip" data-ns="business">Business</button>
+    <button type="button" class="chip" data-ns="engineering">Engineering</button>
     <button type="button" class="chip" data-ns="industry">Industries</button>
     <button type="button" class="chip" data-ns="client">Clients</button>
     <button type="button" class="chip" data-ns="project">Projects</button>
-    <button type="button" id="graph-fit" class="download-btn" style="margin-left: auto;">Fit to screen</button>
+    <label style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); margin-left: 8px;">
+        <input type="checkbox" id="hide-orphans" checked>
+        Hide isolated
+    </label>
+    <button type="button" id="graph-relayout" class="download-btn" style="margin-left: auto;">Re-layout</button>
+    <button type="button" id="graph-fit" class="download-btn">Fit</button>
+    <button type="button" id="graph-reset" class="download-btn">Reset focus</button>
 </div>
 
-<div id="cy" style="height: 75vh; min-height: 560px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;"></div>
+<div id="cy" style="height: 82vh; min-height: 620px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;"></div>
 
-<div id="graph-status" style="color: var(--text-muted); font-size: 12px; margin-top: 8px;">Loading graph…</div>
+<div id="graph-status" style="color: var(--text-muted); font-size: 12px; margin-top: 8px; min-height: 18px;">Loading graph…</div>
+
+<!-- Legend -->
+<div style="display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; font-size: 11px; color: var(--text-muted);">
+    <span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #58a6ff; vertical-align: middle;"></span> Business topic</span>
+    <span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #f0883e; vertical-align: middle;"></span> Engineering topic</span>
+    <span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #bc8cff; vertical-align: middle;"></span> Industry</span>
+    <span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #3fb950; vertical-align: middle;"></span> Client</span>
+    <span><span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #d29922; vertical-align: middle;"></span> Project</span>
+    <span style="margin-left: 12px;"><span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: transparent; border: 2px solid #3fb950; vertical-align: middle;"></span> Has Layer 3 synthesis</span>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/layout-base@2.0.1/layout-base.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cose-base@2.2.0/cose-base.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-fcose@2.2.0/cytoscape-fcose.js"></script>
 <script>
 (async function () {
     const status = document.getElementById('graph-status');
@@ -37,12 +56,18 @@
         return;
     }
 
-    status.textContent = `${data.stats.node_count} nodes · ${data.stats.edge_count} edges`;
+    // Which nodes have at least one edge? Used for the orphan filter.
+    const connectedIds = new Set();
+    data.edges.forEach(e => {
+        connectedIds.add(e.data.source);
+        connectedIds.add(e.data.target);
+    });
+    const orphanCount = data.nodes.filter(n => !connectedIds.has(n.data.id)).length;
 
     const colorByNamespace = {
         business:    '#58a6ff',
         engineering: '#f0883e',
-        industry:    '#a371f7',
+        industry:    '#bc8cff',
         client:      '#3fb950',
         project:     '#d29922',
     };
@@ -50,6 +75,9 @@
     const cy = cytoscape({
         container: cyEl,
         elements: [...data.nodes, ...data.edges],
+        minZoom: 0.2,
+        maxZoom: 4,
+        wheelSensitivity: 0.2,
         style: [
             {
                 selector: 'node',
@@ -57,22 +85,32 @@
                     'background-color': (ele) => colorByNamespace[ele.data('namespace')] || '#8b949e',
                     'label': 'data(label)',
                     'color': '#e6edf3',
-                    'font-size': '10px',
-                    'text-valign': 'bottom',
-                    'text-halign': 'center',
-                    'text-margin-y': 4,
+                    'font-size': '11px',
+                    'font-weight': 500,
+                    'text-valign': 'center',
+                    'text-halign': 'right',
+                    'text-margin-x': 6,
+                    'text-background-color': '#0d1117',
+                    'text-background-opacity': 0.85,
+                    'text-background-padding': '3px',
+                    'text-background-shape': 'roundrectangle',
+                    'text-border-color': '#30363d',
+                    'text-border-width': 1,
+                    'text-border-opacity': 1,
+                    'text-max-width': 140,
+                    'text-wrap': 'ellipsis',
                     'width': 'data(size)',
                     'height': 'data(size)',
-                    'border-width': 1,
+                    'border-width': 1.5,
                     'border-color': '#0d1117',
-                    'min-zoomed-font-size': 8,
+                    'min-zoomed-font-size': 10,
                 }
             },
             {
-                selector: 'node[has_l3]',
+                selector: 'node[?has_l3]',
                 style: {
                     'border-color': '#3fb950',
-                    'border-width': 2,
+                    'border-width': 2.5,
                 }
             },
             {
@@ -81,75 +119,172 @@
                     'width': 1,
                     'line-color': '#30363d',
                     'curve-style': 'bezier',
-                    'opacity': 0.6,
+                    'opacity': 0.55,
                 }
             },
             {
                 selector: 'edge[kind = "related"]',
                 style: {
                     'line-color': '#58a6ff',
-                    'opacity': 0.5,
+                    'opacity': 0.45,
                 }
             },
             {
-                selector: 'node:selected, node.highlighted',
+                selector: 'edge[kind = "has_commits"]',
+                style: {
+                    'line-color': '#f0883e',
+                    'opacity': 0.4,
+                }
+            },
+            {
+                selector: 'edge[kind = "contains"]',
+                style: {
+                    'line-color': '#bc8cff',
+                    'opacity': 0.4,
+                }
+            },
+            {
+                selector: 'edge[kind = "cited_by"]',
+                style: {
+                    'line-color': '#3fb950',
+                    'opacity': 0.4,
+                }
+            },
+            {
+                selector: 'node.focused',
                 style: {
                     'border-color': '#f85149',
-                    'border-width': 3,
+                    'border-width': 3.5,
                 }
             },
             {
-                selector: 'node.dim',
+                selector: 'node.neighbor',
                 style: {
-                    'opacity': 0.15,
+                    'border-color': '#58a6ff',
+                    'border-width': 2.5,
                 }
             },
             {
-                selector: 'edge.dim',
+                selector: 'edge.neighbor',
+                style: {
+                    'line-color': '#58a6ff',
+                    'width': 2,
+                    'opacity': 0.9,
+                }
+            },
+            {
+                selector: '.dim',
                 style: {
                     'opacity': 0.1,
                 }
             }
         ],
-        layout: {
-            name: 'cose',
+    });
+
+    // Hide isolated nodes by default (reduces visual clutter)
+    const hideOrphansCb = document.getElementById('hide-orphans');
+    function applyOrphanFilter() {
+        if (hideOrphansCb.checked) {
+            cy.nodes().forEach(n => {
+                if (!connectedIds.has(n.id())) n.style('display', 'none');
+                else n.style('display', 'element');
+            });
+        } else {
+            cy.nodes().style('display', 'element');
+        }
+    }
+    applyOrphanFilter();
+
+    function runLayout() {
+        const visibleNodes = cy.nodes(':visible');
+        const visibleEdges = cy.edges().filter(e => e.source().visible() && e.target().visible());
+        const layout = cy.collection([...visibleNodes, ...visibleEdges]).layout({
+            name: 'fcose',
+            quality: 'default',
+            randomize: true,
             animate: false,
-            nodeRepulsion: 6000,
-            idealEdgeLength: 90,
-            edgeElasticity: 0.4,
-            gravity: 0.3,
-            numIter: 1500,
+            nodeRepulsion: 10000,
+            idealEdgeLength: 140,
+            edgeElasticity: 0.45,
+            nestingFactor: 0.1,
+            gravity: 0.25,
+            gravityRange: 3.8,
+            numIter: 2500,
+            tile: true,                   // lay out disconnected components as a grid-like tile
+            tilingPaddingVertical: 30,
+            tilingPaddingHorizontal: 30,
             fit: true,
             padding: 40,
-        },
-        wheelSensitivity: 0.2,
-    });
+            nodeDimensionsIncludeLabels: false,
+        });
+        layout.run();
+    }
 
-    // Click navigation
+    runLayout();
+
+    // Status bar
+    function setStatus(text) {
+        status.textContent = text;
+    }
+    const defaultStatus = () => {
+        const visible = cy.nodes(':visible').length;
+        setStatus(`${visible} / ${data.stats.node_count} nodes · ${data.stats.edge_count} edges` +
+                  (orphanCount ? ` · ${orphanCount} isolated` : ''));
+    };
+    defaultStatus();
+
+    // Focus mode — click a node to highlight its neighborhood
+    let focusedNode = null;
+    function clearFocus() {
+        focusedNode = null;
+        cy.elements().removeClass('dim focused neighbor');
+        defaultStatus();
+    }
     cy.on('tap', 'node', (evt) => {
-        const href = evt.target.data('href');
-        if (href) window.location.href = href;
+        const n = evt.target;
+        if (focusedNode && focusedNode.id() === n.id()) {
+            // Second click on same node = navigate
+            const href = n.data('href');
+            if (href) window.location.href = href;
+            return;
+        }
+        focusedNode = n;
+        const neighborhood = n.closedNeighborhood();
+        cy.elements().addClass('dim');
+        neighborhood.removeClass('dim').addClass('neighbor');
+        n.removeClass('neighbor').addClass('focused');
+        const parts = [n.data('label')];
+        if (n.data('fragment_count') !== undefined) parts.push(n.data('fragment_count') + ' frags');
+        if (n.data('has_l3')) parts.push('L3');
+        parts.push(`${neighborhood.nodes().length - 1} connections`);
+        parts.push('click again to navigate');
+        setStatus(parts.join(' · '));
+    });
+    cy.on('tap', (evt) => {
+        if (evt.target === cy) clearFocus();
     });
 
-    // Hover tooltip via cytoscape's built-in title (the data.label shows already)
+    // Hover details (only when not in focus mode)
     cy.on('mouseover', 'node', (evt) => {
+        if (focusedNode) return;
         const n = evt.target;
         const parts = [n.data('label')];
         if (n.data('fragment_count') !== undefined) parts.push(n.data('fragment_count') + ' frags');
         if (n.data('has_l3')) parts.push('L3');
-        status.textContent = parts.join(' · ');
+        setStatus(parts.join(' · '));
     });
     cy.on('mouseout', 'node', () => {
-        status.textContent = `${data.stats.node_count} nodes · ${data.stats.edge_count} edges`;
+        if (!focusedNode) defaultStatus();
     });
 
-    // Filter by namespace
+    // Namespace filter chips
     const chips = document.querySelectorAll('#graph-controls .chip');
     chips.forEach(chip => {
         chip.addEventListener('click', () => {
             chips.forEach(c => c.classList.remove('active'));
             chip.classList.add('active');
             const ns = chip.dataset.ns;
+            clearFocus();
             if (ns === 'all') {
                 cy.elements().removeClass('dim');
             } else {
@@ -158,10 +293,11 @@
                     else n.addClass('dim');
                 });
                 cy.edges().forEach(e => {
-                    const s = e.source();
-                    const t = e.target();
-                    if (s.data('namespace') === ns || t.data('namespace') === ns) e.removeClass('dim');
-                    else e.addClass('dim');
+                    if (e.source().data('namespace') === ns || e.target().data('namespace') === ns) {
+                        e.removeClass('dim');
+                    } else {
+                        e.addClass('dim');
+                    }
                 });
             }
         });
@@ -170,16 +306,30 @@
     // Search highlighting
     const search = document.getElementById('graph-search');
     search.addEventListener('input', (e) => {
-        const q = e.target.value.toLowerCase();
-        cy.nodes().removeClass('highlighted');
-        if (!q) return;
+        const q = e.target.value.toLowerCase().trim();
+        if (!q) {
+            cy.nodes().removeClass('dim');
+            return;
+        }
         cy.nodes().forEach(n => {
-            if (n.data('label').toLowerCase().includes(q)) n.addClass('highlighted');
+            if (n.data('label').toLowerCase().includes(q)) n.removeClass('dim');
+            else n.addClass('dim');
         });
     });
 
-    // Fit button
+    // Buttons
+    document.getElementById('graph-relayout').addEventListener('click', runLayout);
     document.getElementById('graph-fit').addEventListener('click', () => cy.fit(null, 40));
+    document.getElementById('graph-reset').addEventListener('click', clearFocus);
+    hideOrphansCb.addEventListener('change', () => {
+        applyOrphanFilter();
+        runLayout();
+    });
+
+    // Escape key clears focus
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') clearFocus();
+    });
 })();
 </script>
 {% endblock %}
