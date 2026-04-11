@@ -289,19 +289,72 @@ time; the detector mutates them over time as new evidence arrives.
 
 ### Layer 4 articles (`wiki/layer4/`)
 
-Layer 4 articles capture cross-topic patterns, emerging trends, knowledge drift,
-and unresolved contradictions:
+Layer 4 is the **conceptual layer**. Articles in `wiki/layer4/` are
+written by `agents/conceptual_agent.py`, not by the compiler or
+synthesizer. They contain insight that only emerges from reading
+across multiple Layer 3 articles simultaneously — patterns, emerging
+trends, resolved contradictions, and drift flags.
+
+```
+wiki/layer4/
+├── _index.md                 # auto-maintained by conceptual agent
+├── patterns/                 # non-obvious cross-topic connections
+├── emergence/                # proto-patterns (not yet established)
+├── contradictions/           # resolved cross-topic contradictions
+└── drift/                    # created by Phase 6 evolution detector
+```
 
 ```yaml
 ---
+title: "Landing Page Quality as a Google Ads Forcing Function"
 layer: 4
-concept_type: pattern                  # pattern | drift | emergence | contradiction
-topics_connected: []                   # list of Layer 3 topic slugs this connects
-confidence: medium                     # low | medium | high | established
-first_detected: "2026-03-15"
-last_updated: "2026-04-06"
+concept_type: pattern                  # pattern | emergence | contradiction | drift
+topics_connected:                      # Layer 3 article paths this concept binds
+  - wiki/knowledge/google-ads/index.md
+  - wiki/knowledge/website/index.md
+industries_connected: []               # Layer 3 industry paths, if applicable
+confidence: low                        # low | medium | high | established
+first_detected: "2026-04-12"           # when the conceptual agent first noticed it
+last_updated: "2026-04-12"
+hypothesis: true                       # true until evidence reaches medium+ confidence
+supporting_evidence_count: 2           # updated by Mode B (pattern maturation)
+contradicting_evidence_count: 0
+status: active                         # active | resolved | superseded
 ---
 ```
+
+**Rules for linter, compiler, and other agents:**
+
+- **Never flag Layer 4 articles as orphans.** They're not reachable
+  via wikilinks from Layer 2 fragments by design — nothing in the
+  raw corpus knows they exist until the conceptual agent writes them.
+- **Never apply Layer 2/3 quality rules to Layer 4.** No Layer 4
+  article has `client_source`, `source_docs`, or the Layer 3
+  confidence-gradation vocabulary. Its evidence lives in the
+  `topics_connected` links.
+- **Never suggest a Layer 4 connection yourself.** The conceptual
+  agent makes that judgment across the full L3 map. The linter can
+  report stats but must not write speculative pattern stubs.
+- **Registry enforcement still applies.** A Layer 4 article's
+  `topics_connected` and `industries_connected` lists must reference
+  existing canonical slugs in `topics.yaml` and `industries.yaml`.
+  No inventing new topic slugs in a Layer 4 article.
+- **The linter should report Layer 4 article count** in its summary
+  section but otherwise leave Layer 4 files untouched — no
+  backlinks rebuilding, no index-entry auto-adding.
+- **Engineering and interests namespaces are excluded from Layer 4
+  analysis** in Phase 7. The conceptual agent reads only
+  `wiki/knowledge/` and `wiki/industries/` Layer 3 articles. This
+  may expand in a later phase once engineering has enough L3
+  articles to produce cross-topic patterns.
+
+**Quality standard** (the hard bar): a Layer 4 article belongs in
+Layer 4 if and only if it contains insight that could not have been
+written without reading multiple Layer 3 articles simultaneously. A
+summary of a single Layer 3 article is not Layer 4 — it belongs in
+that article's own `## Current Understanding` section. A connection
+between two Layer 3 articles that adds something neither contains
+alone — that is Layer 4.
 
 ### Capture documents (`capture/`)
 
@@ -638,3 +691,95 @@ Hourly via n8n. Detects pipeline state that the normal flow has left stuck:
 - **Orphan extraction caches** referencing fragments that no longer exist — log + mark for cleanup
 
 The watchdog never deletes content. It only re-triggers, resets state, or logs.
+
+## Layer 4 Conceptual Protocol
+
+The conceptual agent (`agents/conceptual_agent.py`) runs four modes on
+a schedule. Unlike every other pipeline stage, Layer 4 is not triggered
+by new documents — it runs continuously across the *existing* knowledge
+base looking for what cannot be seen from any single Layer 3 article.
+
+All four modes share a cached in-memory map of every Layer 3 article
+in `wiki/knowledge/` and `wiki/industries/` (topic slug → summary +
+key claims + client mentions; industry slug → summary + key claims;
+plus cross-references). The cache lives at `cache/layer4/l3_map.json`
+and is invalidated when any index.md mtime is newer than the cache
+or the schema version drifts.
+
+### Mode A — Connection Discovery  (Sunday 09:00 UTC)
+
+Reads the L3 map, finds non-obvious cross-topic connections, writes
+at most 5 new Layer 4 pattern articles per run to
+`wiki/layer4/patterns/`. Hard quality gate:
+
+1. Connection must not already appear in any existing `## Related
+   Topics` section of the source articles.
+2. Must have at least 2 independent pieces of evidence.
+3. Must be statable in one sentence that would surprise a competent
+   practitioner.
+
+Uses Sonnet for writing. Prompt lives at
+`prompts/conceptual_connections.md`.
+
+### Mode B — Pattern Maturation  (Sunday 09:30 UTC)
+
+Walks existing `wiki/layer4/patterns/*.md` articles. For each one
+with `hypothesis: true`, counts new supporting and contradicting
+evidence since `first_detected`, updates `supporting_evidence_count`
+and `contradicting_evidence_count`, and recomputes `confidence` per
+the standard evidence gradation. When confidence reaches `medium`+
+and contradicting is 0, flips `hypothesis: false`. Pure Python — no
+LLM calls. Uses synthesis versioning before any mutation.
+
+### Mode C — Emergence Detection  (daily 09:00 UTC)
+
+Lightweight signal watch. Reads new Layer 3 articles since the last
+Mode C run. Does not write full Layer 4 articles. Logs candidate
+patterns to `cache/layer4/emergence_candidates.json`. When a
+candidate accumulates 3+ appearances across 2+ different topics, the
+candidate is promoted to `synthesis_queue.json` as a `layer4_candidate`
+so the next Mode A run picks it up. Uses Haiku (cheap, fast) for the
+signal-detection pass.
+
+### Mode D — Contradiction Resolution  (first Sunday of month, 10:00 UTC)
+
+Reads all Layer 3 articles with non-empty `contradicting_sources`.
+For each, attempts to explain the contradiction using the five-frame
+framework (industry / size / timeline / methodology / context). If
+explained, writes a resolution article to
+`wiki/layer4/contradictions/` and adds a "Contradiction Resolved"
+note to the source articles' `## Evolution and Change` sections
+(via synthesis versioning). If not resolvable from internal evidence
+alone, flags for web augmentation. Uses Sonnet for writing. Prompt
+lives at `prompts/conceptual_contradictions.md`.
+
+### Constraints
+
+- **Conceptual agent never modifies Layer 2 or Layer 3 articles
+  directly** except adding "Contradiction Resolved" notes via Mode D,
+  which uses synthesis versioning so every edit is recoverable.
+- **Layer 4 articles use their own frontmatter schema** — do not
+  apply Layer 3 confidence rules to them. The evidence counts and
+  confidence gradation are Layer-4 specific.
+- **Mode A writes at most 5 articles per run.** Quality over quantity.
+  If 5 strong connections aren't found, write fewer.
+- **Dry-run mode is mandatory before the first real run of any mode.**
+- **All operations appended to `wiki/log.md`** like every other agent.
+- **All prompts live in `prompts/` files**, never hardcoded.
+- **Engineering and interests namespaces are currently excluded**
+  from Layer 4 analysis — the conceptual agent only reads
+  `wiki/knowledge/` and `wiki/industries/` Layer 3 articles in
+  this phase.
+- **Registry enforcement:** Layer 4 articles reference only known
+  topic/industry slugs in `topics_connected` and `industries_connected`.
+- **The L3 map cache** must be invalidated correctly. Stale cache
+  producing wrong connections is worse than slow cache regeneration.
+
+### Layer 4 article schema (reprise)
+
+See "Layer 4 articles" in the Frontmatter Schema section above for
+the full template. Key fields the conceptual agent owns:
+`concept_type`, `topics_connected`, `industries_connected`,
+`confidence`, `hypothesis`, `supporting_evidence_count`,
+`contradicting_evidence_count`, `status`, `first_detected`,
+`last_updated`.
