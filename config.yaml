@@ -88,17 +88,18 @@ evolution:
     - "google announced"
     - "meta changed"
     - "as of [date]"
-  contradiction_keywords:       # Check 1: language signaling disagreement with established patterns
+  contradiction_keywords:       # Check 1: language signaling disagreement with established patterns.
+                                # Keep tight — generic words like "changed" and "as of" appear
+                                # constantly in commit messages and produce false positives. These
+                                # are deliberate strong signals only.
     - "no longer"
     - "deprecated"
-    - "changed"
-    - "previously"
-    - "used to"
-    - "now requires"
-    - "recent update"
-    - "as of"
-    - "replaced by"
     - "superseded by"
+    - "replaced by"
+    - "now requires"
+    - "breaking change"
+    - "no longer supported"
+    - "removed in"
 
 # Synthesis settings — Layer 3 knowledge generation
 synthesis:

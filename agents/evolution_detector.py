@@ -199,10 +199,15 @@ class EvolutionConfig:
         }
         return cls(
             stale_threshold_days=int(evo.get("stale_threshold_days", 180)),
+            # Keep keywords tight — generic words like "changed" and
+            # "as of" are too common in commit messages and prose and
+            # produce false positives. Prefer strong, unambiguous
+            # signals that specifically describe supersession,
+            # deprecation, or version transitions.
             contradiction_keywords=[k.lower() for k in evo.get("contradiction_keywords", [
-                "no longer", "deprecated", "changed", "previously",
-                "used to", "now requires", "recent update", "as of",
-                "replaced by", "superseded by",
+                "no longer", "deprecated", "superseded by",
+                "replaced by", "now requires", "breaking change",
+                "no longer supported", "removed in",
             ])],
             platform_trigger_keywords=[k.lower() for k in evo.get("platform_trigger_keywords", [
                 "announced", "policy change", "algorithm update",
@@ -229,6 +234,27 @@ class L3Article:
     @property
     def last_updated(self) -> date | None:
         return _coerce_date(self.fm.get("last_updated") or self.fm.get("updated"))
+
+    @property
+    def synthesis_cutoff(self) -> date | None:
+        """Authoritative "when was this synthesized" timestamp for the
+        purpose of detecting new-since-synthesis fragments.
+
+        Prefers `generated_at` (injected by the synthesizer's provenance
+        stamp as an ISO-8601 UTC string — always the actual synthesis
+        time), then falls back to `last_updated` (which the LLM writes
+        based on the latest source date, not the synthesis date —
+        historically ambiguous).
+        """
+        gen = self.fm.get("generated_at")
+        if isinstance(gen, str) and len(gen) >= 10:
+            try:
+                return datetime.strptime(gen[:10], "%Y-%m-%d").date()
+            except ValueError:
+                pass
+        if isinstance(gen, (date, datetime)):
+            return gen.date() if isinstance(gen, datetime) else gen
+        return self.last_updated
 
     @property
     def domain_type(self) -> str:
@@ -310,8 +336,26 @@ def _list_fragments(topic_dir: Path) -> list[Path]:
     ]
 
 
+def _strip_code_blocks(text: str) -> str:
+    """Remove fenced code blocks (```...```) from markdown text.
+
+    Commit-fragment files embed the raw commit message inside a
+    ``` fence. Scanning the full file text gives every commit
+    message a bunch of false-positive keyword hits ("changed",
+    "no longer", "as of") because commits inherently describe
+    changes. Stripping code blocks limits keyword scanning to
+    actual prose — the part that would signal the SYNTHESIS
+    is outdated, not just that a commit happened.
+    """
+    return re.sub(r"```[^`]*?```", "", text, flags=re.DOTALL)
+
+
 def _read_fragment_date_and_text(path: Path) -> tuple[date | None, str]:
-    """Return the fragment's content date + full file text (for keyword scanning)."""
+    """Return the fragment's content date + scannable body text (for
+    keyword scanning). Body text has fenced code blocks stripped so
+    commit-message contents don't create false-positive contradiction
+    signals.
+    """
     try:
         text = path.read_text(encoding="utf-8", errors="replace")
     except OSError:
@@ -324,7 +368,9 @@ def _read_fragment_date_and_text(path: Path) -> tuple[date | None, str]:
             d = _coerce_date(v)
             if d:
                 break
-    return d, text
+    # Scan only the body prose (without frontmatter) with code blocks stripped
+    scannable = _strip_code_blocks(body or text)
+    return d, scannable
 
 
 # =============================================================================
@@ -540,14 +586,23 @@ def scan_article(article: L3Article, evo_cfg: EvolutionConfig) -> list[Detection
     """Run all four checks on a single article, return every detection."""
     detections: list[Detection] = []
 
-    # Gather "new" fragments — those with a date newer than last_updated
-    last_updated = article.last_updated
+    # Gather "new" fragments — those with a date newer than the
+    # article's synthesis cutoff. synthesis_cutoff prefers generated_at
+    # (code-injected provenance, always the actual synthesis time)
+    # over last_updated (LLM-written, often the latest source date
+    # instead of the synthesis date — ambiguous).
+    #
+    # If neither field is present we SKIP the fragment-dependent
+    # checks entirely. "Every fragment is new" is not a useful
+    # default — it's how Check 1 false-positives every article.
+    cutoff = article.synthesis_cutoff
     fragment_files = _list_fragments(article.topic_dir)
     new_fragments: list[tuple[Path, date | None, str]] = []
-    for f in fragment_files:
-        d, text = _read_fragment_date_and_text(f)
-        if last_updated is None or (d is not None and d > last_updated):
-            new_fragments.append((f, d, text))
+    if cutoff is not None:
+        for f in fragment_files:
+            d, text = _read_fragment_date_and_text(f)
+            if d is not None and d > cutoff:
+                new_fragments.append((f, d, text))
 
     # Check 1 — contradiction accumulation
     det = check_contradiction_accumulation(article, new_fragments, evo_cfg)
