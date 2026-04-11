@@ -1089,6 +1089,15 @@ def review_taxonomy():
 
     rows = _parse_clients_yaml_for_review()
 
+    # Strip meta-entries like `_internal` that represent "not a real client"
+    # buckets in the registry. They have no meaningful industry, can't be
+    # assigned one, and clutter the review queue. Anything whose slug
+    # starts with `_` or whose status is `internal` is filtered out here.
+    rows = [
+        r for r in rows
+        if not r["slug"].startswith("_") and r.get("status") != "internal"
+    ]
+
     # Load the list of valid industries from industries.yaml
     industries_for_picker: list[dict] = []
     industries_yaml_path = MERIDIAN_ROOT / "industries.yaml"

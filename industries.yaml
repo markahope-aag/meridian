@@ -32,6 +32,25 @@ industries:
       - telehealth
       - patient-care
 
+  - name: "Beauty & Wellness"
+    slug: beauty-wellness
+    description: "Med spas, aesthetic medicine, day spas, salons, cosmetic dermatology, and wellness centers — elective/retail services with visual and social-content marketing dynamics. Distinct from clinical healthcare because the business model is retail-elective rather than insurance-driven."
+    aliases:
+      - med-spa
+      - medspa
+      - medical-spa
+      - aesthetic-medicine
+      - aesthetics
+      - day-spa
+      - salon
+      - cosmetic
+      - cosmetic-dermatology
+      - beauty
+      - wellness
+      - spa
+      - body-contouring
+      - injectables
+
   - name: "Senior Living"
     slug: senior-living
     description: "Assisted living, memory care, independent living, skilled nursing, and related senior services."

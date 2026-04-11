@@ -214,13 +214,13 @@ clients:
 
   - name: "LaMarie Beauty"
     slug: lamarie
-    industry: ecommerce-retail  # classifier: high
+    industry: beauty-wellness  # classifier: manual — med spa / aesthetics, not ecommerce
     status: current
     aliases: ["la-marie", "lamarie-beauty", "la-marie-beauty", "la-marie-connect", "lamaurie", "lameri-beauty", "lammary", "lmb"]
 
   - name: "Hooper"
     slug: ab-hooper
-    industry: b2b-services  # classifier: low
+    industry: construction-home-services  # classifier: manual
     status: current
     aliases: ["hooper", "AB Hooper"]
 
@@ -234,37 +234,37 @@ clients:
   # === FROM INVOICING HISTORY (may be former) ===
   - name: "Evolution Body Transformation"
     slug: evolution-body
-    industry: b2b-services  # classifier: low
+    industry: beauty-wellness  # classifier: manual — body contouring / aesthetics
     status: former
     aliases: []
 
   - name: "The King Company"
     slug: king-company
-    industry: b2b-services  # classifier: low
+    industry: ecommerce-retail  # classifier: manual
     status: former
     aliases: []
 
   - name: "Global Coin"
     slug: global-coin
-    industry: financial-services  # classifier: low
+    industry: ecommerce-retail  # classifier: manual
     status: former
     aliases: []
 
   - name: "Innoviom"
     slug: innoviom
-    industry: b2b-services  # classifier: low
+    industry: food-beverage  # classifier: manual
     status: former
     aliases: ["innoviom-websites"]
 
   - name: "Naviant"
     slug: naviant
-    industry: b2b-services  # classifier: low
+    industry: saas  # classifier: manual
     status: former
     aliases: []
 
   - name: "Dirty Ducts"
     slug: dirty-ducts
-    industry: construction-home-services  # classifier: low
+    industry: construction-home-services  # classifier: manual
     status: former
     aliases: []
 
@@ -276,7 +276,7 @@ clients:
 
   - name: "Jupmode"
     slug: jupmode
-    industry: saas  # classifier: low
+    industry: ecommerce-retail  # classifier: manual
     status: former
     aliases: []
 
@@ -288,25 +288,25 @@ clients:
 
   - name: "Best Defense"
     slug: best-defense
-    industry: legal-services  # classifier: low
+    industry: b2b-services  # classifier: manual
     status: former
     aliases: []
 
   - name: "CraftOptics"
     slug: craftoptics
-    industry: manufacturing  # classifier: low
+    industry: ecommerce-retail  # classifier: manual
     status: former
     aliases: []
 
   - name: "Gulf Coast Business Credit"
     slug: gulf-coast
-    industry: financial-services  # classifier: low
+    industry: financial-services  # classifier: manual
     status: former
     aliases: []
 
   - name: "Hooper Corp"
     slug: hooper
-    industry: b2b-services  # classifier: low
+    industry: construction-home-services  # classifier: manual
     status: former
     aliases: ["ab-hooper"]
 
@@ -318,31 +318,31 @@ clients:
 
   - name: "Mine & Process Service"
     slug: mine-process
-    industry: manufacturing  # classifier: low
+    industry: ecommerce-retail  # classifier: manual
     status: former
     aliases: []
 
   - name: "Utility Management Services"
     slug: utility-management
-    industry: b2b-services  # classifier: low
+    industry: b2b-services  # classifier: manual
     status: former
     aliases: []
 
   - name: "Vintage Fields"
     slug: vintage-fields
-    industry: food-beverage  # classifier: low
+    industry: food-beverage  # classifier: manual
     status: former
     aliases: []
 
   - name: "WALA"
     slug: wala
-    industry: b2b-services  # classifier: low
+    industry: b2b-services  # classifier: manual
     status: former
     aliases: []
 
   - name: "WrenchWay"
     slug: wrenchway
-    industry: construction-home-services  # classifier: low
+    industry: b2b-services  # classifier: manual
     status: former
     aliases: []
 
