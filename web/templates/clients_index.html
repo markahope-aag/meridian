@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Clients — Meridian{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 8px;">Clients</h1>
+<div style="color: var(--text-muted); margin-bottom: 24px;">
+    {{ clients|length }} Asymmetric engagements — each one contributes insights to business topics.
+    Sorted by insight count.
+</div>
+
+<div class="card">
+    <h2>Clients ({{ clients|length }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Click a client to see their profile and the topics they've contributed to.
+    </div>
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+        {% for c in clients %}
+        <div class="stat-box" style="text-align: left; padding: 12px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">
+                <a href="/client/{{ c.slug }}" style="color: var(--accent); text-decoration: none;">{{ c.name }}</a>
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+                {{ c.topic_count }} topic{{ 's' if c.topic_count != 1 else '' }}
+                {% if c.insight_count %} · {{ '{:,}'.format(c.insight_count) }} insight{{ 's' if c.insight_count != 1 else '' }}{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

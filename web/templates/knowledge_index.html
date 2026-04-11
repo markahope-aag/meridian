@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Knowledge Topics — Meridian{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 8px;">Business Knowledge</h1>
+<div style="color: var(--text-muted); margin-bottom: 24px;">
+    {{ topics|length }} topics · {{ '{:,}'.format(stats.business_fragments) }} fragments ·
+    {{ stats.business_l3 }} syntheses. Client-driven knowledge from Asymmetric engagements.
+</div>
+
+<div class="card">
+    <h2>Topics ({{ topics|length }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Business and marketing topics — each collects fragments across multiple clients.
+    </div>
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+        {% for t in topics %}
+        <div class="stat-box" style="text-align: left; padding: 12px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">
+                <a href="/topic/{{ t.slug }}" style="color: var(--accent); text-decoration: none;">{{ t.name }}</a>
+                {% if t.layer3 %}
+                <span style="background: var(--green); color: #000; padding: 1px 8px; border-radius: 10px; font-size: 10px; margin-left: 6px; font-weight: 600;">L3</span>
+                {% endif %}
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+                {{ t.articles }} fragment{{ 's' if t.articles != 1 else '' }}
+                {% if t.layer3 and t.confidence %} · {{ t.confidence }}{% endif %}
+                {% if t.layer3 and t.evidence_count %} · {{ t.evidence_count }} evidence{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

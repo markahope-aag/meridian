@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Industries — Meridian{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 8px;">Industries</h1>
+<div style="color: var(--text-muted); margin-bottom: 24px;">
+    {{ industries|length }} vertical slices — what we know about working in each industry across all clients in that space.
+</div>
+
+<div class="card">
+    <h2>Industries ({{ industries|length }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Cross-cutting dimension — fragments here are also filed under the client who contributed them.
+    </div>
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+        {% for i in industries %}
+        <div class="stat-box" style="text-align: left; padding: 12px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">
+                <a href="/industry/{{ i.slug }}" style="color: var(--accent); text-decoration: none;">{{ i.name }}</a>
+                {% if i.layer3 %}
+                <span style="background: var(--green); color: #000; padding: 1px 8px; border-radius: 10px; font-size: 10px; margin-left: 6px; font-weight: 600;">L3</span>
+                {% endif %}
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+                {{ i.fragment_count }} fragment{{ 's' if i.fragment_count != 1 else '' }}
+                {% if i.placeholder %} · <span style="color: var(--yellow);">placeholder</span>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

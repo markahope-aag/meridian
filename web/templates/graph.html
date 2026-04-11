@@ -19,6 +19,10 @@
         <input type="checkbox" id="hide-orphans" checked>
         Hide isolated
     </label>
+    <label style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted);">
+        <input type="checkbox" id="show-labels">
+        Show all labels
+    </label>
     <button type="button" id="graph-relayout" class="download-btn" style="margin-left: auto;">Re-layout</button>
     <button type="button" id="graph-fit" class="download-btn">Fit</button>
     <button type="button" id="graph-reset" class="download-btn">Reset focus</button>
@@ -91,12 +95,13 @@
                     'text-halign': 'right',
                     'text-margin-x': 6,
                     'text-background-color': '#0d1117',
-                    'text-background-opacity': 0.85,
+                    'text-background-opacity': 0.9,
                     'text-background-padding': '3px',
                     'text-background-shape': 'roundrectangle',
                     'text-border-color': '#30363d',
                     'text-border-width': 1,
                     'text-border-opacity': 1,
+                    'text-opacity': 0,
                     'text-max-width': 140,
                     'text-wrap': 'ellipsis',
                     'width': 'data(size)',
@@ -104,6 +109,12 @@
                     'border-width': 1.5,
                     'border-color': '#0d1117',
                     'min-zoomed-font-size': 10,
+                }
+            },
+            {
+                selector: 'node.show-label',
+                style: {
+                    'text-opacity': 1,
                 }
             },
             {
@@ -181,6 +192,19 @@
         ],
     });
 
+    // Label visibility — hidden by default, hover reveals individual labels.
+    // The "Show all labels" checkbox flips every node to labelled at once.
+    let labelsAlwaysVisible = false;
+    const showLabelsCb = document.getElementById('show-labels');
+    function applyLabelsMode() {
+        labelsAlwaysVisible = showLabelsCb.checked;
+        if (labelsAlwaysVisible) {
+            cy.nodes().addClass('show-label');
+        } else {
+            cy.nodes().removeClass('show-label');
+        }
+    }
+
     // Hide isolated nodes by default (reduces visual clutter)
     const hideOrphansCb = document.getElementById('hide-orphans');
     function applyOrphanFilter() {
@@ -238,6 +262,8 @@
     function clearFocus() {
         focusedNode = null;
         cy.elements().removeClass('dim focused neighbor');
+        // Strip label-reveal from whatever nodes were in focus
+        if (!labelsAlwaysVisible) cy.nodes().removeClass('show-label');
         defaultStatus();
     }
     cy.on('tap', 'node', (evt) => {
@@ -253,6 +279,8 @@
         cy.elements().addClass('dim');
         neighborhood.removeClass('dim').addClass('neighbor');
         n.removeClass('neighbor').addClass('focused');
+        // Reveal labels for the focused neighborhood so you can read it
+        neighborhood.nodes().addClass('show-label');
         const parts = [n.data('label')];
         if (n.data('fragment_count') !== undefined) parts.push(n.data('fragment_count') + ' frags');
         if (n.data('has_l3')) parts.push('L3');
@@ -264,16 +292,24 @@
         if (evt.target === cy) clearFocus();
     });
 
-    // Hover details (only when not in focus mode)
+    // Hover details (only when not in focus mode) + label reveal
     cy.on('mouseover', 'node', (evt) => {
-        if (focusedNode) return;
         const n = evt.target;
+        // Always reveal the hovered label, even when global labels are off
+        if (!labelsAlwaysVisible) n.addClass('show-label');
+        if (focusedNode) return;
         const parts = [n.data('label')];
         if (n.data('fragment_count') !== undefined) parts.push(n.data('fragment_count') + ' frags');
         if (n.data('has_l3')) parts.push('L3');
         setStatus(parts.join(' · '));
     });
-    cy.on('mouseout', 'node', () => {
+    cy.on('mouseout', 'node', (evt) => {
+        const n = evt.target;
+        // Un-reveal the label unless the global toggle is on, or this node
+        // is currently in focus mode (focused/neighbor nodes keep labels)
+        if (!labelsAlwaysVisible && !n.hasClass('focused') && !n.hasClass('neighbor')) {
+            n.removeClass('show-label');
+        }
         if (!focusedNode) defaultStatus();
     });
 
@@ -325,6 +361,7 @@
         applyOrphanFilter();
         runLayout();
     });
+    showLabelsCb.addEventListener('change', applyLabelsMode);
 
     // Escape key clears focus
     window.addEventListener('keydown', (e) => {

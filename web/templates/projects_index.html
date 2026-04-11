@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Projects — Meridian{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 8px;">Projects</h1>
+<div style="color: var(--text-muted); margin-bottom: 24px;">
+    {{ projects|length }} projects · {{ '{:,}'.format(stats.commits_ingested_total) }} commits ingested.
+    Sources of engineering knowledge, drawn from git history.
+</div>
+
+<div class="card">
+    <h2>Projects ({{ projects|length }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Click a project to see its commits grouped by engineering topic.
+    </div>
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+        {% for p in projects %}
+        <div class="stat-box" style="text-align: left; padding: 14px;">
+            <div style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">
+                <a href="/project/{{ p.slug }}" style="color: var(--accent); text-decoration: none;">{{ p.name }}</a>
+                {% if p.status == 'archived' %}
+                <span style="color: var(--text-muted); font-size: 10px; margin-left: 6px;">archived</span>
+                {% elif p.status == 'dormant' %}
+                <span style="color: var(--yellow); font-size: 10px; margin-left: 6px;">dormant</span>
+                {% endif %}
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-bottom: 6px;">
+                {{ p.commits_total }} commits
+                {% if p.commits_queue > 0 %} · <span style="color: var(--yellow);">{{ p.commits_queue }} queued</span>{% endif %}
+            </div>
+            {% if p.description %}
+            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5; opacity: 0.85; margin-bottom: 6px;">
+                {{ p.description[:120] }}{% if p.description|length > 120 %}…{% endif %}
+            </div>
+            {% endif %}
+            {% if p.stack %}
+            <div style="font-size: 10px; color: var(--text-muted); opacity: 0.7;">
+                {{ p.stack[:5]|join(' · ') }}{% if p.stack|length > 5 %} · +{{ p.stack|length - 5 }}{% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

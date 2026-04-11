@@ -42,6 +42,77 @@
         }
         .nav a { color: var(--text-muted); font-size: 14px; }
         .nav a:hover { color: var(--text); text-decoration: none; }
+
+        /* Dropdown menu for the Browse navigation */
+        .nav-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .nav-dropdown-toggle {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            padding: 0;
+            cursor: pointer;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .nav-dropdown-toggle:hover,
+        .nav-dropdown.open .nav-dropdown-toggle {
+            color: var(--text);
+        }
+        .nav-dropdown-toggle::after {
+            content: "\25BE";
+            font-size: 10px;
+            margin-top: 1px;
+        }
+        .nav-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            left: -8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px;
+            min-width: 200px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+            z-index: 100;
+        }
+        .nav-dropdown.open .nav-dropdown-menu {
+            display: block;
+        }
+        .nav-dropdown-menu a {
+            display: block;
+            padding: 8px 12px;
+            color: var(--text);
+            font-size: 13px;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+        .nav-dropdown-menu a:hover {
+            background: var(--bg);
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .nav-dropdown-menu .menu-section {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px 12px 4px;
+        }
+        .nav-dropdown-menu .menu-section:first-child {
+            padding-top: 4px;
+        }
+        .nav-dropdown-menu hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 4px 0;
+        }
         .nav-search {
             margin-left: auto;
             display: flex;
@@ -407,8 +478,22 @@
         <a href="/">Dashboard</a>
         <a href="/search">Search</a>
         <a href="/ask">Ask</a>
-        <a href="/engineering/">Engineering</a>
-        <a href="/interests/">Interests</a>
+        <div class="nav-dropdown" id="browse-dropdown">
+            <button type="button" class="nav-dropdown-toggle" id="browse-dropdown-toggle">Browse</button>
+            <div class="nav-dropdown-menu">
+                <div class="menu-section">Business</div>
+                <a href="/knowledge/">Knowledge Topics</a>
+                <a href="/industries/">Industries</a>
+                <a href="/clients/">Clients</a>
+                <hr>
+                <div class="menu-section">Engineering</div>
+                <a href="/engineering/">Engineering Topics</a>
+                <a href="/projects/">Projects</a>
+                <hr>
+                <div class="menu-section">Personal</div>
+                <a href="/interests/">Interests</a>
+            </div>
+        </div>
         <a href="/analytics/">Analytics</a>
         <a href="/graph/">Graph</a>
         <a href="/review/taxonomy">Review</a>
@@ -420,5 +505,22 @@
     <div class="container">
         {% block content %}{% endblock %}
     </div>
+    <script>
+    (function () {
+        var dd = document.getElementById('browse-dropdown');
+        var btn = document.getElementById('browse-dropdown-toggle');
+        if (!dd || !btn) return;
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            dd.classList.toggle('open');
+        });
+        document.addEventListener('click', function () {
+            dd.classList.remove('open');
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') dd.classList.remove('open');
+        });
+    })();
+    </script>
 </body>
 </html>

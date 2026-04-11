@@ -1369,16 +1369,182 @@ def view_topic(slug):
 
 @app.route("/engineering/")
 def engineering_index():
-    """Engineering topics browse page — companion to the /topic/ route family."""
+    """Engineering topics browse page — companion to the /topic/ route family.
+
+    Projects moved to their own /projects/ page for navigation symmetry, so
+    this page is now topics-only. `projects` is still passed to the template
+    for legacy compatibility but the template no longer renders it.
+    """
     engineering_topics = _load_engineering_topics_with_counts()
-    projects = _load_projects_with_counts()
     stats = get_stats()
     return render_template(
         "engineering_index.html",
         engineering_topics=engineering_topics,
+        stats=stats,
+    )
+
+
+@app.route("/knowledge/")
+def knowledge_index():
+    """Business knowledge topics browse page."""
+    topics = _collect_business_topics()
+    stats = get_stats()
+    return render_template(
+        "knowledge_index.html",
+        topics=topics,
+        stats=stats,
+    )
+
+
+@app.route("/industries/")
+def industries_index():
+    """Industries browse page — parallel to engineering/interests indexes."""
+    industries = _collect_industries()
+    stats = get_stats()
+    return render_template(
+        "industries_index.html",
+        industries=industries,
+        stats=stats,
+    )
+
+
+@app.route("/clients/")
+def clients_index():
+    """Clients browse page — parallel to the other namespace indexes."""
+    clients = _collect_clients()
+    stats = get_stats()
+    return render_template(
+        "clients_index.html",
+        clients=clients,
+        stats=stats,
+    )
+
+
+@app.route("/projects/")
+def projects_index():
+    """Projects browse page — parallel to engineering topics."""
+    projects = _load_projects_with_counts()
+    stats = get_stats()
+    return render_template(
+        "projects_index.html",
         projects=projects,
         stats=stats,
     )
+
+
+def _collect_business_topics() -> list[dict]:
+    """Walk wiki/knowledge/ and return browse data for each topic directory."""
+    result = []
+    knowledge_dir = WIKI_DIR / "knowledge"
+    if not knowledge_dir.exists():
+        return result
+    for d in sorted(knowledge_dir.iterdir()):
+        if not d.is_dir():
+            continue
+        frag_count = sum(
+            1 for f in d.rglob("*.md")
+            if f.name not in ("_index.md", "index.md")
+        )
+        has_l3 = False
+        confidence = ""
+        evidence_count = 0
+        index_file = d / "index.md"
+        if index_file.exists():
+            try:
+                content = index_file.read_text(encoding="utf-8", errors="replace")
+                if "layer: 3" in content:
+                    has_l3 = True
+                    fm, _ = parse_frontmatter(content)
+                    confidence = fm.get("confidence", "")
+                    evidence_count = fm.get("evidence_count", 0)
+            except Exception:
+                pass
+        result.append({
+            "slug": d.name,
+            "name": TOPIC_NAMES.get(d.name, d.name.replace("-", " ").title()),
+            "articles": frag_count,
+            "layer3": has_l3,
+            "confidence": confidence,
+            "evidence_count": evidence_count,
+        })
+    result.sort(key=lambda x: (not x["layer3"], -x["articles"]))
+    return result
+
+
+def _collect_industries() -> list[dict]:
+    """Return browse data for all industry directories."""
+    result = []
+    industries_dir = WIKI_DIR / "industries"
+    if not industries_dir.exists():
+        return result
+    # Load display names from industries.yaml so the page matches the
+    # dashboard card labels instead of showing raw slugs.
+    name_by_slug: dict[str, str] = {}
+    industries_yaml = MERIDIAN_ROOT / "industries.yaml"
+    if industries_yaml.exists():
+        try:
+            data = yaml.safe_load(industries_yaml.read_text(encoding="utf-8")) or {}
+            for entry in data.get("industries", []):
+                if isinstance(entry, dict) and entry.get("slug"):
+                    name_by_slug[entry["slug"]] = entry.get("name", entry["slug"])
+        except yaml.YAMLError:
+            pass
+    for d in sorted(industries_dir.iterdir()):
+        if not d.is_dir():
+            continue
+        real_fragments = [
+            f for f in d.glob("*.md")
+            if f.name not in ("_index.md", "index.md", "PLACEHOLDER.md")
+        ]
+        is_placeholder = not real_fragments and (d / "PLACEHOLDER.md").exists()
+        has_l3 = False
+        index_file = d / "index.md"
+        if index_file.exists():
+            try:
+                if "layer: 3" in index_file.read_text(encoding="utf-8", errors="replace"):
+                    has_l3 = True
+            except Exception:
+                pass
+        result.append({
+            "slug": d.name,
+            "name": name_by_slug.get(d.name, d.name.replace("-", " ").title()),
+            "fragment_count": len(real_fragments),
+            "layer3": has_l3,
+            "placeholder": is_placeholder,
+        })
+    result.sort(key=lambda x: (x["placeholder"], not x["layer3"], -x["fragment_count"]))
+    return result
+
+
+def _collect_clients() -> list[dict]:
+    """Return browse data for all current clients."""
+    result = []
+    clients_dir = WIKI_DIR / "clients" / "current"
+    if not clients_dir.exists():
+        return result
+    for d in sorted(clients_dir.iterdir()):
+        if not d.is_dir():
+            continue
+        topic_count = 0
+        insight_count = 0
+        index_file = d / "_index.md"
+        if index_file.exists():
+            try:
+                content = index_file.read_text(encoding="utf-8", errors="replace")
+                topic_links = re.findall(r"\[\[knowledge/[^|\]]+", content)
+                topic_count = len(set(topic_links))
+                insight_nums = re.findall(r"\((\d+)\s+insights?\)", content)
+                insight_count = sum(int(n) for n in insight_nums)
+            except Exception:
+                pass
+        result.append({
+            "slug": d.name,
+            "name": CLIENT_NAMES.get(d.name, d.name.replace("-", " ").title()),
+            "topic_count": topic_count,
+            "insight_count": insight_count,
+        })
+    result.sort(key=lambda x: -x["insight_count"])
+    return result
 
 
 @app.route("/engineering/<slug>")

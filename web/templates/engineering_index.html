@@ -1,14 +1,17 @@
 {% extends "base.html" %}
 {% block title %}Engineering — Meridian{% endblock %}
 {% block content %}
-<h1 style="margin-bottom: 8px;">Engineering Knowledge</h1>
+<h1 style="margin-bottom: 8px;">Engineering Topics</h1>
 <div style="color: var(--text-muted); margin-bottom: 24px;">
-    Technical knowledge from {{ stats.projects_registered }} projects —
-    {{ '{:,}'.format(stats.commits_ingested_total) }} commits ingested,
-    {{ '{:,}'.format(stats.engineering_fragments) }} classified across
-    {{ stats.engineering_topics_with_fragments }} topics.
+    Technical knowledge by technology and framework —
+    {{ '{:,}'.format(stats.engineering_fragments) }} fragments across
+    {{ stats.engineering_topics_with_fragments }} topics from
+    {{ stats.projects_registered }} projects.
     {% if stats.capture_commits_queue > 0 %}
     <span style="color: var(--yellow);">· {{ stats.capture_commits_queue }} unclassified</span>
+    {% endif %}
+    {% if stats.projects_registered %}
+    · <a href="/projects/" style="color: var(--accent);">Browse projects &rarr;</a>
     {% endif %}
 </div>
 
@@ -35,26 +38,4 @@
     </div>
 </div>
 
-<div class="card">
-    <h2>Projects ({{ projects|length }})</h2>
-    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
-        Engineering knowledge contributors. Click to see commits broken down by topic.
-    </div>
-    <ul class="fragment-list">
-        {% for p in projects %}
-        <li class="fragment-item">
-            <div class="fragment-head">
-                <a href="/project/{{ p.slug }}" class="fragment-title">{{ p.name }}</a>
-                <span class="fragment-client-tag">{{ p.commits_total }} commits</span>
-            </div>
-            <div class="fragment-preview">{{ p.description }}</div>
-            <div class="fragment-meta">
-                {% for s in p.stack %}<span style="font-size: 10px; color: var(--text-muted); margin-right: 6px;">{{ s }}</span>{% endfor %}
-                {% if p.status != 'active' %} · <span style="color: var(--yellow);">{{ p.status }}</span>{% endif %}
-                {% if p.commits_queue > 0 %} · <span style="color: var(--yellow);">{{ p.commits_queue }} unclassified</span>{% endif %}
-            </div>
-        </li>
-        {% endfor %}
-    </ul>
-</div>
 {% endblock %}
