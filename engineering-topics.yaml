@@ -135,3 +135,17 @@ topics:
     slug: debugging
     category: workflow
     aliases: [debugging-techniques, error-investigation, root-cause-analysis, troubleshooting]
+
+  # === CATCH-ALL ===
+
+  # Landing bucket for commits the classifier can't place in any
+  # topic-with-synthesis-value. Project-specific business logic,
+  # one-off feature work, config changes, docs-only commits, etc.
+  # Browsable and searchable, but deliberately NOT synthesized —
+  # there's no generalizable engineering pattern in this bucket
+  # and forcing synthesis would produce noise.
+  - name: "Unclassified"
+    slug: unclassified
+    category: catch-all
+    synthesize: false
+    aliases: [other, misc, uncategorized, project-specific]

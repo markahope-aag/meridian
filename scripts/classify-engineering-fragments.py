@@ -385,13 +385,13 @@ def main() -> None:
                     new_text = update_fragment_file(
                         frag, primary, frag.secondary_topics, frag.confidence, frag.rationale
                     )
-                    # If classified, move to wiki; if unclassified, leave in capture/ with updated frontmatter
-                    if primary == "unclassified":
-                        frag.path.write_text(new_text, encoding="utf-8")
-                    else:
-                        # Write updated content, then move
-                        frag.path.write_text(new_text, encoding="utf-8")
-                        move_to_wiki(frag, primary, dry_run=False)
+                    # Every classified (or unclassified-terminal) fragment lands in
+                    # wiki/engineering/<topic>/. The `unclassified` folder is a
+                    # catch-all topic for fragments the classifier couldn't place;
+                    # they still live under wiki/engineering/ so the Review queue
+                    # can find them. Nothing is left orphaned in capture/.
+                    frag.path.write_text(new_text, encoding="utf-8")
+                    move_to_wiki(frag, primary, dry_run=False)
                 except Exception as e:
                     log_error(f"failed to update/move {frag.path}: {e}")
                     error_count += 1

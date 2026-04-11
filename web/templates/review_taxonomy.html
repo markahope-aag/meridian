@@ -98,6 +98,84 @@
     {% endif %}
 </div>
 
+{% if unclassified_review and unclassified_review.pending_count + unclassified_review.dismissed_count > 0 %}
+<div class="card" id="unclassified">
+    <h2>Unclassified Engineering Commits ({{ unclassified_review.pending_count }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Commits the classifier couldn't confidently assign to any engineering topic.
+        Pick a better target topic from the dropdown and <strong>Assign</strong>, or mark the commit
+        as <strong>permanently unclassified</strong> to drop it from this queue forever.
+        Either action removes it from review — reviewed means done.
+        {% if unclassified_review.dismissed_count %}
+        <span style="color: var(--text-muted); opacity: 0.8;">
+            · {{ unclassified_review.dismissed_count }} previously dismissed
+        </span>
+        {% endif %}
+    </div>
+
+    {% if not unclassified_review.groups %}
+    <div style="color: var(--text-muted); padding: 12px 0;">
+        Nothing to review — every unclassified commit has been assigned or dismissed.
+    </div>
+    {% else %}
+    {% for group in unclassified_review.groups %}
+    <details style="margin-bottom: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg);">
+        <summary style="padding: 10px 14px; cursor: pointer; font-size: 14px; font-weight: 500;">
+            {{ group.project }}
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: 400;">· {{ group.count }} pending</span>
+        </summary>
+        <div style="padding: 0 14px 14px;">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 8px;">
+                <thead>
+                    <tr style="text-align: left; border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: 11px; text-transform: uppercase;">
+                        <th style="padding: 6px 4px;">Commit</th>
+                        <th style="padding: 6px 4px;">Reason</th>
+                        <th style="padding: 6px 4px; min-width: 260px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in group.items %}
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 10px 4px; vertical-align: top;">
+                            <div style="font-size: 13px; font-weight: 500;">{{ item.title }}</div>
+                            <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">
+                                {% if item.short_sha %}<code>{{ item.short_sha }}</code>{% endif %}
+                                {% if item.date %} · {{ item.date }}{% endif %}
+                                {% if item.files_changed %} · {{ item.files_changed }} files +{{ item.insertions }}/-{{ item.deletions }}{% endif %}
+                            </div>
+                        </td>
+                        <td style="padding: 10px 4px; vertical-align: top; font-size: 11px; color: var(--text-muted); max-width: 320px;">
+                            {{ item.rationale }}
+                            {% if item.confidence %}
+                            <div style="margin-top: 2px; font-size: 10px; opacity: 0.6;">confidence: {{ item.confidence }}</div>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 10px 4px; vertical-align: top;">
+                            <form method="POST" action="/review/unclassified/assign" style="display: flex; gap: 4px; margin-bottom: 4px;">
+                                <input type="hidden" name="filename" value="{{ item.filename }}">
+                                <select name="target" class="fragment-sort" style="font-size: 11px; padding: 3px 6px; flex: 1; min-width: 140px;">
+                                    {% for t in engineering_topics_picker %}
+                                    <option value="{{ t.slug }}">{{ t.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="download-btn" style="cursor: pointer; background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; font-size: 11px; padding: 3px 10px;">Assign</button>
+                            </form>
+                            <form method="POST" action="/review/unclassified/dismiss" style="margin: 0;">
+                                <input type="hidden" name="filename" value="{{ item.filename }}">
+                                <button type="submit" class="download-btn" style="cursor: pointer; font-size: 10px; padding: 2px 8px; color: var(--text-muted);" title="Mark as permanently unclassified — won't appear here again">Permanently unclassified</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+    {% endfor %}
+    {% endif %}
+</div>
+{% endif %}
+
 {% if empty_industries %}
 <div class="card">
     <h2>Empty industries ({{ empty_industries|length }})</h2>

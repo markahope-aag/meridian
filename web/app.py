@@ -286,6 +286,34 @@ def _load_projects() -> list[dict]:
     return data.get("projects", [])
 
 
+def _non_synthesizable_topic_slugs() -> set:
+    """Return set of (namespace, slug) tuples for topics flagged
+    `synthesize: false` in their registry YAML. These topics are
+    excluded from "ready to synthesize" lists and L3 coverage math.
+
+    Currently only engineering-topics.yaml supports the flag, but the
+    helper is generic so other namespaces can opt in later.
+    """
+    result: set = set()
+    sources = [
+        ("engineering", ENGINEERING_TOPICS_YAML, "topics"),
+        ("interests",   INTERESTS_TOPICS_YAML,   "topics"),
+    ]
+    for ns, path, key in sources:
+        if not path.exists():
+            continue
+        try:
+            data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except yaml.YAMLError:
+            continue
+        for entry in data.get(key, []):
+            if isinstance(entry, dict) and entry.get("synthesize") is False:
+                slug = (entry.get("slug") or "").strip()
+                if slug:
+                    result.add((ns, slug))
+    return result
+
+
 def _load_interests_topic_names() -> dict:
     """Map interests topic slug -> display name. Reads interests-topics.yaml."""
     if not INTERESTS_TOPICS_YAML.exists():
@@ -1083,6 +1111,148 @@ def _rewrite_client_industry(slug: str, new_industry: str) -> bool:
     return touched
 
 
+def _collect_unclassified_for_review() -> dict:
+    """Walk wiki/engineering/unclassified/ and return pending fragments
+    grouped by source project. Excludes fragments already marked
+    `review_status: dismissed` in frontmatter.
+
+    Each fragment dict carries the fields the review UI needs: filename,
+    commit subject, short SHA, project, confidence, rationale, date.
+    """
+    result: dict[str, list[dict]] = {}
+    dismissed_count = 0
+    unclassified_dir = ENGINEERING_DIR / "unclassified"
+    if not unclassified_dir.exists():
+        return {"groups": [], "dismissed_count": 0, "pending_count": 0}
+
+    for f in sorted(unclassified_dir.glob("*.md")):
+        if f.name in ("_index.md", "index.md", "README.md"):
+            continue
+        fm = _read_frontmatter_only(f)
+        if fm.get("review_status") == "dismissed":
+            dismissed_count += 1
+            continue
+        project = fm.get("source_project", "unknown")
+        result.setdefault(project, []).append({
+            "filename": f.name,
+            "title": fm.get("title", f.stem),
+            "short_sha": fm.get("commit_short_sha", ""),
+            "project": project,
+            "date": _coerce_date_str(fm.get("source_date")),
+            "confidence": fm.get("classification_confidence", ""),
+            "rationale": fm.get("classification_rationale", ""),
+            "files_changed": fm.get("files_changed", 0),
+            "insertions": fm.get("insertions", 0),
+            "deletions": fm.get("deletions", 0),
+        })
+
+    # Sort each project's fragments by date (newest first) and the
+    # project list by total fragment count (largest first).
+    groups = []
+    pending = 0
+    for proj in sorted(result.keys(), key=lambda p: -len(result[p])):
+        items = sorted(result[proj], key=lambda r: r["date"], reverse=True)
+        pending += len(items)
+        groups.append({"project": proj, "count": len(items), "items": items})
+
+    return {"groups": groups, "dismissed_count": dismissed_count, "pending_count": pending}
+
+
+def _safe_fragment_path(filename: str) -> Path | None:
+    """Validate a filename is a safe relative path inside the unclassified
+    directory. Returns the resolved Path if safe, None if not.
+    """
+    if not filename or "/" in filename or "\\" in filename or ".." in filename:
+        return None
+    p = (ENGINEERING_DIR / "unclassified" / filename).resolve()
+    # Must stay inside ENGINEERING_DIR/unclassified
+    try:
+        p.relative_to((ENGINEERING_DIR / "unclassified").resolve())
+    except ValueError:
+        return None
+    if not p.exists():
+        return None
+    return p
+
+
+def _rewrite_fragment_frontmatter(path: Path, updates: dict) -> bool:
+    """Surgically update the YAML frontmatter of a fragment in place.
+    Adds or overwrites the keys in `updates`. Returns True on success.
+    """
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return False
+    if not text.startswith("---"):
+        return False
+    try:
+        end = text.index("\n---\n", 4)
+    except ValueError:
+        return False
+    try:
+        fm = yaml.safe_load(text[4:end]) or {}
+    except yaml.YAMLError:
+        return False
+    if not isinstance(fm, dict):
+        return False
+    fm.update(updates)
+    new_fm = yaml.safe_dump(fm, sort_keys=False, default_flow_style=False, allow_unicode=True).strip()
+    body = text[end + 5 :]
+    path.write_text(f"---\n{new_fm}\n---\n{body}", encoding="utf-8")
+    return True
+
+
+@app.route("/review/unclassified/assign", methods=["POST"])
+def assign_unclassified():
+    """Move a fragment from wiki/engineering/unclassified/ into a target
+    engineering topic directory. Updates topic_slug in frontmatter and
+    records that the assignment was manual."""
+    filename = (request.form.get("filename") or "").strip()
+    target = (request.form.get("target") or "").strip()
+    src = _safe_fragment_path(filename)
+    if src is None:
+        return "invalid filename", 400
+    if target == "unclassified" or target not in ENGINEERING_TOPIC_NAMES:
+        return "invalid target topic", 400
+
+    target_dir = ENGINEERING_DIR / target
+    target_dir.mkdir(parents=True, exist_ok=True)
+    dst = target_dir / filename
+
+    # Update frontmatter first, then move
+    _rewrite_fragment_frontmatter(src, {
+        "topic_slug": target,
+        "classification_confidence": "manual",
+        "classification_rationale": f"manually reassigned to {target} via review UI",
+    })
+    import shutil as _shutil
+    try:
+        _shutil.move(str(src), str(dst))
+    except Exception as e:
+        return f"move failed: {e}", 500
+    return redirect_to_review()
+
+
+@app.route("/review/unclassified/dismiss", methods=["POST"])
+def dismiss_unclassified():
+    """Mark a fragment as permanently unclassified so it stops
+    appearing in the review queue. Writes `review_status: dismissed`
+    into frontmatter; the file stays in wiki/engineering/unclassified/."""
+    filename = (request.form.get("filename") or "").strip()
+    src = _safe_fragment_path(filename)
+    if src is None:
+        return "invalid filename", 400
+    _rewrite_fragment_frontmatter(src, {
+        "review_status": "dismissed",
+    })
+    return redirect_to_review()
+
+
+def redirect_to_review():
+    from flask import redirect
+    return redirect("/review/taxonomy#unclassified")
+
+
 @app.route("/review/taxonomy", methods=["GET", "POST"])
 def review_taxonomy():
     """Review queue for the taxonomy registries.
@@ -1153,6 +1323,18 @@ def review_taxonomy():
             if not real:
                 empty_industries.append(d.name)
 
+    # Unclassified engineering commits — pending human review
+    unclassified_review = _collect_unclassified_for_review()
+    # Build list of engineering topics for the assign dropdown. Exclude
+    # `unclassified` itself — can't reassign to the same bucket.
+    engineering_topics_picker = [
+        {"slug": slug, "name": name}
+        for slug, name in sorted(
+            ENGINEERING_TOPIC_NAMES.items(), key=lambda x: x[1]
+        )
+        if slug != "unclassified"
+    ]
+
     return render_template(
         "review_taxonomy.html",
         needs_review=needs_review,
@@ -1160,6 +1342,8 @@ def review_taxonomy():
         total=len(rows),
         industries=industries_for_picker,
         empty_industries=empty_industries,
+        unclassified_review=unclassified_review,
+        engineering_topics_picker=engineering_topics_picker,
         message=message,
     )
 
@@ -1967,11 +2151,16 @@ def _compute_analytics() -> dict:
     # -----------------------------------------------------------------
     # SECTION 1: Knowledge Health (overview)
     # -----------------------------------------------------------------
-    # Topics registered (from YAML) vs topics with fragments (from disk)
+    # Topics registered (from YAML) vs topics with fragments (from disk).
+    # Exclude topics flagged `synthesize: false` from the L3 denominator
+    # so the coverage % reflects "topics we intend to synthesize" rather
+    # than "every topic in the registry."
+    non_synth_engineering = sum(1 for ns, _ in _non_synthesizable_topic_slugs() if ns == "engineering")
+    non_synth_interests = sum(1 for ns, _ in _non_synthesizable_topic_slugs() if ns == "interests")
     registered_topics = {
         "knowledge":   len(TOPIC_NAMES),
-        "engineering": len(ENGINEERING_TOPIC_NAMES),
-        "interests":   len(INTERESTS_TOPIC_NAMES),
+        "engineering": len(ENGINEERING_TOPIC_NAMES) - non_synth_engineering,
+        "interests":   len(INTERESTS_TOPIC_NAMES) - non_synth_interests,
     }
     # industries isn't a TOPIC_NAMES-style global; read from the YAML directly
     industries_yaml = MERIDIAN_ROOT / "industries.yaml"
@@ -2083,12 +2272,17 @@ def _compute_analytics() -> dict:
                 })
     grown_since.sort(key=lambda x: -x["growth_pct"])
 
-    # Ready to synthesize — topics with 5+ fragments but no L3 yet
+    # Ready to synthesize — topics with 5+ fragments but no L3 yet.
+    # Exclude topics flagged `synthesize: false` in the registry
+    # (e.g., the `unclassified` catch-all in engineering-topics.yaml).
     synthesized_keys = {(l3["namespace"], l3["slug"]) for l3 in all_l3}
+    non_synth = _non_synthesizable_topic_slugs()
     ready_to_synthesize = [
         {"namespace": ns, "slug": slug, "count": count}
         for (ns, slug), count in topic_counts.items()
-        if count >= 5 and (ns, slug) not in synthesized_keys
+        if count >= 5
+        and (ns, slug) not in synthesized_keys
+        and (ns, slug) not in non_synth
     ]
     ready_to_synthesize.sort(key=lambda x: -x["count"])
 
