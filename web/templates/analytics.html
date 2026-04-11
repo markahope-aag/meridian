@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+{% block title %}Analytics — Meridian{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 8px;">Analytics</h1>
+<div style="color: var(--text-muted); margin-bottom: 24px;">
+    Deep insights into {{ '{:,}'.format(analytics.total_fragments) }} fragments —
+    where they came from, how rich each slice is, how fresh, where the gaps are.
+</div>
+
+<!-- ================================================================= -->
+<!-- A. Source Provenance                                                -->
+<!-- ================================================================= -->
+<div class="card">
+    <h2>Source Provenance</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 16px;">
+        Where fragments come from, broken down three ways.
+    </div>
+
+    <div class="two-col">
+        <div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">By namespace</div>
+            <canvas id="chart-namespace" style="max-height: 220px;"></canvas>
+        </div>
+        <div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">By source type</div>
+            <canvas id="chart-source-type" style="max-height: 220px;"></canvas>
+        </div>
+    </div>
+
+    <div style="margin-top: 24px;">
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Fragments per month (last 24 months)</div>
+        <canvas id="chart-time-series" style="max-height: 260px;"></canvas>
+    </div>
+</div>
+
+<!-- ================================================================= -->
+<!-- B. Coverage & Density                                               -->
+<!-- ================================================================= -->
+<div class="card">
+    <h2>Coverage & Density</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 16px;">
+        {{ analytics.coverage.topic_count }} topics total. How fragments distribute across them.
+    </div>
+
+    <div class="two-col">
+        <div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Topic fragment-count histogram</div>
+            <canvas id="chart-histogram" style="max-height: 220px;"></canvas>
+        </div>
+        <div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Top 10 densest topics</div>
+            <ul class="fragment-list" style="margin-top: 4px;">
+                {% for t in analytics.coverage.top_topics %}
+                <li class="fragment-item" style="padding: 6px 0;">
+                    <div class="fragment-head">
+                        <a href="/{% if t.namespace == 'engineering' %}engineering{% else %}topic{% endif %}/{{ t.slug }}" class="fragment-title">{{ t.slug }}</a>
+                        <span class="fragment-client-tag">{{ t.count }}</span>
+                    </div>
+                    <div class="fragment-meta">{{ t.namespace }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================= -->
+<!-- C. Freshness                                                        -->
+<!-- ================================================================= -->
+<div class="card">
+    <h2>Freshness</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 16px;">
+        Ingestion activity over the last 180 days, and topics going stale.
+    </div>
+
+    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Daily fragment ingestion (GitHub-style)</div>
+    {% set cell_size = 11 %}
+    {% set cell_gap = 2 %}
+    {% set heatmap_max = analytics.freshness.heatmap_max %}
+    {% set weeks = (analytics.freshness.heatmap|length / 7) | round(0, 'ceil') | int + 1 %}
+    <svg width="{{ weeks * (cell_size + cell_gap) + 40 }}" height="{{ 7 * (cell_size + cell_gap) + 20 }}"
+         style="background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px;">
+        {% for day in analytics.freshness.heatmap %}
+            {% set idx = loop.index0 %}
+            {% set week = (idx / 7) | int %}
+            {% set weekday = day.weekday %}
+            {% set intensity = (day.count / heatmap_max) if heatmap_max > 0 else 0 %}
+            {% set color = '#0d1117' if day.count == 0 else ('#0e4429' if intensity < 0.25 else ('#006d32' if intensity < 0.5 else ('#26a641' if intensity < 0.8 else '#39d353'))) %}
+            <rect x="{{ week * (cell_size + cell_gap) + 20 }}"
+                  y="{{ weekday * (cell_size + cell_gap) + 10 }}"
+                  width="{{ cell_size }}" height="{{ cell_size }}"
+                  rx="2" ry="2"
+                  fill="{{ color }}">
+                <title>{{ day.date }}: {{ day.count }} fragment{{ 's' if day.count != 1 else '' }}</title>
+            </rect>
+        {% endfor %}
+    </svg>
+
+    <div style="margin-top: 24px;">
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Top 10 stalest topics (oldest last-fragment date)</div>
+        <ul class="fragment-list">
+            {% for t in analytics.freshness.stalest_topics %}
+            <li class="fragment-item" style="padding: 6px 0;">
+                <div class="fragment-head">
+                    <a href="/{% if t.namespace == 'engineering' %}engineering{% else %}topic{% endif %}/{{ t.slug }}" class="fragment-title">{{ t.slug }}</a>
+                    <span class="fragment-client-tag">{{ t.days_since }} days</span>
+                </div>
+                <div class="fragment-meta">{{ t.namespace }} · last activity {{ t.last_date }}</div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<!-- ================================================================= -->
+<!-- D. Gaps & Opportunities                                             -->
+<!-- ================================================================= -->
+<div class="card">
+    <h2>Gaps & Opportunities</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 16px;">
+        The actionable view — what's thin, what's unchallenged, what needs attention.
+    </div>
+
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+        <div class="stat-box">
+            <div class="number" style="font-size: 24px;">{{ analytics.gaps.topics_internal_only }}</div>
+            <div class="label">Internal-only topics</div>
+        </div>
+        <div class="stat-box">
+            <div class="number" style="font-size: 24px;">{{ analytics.gaps.topics_both }}</div>
+            <div class="label">Topics with both evidence types</div>
+        </div>
+        <div class="stat-box">
+            <div class="number" style="font-size: 24px;">{{ analytics.gaps.sparse_topics|length }}</div>
+            <div class="label">Sparse topics (&lt;5 frags)</div>
+        </div>
+        <div class="stat-box"{% if analytics.gaps.unclassified_commits > 0 %} style="border-color: var(--yellow);"{% endif %}>
+            <div class="number" style="font-size: 24px;{% if analytics.gaps.unclassified_commits > 0 %} color: var(--yellow);{% endif %}">{{ analytics.gaps.unclassified_commits }}</div>
+            <div class="label">Unclassified commits</div>
+        </div>
+    </div>
+
+    {% if analytics.gaps.sparse_topics %}
+    <div style="margin-top: 24px;">
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Sparse topics needing more fragments</div>
+        <ul class="fragment-list">
+            {% for t in analytics.gaps.sparse_topics[:15] %}
+            <li class="fragment-item" style="padding: 6px 0;">
+                <div class="fragment-head">
+                    <a href="/{% if t.namespace == 'engineering' %}engineering{% else %}topic{% endif %}/{{ t.slug }}" class="fragment-title">{{ t.slug }}</a>
+                    <span class="fragment-client-tag" style="color: var(--yellow);">{{ t.count }} frags</span>
+                </div>
+                <div class="fragment-meta">{{ t.namespace }}</div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ================================================================= -->
+<!-- Chart.js                                                            -->
+<!-- ================================================================= -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    // Dark theme defaults
+    Chart.defaults.color = '#8b949e';
+    Chart.defaults.borderColor = '#30363d';
+    Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+
+    const namespaceColors = {
+        knowledge:   '#58a6ff',
+        engineering: '#f0883e',
+        industries:  '#a371f7',
+        clients:     '#3fb950',
+        unclassified:'#d29922',
+    };
+
+    // A.1 — By namespace
+    const nsData = {{ analytics.provenance.by_namespace | tojson }};
+    new Chart(document.getElementById('chart-namespace'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(nsData),
+            datasets: [{
+                label: 'Fragments',
+                data: Object.values(nsData),
+                backgroundColor: Object.keys(nsData).map(k => namespaceColors[k] || '#8b949e'),
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: '#30363d' } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+
+    // A.2 — By source type
+    const stData = {{ analytics.provenance.by_source_type | tojson }};
+    const stLabels = Object.keys(stData).slice(0, 10);
+    const stValues = stLabels.map(k => stData[k]);
+    new Chart(document.getElementById('chart-source-type'), {
+        type: 'bar',
+        data: {
+            labels: stLabels,
+            datasets: [{
+                label: 'Fragments',
+                data: stValues,
+                backgroundColor: '#58a6ff',
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: '#30363d' } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+
+    // A.3 — Time series per namespace (stacked bar by month)
+    const tsMonths = {{ analytics.provenance.time_series.months | tojson }};
+    const tsByNs = {{ analytics.provenance.time_series.by_namespace | tojson }};
+    const tsDatasets = Object.keys(tsByNs)
+        .filter(ns => tsByNs[ns].some(v => v > 0))
+        .map(ns => ({
+            label: ns,
+            data: tsByNs[ns],
+            backgroundColor: namespaceColors[ns] || '#8b949e',
+            borderWidth: 0,
+        }));
+    new Chart(document.getElementById('chart-time-series'), {
+        type: 'bar',
+        data: { labels: tsMonths, datasets: tsDatasets },
+        options: {
+            scales: {
+                x: { stacked: true, grid: { display: false } },
+                y: { stacked: true, grid: { color: '#30363d' } }
+            }
+        }
+    });
+
+    // B.1 — Topic fragment-count histogram
+    const hist = {{ analytics.coverage.histogram | tojson }};
+    new Chart(document.getElementById('chart-histogram'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(hist),
+            datasets: [{
+                label: 'Topics',
+                data: Object.values(hist),
+                backgroundColor: '#58a6ff',
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color: '#30363d' } }
+            }
+        }
+    });
+})();
+</script>
+{% endblock %}

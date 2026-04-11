@@ -201,6 +201,10 @@ RAW_DIR = MERIDIAN_ROOT / "raw"
 CAPTURE_DIR = MERIDIAN_ROOT / "capture"
 CLIENTS_YAML = MERIDIAN_ROOT / "clients.yaml"
 TOPICS_YAML = MERIDIAN_ROOT / "topics.yaml"
+ENGINEERING_TOPICS_YAML = MERIDIAN_ROOT / "engineering-topics.yaml"
+PROJECTS_YAML = MERIDIAN_ROOT / "projects.yaml"
+ENGINEERING_DIR = WIKI_DIR / "engineering"
+COMMITS_CAPTURE_DIR = CAPTURE_DIR / "external" / "commits"
 RECEIVER_URL = os.environ.get("MERIDIAN_RECEIVER_URL", "http://localhost:8000")
 RECEIVER_TOKEN = os.environ.get("MERIDIAN_RECEIVER_TOKEN", "")
 
@@ -243,8 +247,38 @@ def _load_topic_names() -> dict:
     return lookup
 
 
+def _load_engineering_topic_names() -> dict:
+    """Map engineering topic slug -> display name. Reads engineering-topics.yaml."""
+    if not ENGINEERING_TOPICS_YAML.exists():
+        return {}
+    try:
+        data = yaml.safe_load(ENGINEERING_TOPICS_YAML.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        return {}
+    lookup: dict[str, str] = {}
+    for entry in data.get("topics", []):
+        slug = (entry.get("slug") or "").strip()
+        name = (entry.get("name") or "").strip()
+        if slug and name:
+            lookup[slug] = name
+    return lookup
+
+
+def _load_projects() -> list[dict]:
+    """Return the list of project dicts from projects.yaml. Empty list if missing."""
+    if not PROJECTS_YAML.exists():
+        return []
+    try:
+        data = yaml.safe_load(PROJECTS_YAML.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        return []
+    return data.get("projects", [])
+
+
 CLIENT_NAMES: dict = _load_client_names()
 TOPIC_NAMES: dict = _load_topic_names()
+ENGINEERING_TOPIC_NAMES: dict = _load_engineering_topic_names()
+PROJECTS: list = _load_projects()
 
 
 def client_display_name(slug_or_name: str) -> str:
@@ -300,23 +334,49 @@ def read_article(path: Path) -> dict:
 
 
 def get_stats() -> dict:
-    """Get wiki statistics."""
+    """Get wiki statistics.
+
+    After the engineering namespace was added, `wiki_total` now reports
+    business-domain content only (knowledge + industries + clients +
+    articles + concepts). Engineering articles are counted separately
+    under `engineering_fragments` so the dashboard cards don't conflate
+    two unrelated knowledge streams. `capture_total` is recursive so
+    commit fragments waiting to be classified are visible too.
+    """
     stats = {
-        "wiki_total": 0,
+        "wiki_total": 0,           # business domain only (excludes engineering)
         "articles": 0,
         "concepts": 0,
         "knowledge": 0,
         "clients_current": 0,
         "clients_former": 0,
         "raw": 0,
-        "capture": 0,
+        "capture": 0,              # top-level capture/ only (original meaning)
+        "capture_total": 0,        # recursive, includes commit fragments
+        "capture_commits_queue": 0,  # unclassified commit fragments waiting
         "knowledge_topics": 0,
         "client_folders": 0,
         "industries": 0,
         "industries_with_content": 0,
+        # === Engineering namespace ===
+        "engineering_topics_registered": 0,
+        "engineering_topics_with_fragments": 0,
+        "engineering_fragments": 0,
+        "engineering_l3": 0,
+        "projects_registered": 0,
+        "projects_active": 0,
+        "commits_ingested_total": 0,
     }
     if WIKI_DIR.exists():
-        stats["wiki_total"] = sum(1 for _ in WIKI_DIR.rglob("*.md"))
+        # Count business-domain wiki entries only. Engineering is excluded
+        # from wiki_total so the headline number reflects a coherent set.
+        business_count = 0
+        for sub in ("knowledge", "industries", "clients", "articles", "concepts"):
+            d = WIKI_DIR / sub
+            if d.exists():
+                business_count += sum(1 for _ in d.rglob("*.md"))
+        stats["wiki_total"] = business_count
+
         articles_dir = WIKI_DIR / "articles"
         if articles_dir.exists():
             stats["articles"] = sum(1 for _ in articles_dir.glob("*.md"))
@@ -352,10 +412,46 @@ def get_stats() -> dict:
                     for f in d.glob("*.md")
                 )
             )
+        # Engineering namespace
+        if ENGINEERING_DIR.exists():
+            eng_fragments = [
+                f for f in ENGINEERING_DIR.rglob("*.md")
+                if f.name not in ("README.md", "_index.md")
+            ]
+            # Exclude index.md (Layer 3 syntheses) from the raw fragment count
+            stats["engineering_fragments"] = sum(
+                1 for f in eng_fragments if f.name != "index.md"
+            )
+            stats["engineering_l3"] = sum(
+                1 for f in eng_fragments if f.name == "index.md"
+            )
+            topic_dirs = [d for d in ENGINEERING_DIR.iterdir() if d.is_dir()]
+            stats["engineering_topics_with_fragments"] = sum(
+                1 for d in topic_dirs
+                if any(f.name not in ("README.md", "_index.md", "index.md")
+                       for f in d.glob("*.md"))
+            )
+    # Engineering + project registry counts (drive from registry files,
+    # not filesystem, so empty topics still show as registered)
+    stats["engineering_topics_registered"] = len(ENGINEERING_TOPIC_NAMES)
+    stats["projects_registered"] = len(PROJECTS)
+    stats["projects_active"] = sum(
+        1 for p in PROJECTS if p.get("status") == "active"
+    )
+
     if RAW_DIR.exists():
         stats["raw"] = sum(1 for _ in RAW_DIR.glob("*.md") if _.name != "_index.md")
     if CAPTURE_DIR.exists():
         stats["capture"] = sum(1 for _ in CAPTURE_DIR.glob("*.md"))
+        stats["capture_total"] = sum(1 for _ in CAPTURE_DIR.rglob("*.md"))
+    if COMMITS_CAPTURE_DIR.exists():
+        stats["capture_commits_queue"] = sum(
+            1 for _ in COMMITS_CAPTURE_DIR.rglob("*.md")
+        )
+        # Total commits ingested = unclassified (in capture/) + classified (moved to wiki/engineering/)
+        stats["commits_ingested_total"] = (
+            stats["capture_commits_queue"] + stats["engineering_fragments"]
+        )
     return stats
 
 
@@ -605,11 +701,97 @@ def dashboard():
         "latest_lint_report": latest_lint_report,
     }
 
+    # Engineering topics — list from registry, enriched with fragment counts
+    engineering_topics = _load_engineering_topics_with_counts()
+    # Projects — list from registry, enriched with fragment counts
+    projects = _load_projects_with_counts()
+
     return render_template("dashboard.html",
                            stats=stats, recent_log=recent_log,
                            clients=clients, topics=topics, industries=industries,
+                           engineering_topics=engineering_topics,
+                           projects=projects,
                            synth_status=synth_status, layer3_count=layer3_count,
                            metrics=metrics)
+
+
+def _load_engineering_topics_with_counts() -> list[dict]:
+    """Return engineering topics from registry, enriched with fragment counts
+    and Layer 3 status from the filesystem."""
+    result = []
+    if not ENGINEERING_TOPICS_YAML.exists():
+        return result
+    try:
+        data = yaml.safe_load(ENGINEERING_TOPICS_YAML.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        return result
+    for entry in data.get("topics", []):
+        if not isinstance(entry, dict):
+            continue
+        slug = entry.get("slug", "")
+        if not slug:
+            continue
+        topic_dir = ENGINEERING_DIR / slug
+        fragment_count = 0
+        has_l3 = False
+        if topic_dir.exists():
+            fragment_count = sum(
+                1 for f in topic_dir.glob("*.md")
+                if f.name not in ("README.md", "_index.md", "index.md")
+            )
+            if (topic_dir / "index.md").exists():
+                try:
+                    idx = (topic_dir / "index.md").read_text(encoding="utf-8", errors="replace")
+                    if "layer: 3" in idx:
+                        has_l3 = True
+                except Exception:
+                    pass
+        result.append({
+            "slug": slug,
+            "name": entry.get("name", slug),
+            "category": entry.get("category", ""),
+            "fragment_count": fragment_count,
+            "layer3": has_l3,
+        })
+    # Sort: L3 first, then by fragment count descending
+    result.sort(key=lambda x: (not x["layer3"], -x["fragment_count"]))
+    return result
+
+
+def _load_projects_with_counts() -> list[dict]:
+    """Return projects from registry, enriched with commit fragment counts."""
+    result = []
+    for p in PROJECTS:
+        slug = p.get("slug", "")
+        if not slug:
+            continue
+        # Count commits that have been ingested (capture + wiki/engineering combined)
+        commits_capture = 0
+        capture_dir = COMMITS_CAPTURE_DIR / slug
+        if capture_dir.exists():
+            commits_capture = sum(1 for _ in capture_dir.glob("*.md"))
+        commits_classified = 0
+        if ENGINEERING_DIR.exists():
+            # Classified fragments are prefixed with project slug in filename
+            commits_classified = sum(
+                1
+                for f in ENGINEERING_DIR.rglob(f"{slug}-*.md")
+                if f.name not in ("README.md", "_index.md", "index.md")
+            )
+        result.append({
+            "slug": slug,
+            "name": p.get("name", slug),
+            "description": p.get("description", ""),
+            "status": p.get("status", ""),
+            "stack": p.get("stack", []),
+            "commits_queue": commits_capture,
+            "commits_classified": commits_classified,
+            "commits_total": commits_capture + commits_classified,
+        })
+    # Sort: active first, then by total commits descending
+    status_order = {"active": 0, "dormant": 1, "archived": 2}
+    result.sort(key=lambda x: (status_order.get(x["status"], 9), -x["commits_total"]))
+    return result
 
 
 @app.route("/search")
@@ -1046,6 +1228,707 @@ def view_topic(slug):
         synthesis_html=synthesis_html,
         clients_on_topic=clients_on_topic,
     )
+
+
+@app.route("/engineering/")
+def engineering_index():
+    """Engineering topics browse page — companion to the /topic/ route family."""
+    engineering_topics = _load_engineering_topics_with_counts()
+    projects = _load_projects_with_counts()
+    stats = get_stats()
+    return render_template(
+        "engineering_index.html",
+        engineering_topics=engineering_topics,
+        projects=projects,
+        stats=stats,
+    )
+
+
+@app.route("/engineering/<slug>")
+def view_engineering_topic(slug):
+    """Render a single engineering topic page."""
+    topic_dir = ENGINEERING_DIR / slug
+    if not topic_dir.exists():
+        return "Engineering topic not found", 404
+
+    topic_name = ENGINEERING_TOPIC_NAMES.get(slug, slug.replace("-", " ").title())
+
+    # Check for Layer 3 synthesis
+    synthesis = None
+    synthesis_html = ""
+    index_file = topic_dir / "index.md"
+    if index_file.exists():
+        synthesis = read_article(index_file)
+        if synthesis.get("frontmatter", {}).get("layer") == 3:
+            topic_name = synthesis.get("title", topic_name)
+            synthesis_html = render_markdown(synthesis["body"])
+        else:
+            synthesis = None
+
+    # List Layer 2 fragments, enriched with project + commit metadata
+    articles = []
+    for f in sorted(topic_dir.rglob("*.md")):
+        if f.name in ("_index.md", "index.md", "README.md"):
+            continue
+        articles.append(_enrich_engineering_fragment(read_article(f)))
+    articles.sort(key=lambda a: a.get("sort_date", ""), reverse=True)
+
+    # Distinct project set for the filter chips
+    projects_on_topic = sorted(
+        {a["project_display"] for a in articles if a.get("project_display")}
+    )
+
+    return render_template(
+        "engineering_topic.html",
+        slug=slug,
+        topic_name=topic_name,
+        articles=articles,
+        synthesis=synthesis,
+        synthesis_html=synthesis_html,
+        projects_on_topic=projects_on_topic,
+    )
+
+
+@app.route("/project/<slug>")
+def view_project(slug):
+    """Render a single project page — its commits grouped by engineering topic."""
+    project = next((p for p in PROJECTS if p.get("slug") == slug), None)
+    if project is None:
+        return "Project not found", 404
+
+    # Gather commits for this project across both capture (unclassified)
+    # and wiki/engineering/ (classified by topic).
+    commits_by_topic: dict[str, list] = {}
+    # Classified: walk wiki/engineering/<topic>/<slug>-*.md
+    if ENGINEERING_DIR.exists():
+        for f in ENGINEERING_DIR.rglob(f"{slug}-*.md"):
+            if f.name in ("README.md", "_index.md", "index.md"):
+                continue
+            topic = f.parent.name
+            commits_by_topic.setdefault(topic, []).append(_enrich_engineering_fragment(read_article(f)))
+    # Unclassified: capture/external/commits/<slug>/
+    unclassified = []
+    capture_dir = COMMITS_CAPTURE_DIR / slug
+    if capture_dir.exists():
+        for f in sorted(capture_dir.glob("*.md")):
+            unclassified.append(_enrich_engineering_fragment(read_article(f)))
+
+    # Sort each topic bucket newest-first
+    for topic in commits_by_topic:
+        commits_by_topic[topic].sort(key=lambda a: a.get("sort_date", ""), reverse=True)
+    unclassified.sort(key=lambda a: a.get("sort_date", ""), reverse=True)
+
+    # Topic counts sorted descending for display
+    topic_counts = sorted(
+        [(topic, ENGINEERING_TOPIC_NAMES.get(topic, topic.replace("-", " ").title()), len(fragments))
+         for topic, fragments in commits_by_topic.items()],
+        key=lambda x: -x[2],
+    )
+
+    total_commits = sum(len(f) for f in commits_by_topic.values()) + len(unclassified)
+
+    return render_template(
+        "project.html",
+        project=project,
+        topic_counts=topic_counts,
+        commits_by_topic=commits_by_topic,
+        unclassified=unclassified,
+        total_commits=total_commits,
+    )
+
+
+def _enrich_engineering_fragment(article: dict) -> dict:
+    """Enrich a commit fragment with display-friendly project + date fields."""
+    fm = article.get("frontmatter", {}) or {}
+    project_slug = fm.get("source_project", "")
+    project_display = project_slug  # projects.yaml display names are loaded elsewhere; slug is fine here
+    for p in PROJECTS:
+        if p.get("slug") == project_slug:
+            project_display = p.get("name", project_slug)
+            break
+    article["project_slug"] = project_slug
+    article["project_display"] = project_display
+    article["commit_short_sha"] = fm.get("commit_short_sha", "")
+    article["files_changed"] = fm.get("files_changed", 0)
+    article["insertions"] = fm.get("insertions", 0)
+    article["deletions"] = fm.get("deletions", 0)
+    article["sort_date"] = fm.get("source_date", "")
+    article["topic_slug"] = fm.get("topic_slug", "unclassified")
+    article["classification_confidence"] = fm.get("classification_confidence", "")
+    # Use the commit subject as title; fall back to whatever read_article gave us
+    article["title"] = fm.get("title") or article.get("title", "")
+    # Preview from body
+    body = article.get("body", "")
+    preview = body[:300].replace("\n", " ").strip()
+    article["preview"] = preview
+    article["word_count"] = len(body.split())
+    # Path for link construction
+    path = article.get("path", "")
+    if isinstance(path, Path):
+        try:
+            article["path"] = path.relative_to(MERIDIAN_ROOT).as_posix()
+        except ValueError:
+            article["path"] = str(path)
+    return article
+
+
+@app.route("/analytics/")
+def analytics_page():
+    """Deep insights into the data — provenance, density, freshness, gaps."""
+    analytics = _compute_analytics()
+    return render_template("analytics.html", analytics=analytics)
+
+
+def _coerce_date_str(value) -> str:
+    """Normalize a frontmatter date field to a YYYY-MM-DD string.
+
+    PyYAML auto-parses ISO-like date strings into datetime.date objects,
+    which then fail `isinstance(x, str)` checks downstream. Handle both.
+    """
+    if not value:
+        return ""
+    if isinstance(value, str):
+        return value[:10] if len(value) >= 10 else value
+    # datetime.date / datetime.datetime
+    try:
+        return value.strftime("%Y-%m-%d")
+    except Exception:
+        return str(value)[:10]
+
+
+def _read_frontmatter_only(path: Path) -> dict:
+    """Fast read: parse only the YAML frontmatter and return it as a dict.
+    Returns empty dict if no frontmatter or parse error."""
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return {}
+    if not text.startswith("---"):
+        return {}
+    try:
+        end = text.index("\n---\n", 4)
+    except ValueError:
+        return {}
+    try:
+        fm = yaml.safe_load(text[4:end]) or {}
+    except yaml.YAMLError:
+        return {}
+    return fm if isinstance(fm, dict) else {}
+
+
+def _compute_analytics() -> dict:
+    """Walk wiki/ and capture/ and aggregate analytics.
+
+    Returns a dict with four sections: provenance, coverage, freshness, gaps.
+    Currently recomputes on every request. For 4500 files this is fast
+    enough (~1s). Add caching if it becomes a bottleneck.
+    """
+    # -----------------------------------------------------------------
+    # Gather every fragment we care about with its namespace + frontmatter
+    # -----------------------------------------------------------------
+    fragments: list[dict] = []
+
+    namespace_dirs = [
+        ("knowledge",   WIKI_DIR / "knowledge"),
+        ("industries",  WIKI_DIR / "industries"),
+        ("clients",     WIKI_DIR / "clients"),
+        ("engineering", WIKI_DIR / "engineering"),
+    ]
+    for ns, d in namespace_dirs:
+        if not d.exists():
+            continue
+        for f in d.rglob("*.md"):
+            if f.name in ("_index.md", "README.md", "PLACEHOLDER.md"):
+                continue
+            fm = _read_frontmatter_only(f)
+            layer = fm.get("layer", 2)
+            fragments.append({
+                "path": f.relative_to(MERIDIAN_ROOT).as_posix(),
+                "namespace": ns,
+                "is_synthesis": f.name == "index.md" and layer == 3,
+                "layer": layer,
+                "source_type": fm.get("source_type", ""),
+                "source_origin": fm.get("source_origin", ""),
+                "source_date": _coerce_date_str(fm.get("source_date", "")),
+                "source_project": fm.get("source_project", ""),
+                "topic_slug": fm.get("topic_slug", ""),
+                "classification_confidence": fm.get("classification_confidence", ""),
+            })
+
+    # Unclassified capture
+    if COMMITS_CAPTURE_DIR.exists():
+        for f in COMMITS_CAPTURE_DIR.rglob("*.md"):
+            fm = _read_frontmatter_only(f)
+            fragments.append({
+                "path": f.relative_to(MERIDIAN_ROOT).as_posix(),
+                "namespace": "unclassified",
+                "is_synthesis": False,
+                "layer": 2,
+                "source_type": fm.get("source_type", "internal-commit"),
+                "source_origin": fm.get("source_origin", "git"),
+                "source_date": _coerce_date_str(fm.get("source_date", "")),
+                "source_project": fm.get("source_project", ""),
+                "topic_slug": "unclassified",
+                "classification_confidence": "",
+            })
+
+    total_fragments = len(fragments)
+
+    # -----------------------------------------------------------------
+    # A. Source Provenance
+    # -----------------------------------------------------------------
+    by_namespace: dict[str, int] = defaultdict(int)
+    by_source_type: dict[str, int] = defaultdict(int)
+    by_source_origin: dict[str, int] = defaultdict(int)
+    for frag in fragments:
+        by_namespace[frag["namespace"]] += 1
+        st = frag["source_type"] or "(unspecified)"
+        by_source_type[st] += 1
+        so = frag["source_origin"] or "(unspecified)"
+        by_source_origin[so] += 1
+
+    # Time series: fragments per month (last 24 months that have data)
+    per_month: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    for frag in fragments:
+        d = frag["source_date"]
+        if isinstance(d, str) and len(d) >= 7:
+            month = d[:7]  # YYYY-MM
+            per_month[month][frag["namespace"]] += 1
+    # Sort + take last 24 months with any data
+    months_sorted = sorted(per_month.keys())[-24:]
+    time_series = {
+        "months": months_sorted,
+        "by_namespace": {
+            ns: [per_month[m].get(ns, 0) for m in months_sorted]
+            for ns in ("knowledge", "engineering", "industries", "clients", "unclassified")
+        },
+    }
+
+    provenance = {
+        "total": total_fragments,
+        "by_namespace": dict(sorted(by_namespace.items(), key=lambda x: -x[1])),
+        "by_source_type": dict(sorted(by_source_type.items(), key=lambda x: -x[1])),
+        "by_source_origin": dict(sorted(by_source_origin.items(), key=lambda x: -x[1])),
+        "time_series": time_series,
+    }
+
+    # -----------------------------------------------------------------
+    # B. Coverage & Density
+    # -----------------------------------------------------------------
+    topic_counts: dict[tuple[str, str], int] = defaultdict(int)
+    for frag in fragments:
+        if frag["is_synthesis"]:
+            continue
+        parts = frag["path"].split("/")
+        if len(parts) >= 3 and parts[0] == "wiki":
+            ns = parts[1]
+            topic_slug = parts[2]
+            topic_counts[(ns, topic_slug)] += 1
+
+    # Histogram buckets
+    buckets = {"0": 0, "1-4": 0, "5-19": 0, "20-49": 0, "50-99": 0, "100+": 0}
+    for count in topic_counts.values():
+        if count == 0:
+            buckets["0"] += 1
+        elif count < 5:
+            buckets["1-4"] += 1
+        elif count < 20:
+            buckets["5-19"] += 1
+        elif count < 50:
+            buckets["20-49"] += 1
+        elif count < 100:
+            buckets["50-99"] += 1
+        else:
+            buckets["100+"] += 1
+
+    top_topics = sorted(topic_counts.items(), key=lambda x: -x[1])[:10]
+    bottom_topics = [
+        (k, v) for k, v in sorted(topic_counts.items(), key=lambda x: x[1])[:10] if v > 0
+    ]
+
+    coverage = {
+        "topic_count": len(topic_counts),
+        "histogram": buckets,
+        "top_topics": [
+            {"namespace": ns, "slug": slug, "count": count}
+            for (ns, slug), count in top_topics
+        ],
+        "bottom_topics": [
+            {"namespace": ns, "slug": slug, "count": count}
+            for (ns, slug), count in bottom_topics
+        ],
+        "unclassified_count": by_namespace.get("unclassified", 0),
+    }
+
+    # -----------------------------------------------------------------
+    # C. Freshness — calendar heatmap data + stalest topics
+    # -----------------------------------------------------------------
+    # Last 180 days of activity, one bucket per day
+    from datetime import timedelta
+    today = datetime.now().date()
+    earliest = today - timedelta(days=180)
+    per_day: dict[str, int] = defaultdict(int)
+    for frag in fragments:
+        d = frag["source_date"]
+        if isinstance(d, str) and len(d) >= 10:
+            try:
+                frag_date = datetime.strptime(d[:10], "%Y-%m-%d").date()
+            except ValueError:
+                continue
+            if frag_date >= earliest:
+                per_day[d[:10]] += 1
+
+    # Build ordered day list for the heatmap
+    heatmap_days = []
+    cur = earliest
+    while cur <= today:
+        heatmap_days.append({
+            "date": cur.strftime("%Y-%m-%d"),
+            "count": per_day.get(cur.strftime("%Y-%m-%d"), 0),
+            "weekday": cur.weekday(),  # 0=Mon
+        })
+        cur = cur + timedelta(days=1)
+
+    # Stalest topics: latest source_date per topic, sorted ascending (oldest first)
+    topic_latest_date: dict[tuple[str, str], str] = {}
+    for frag in fragments:
+        if frag["is_synthesis"]:
+            continue
+        parts = frag["path"].split("/")
+        if len(parts) >= 3 and parts[0] == "wiki":
+            ns, slug = parts[1], parts[2]
+            d = frag["source_date"]
+            if isinstance(d, str) and len(d) >= 10:
+                existing = topic_latest_date.get((ns, slug), "")
+                if d > existing:
+                    topic_latest_date[(ns, slug)] = d[:10]
+    stalest = sorted(
+        [(k, v) for k, v in topic_latest_date.items() if v],
+        key=lambda x: x[1],
+    )[:10]
+    stalest_list = []
+    for (ns, slug), last in stalest:
+        try:
+            last_dt = datetime.strptime(last, "%Y-%m-%d").date()
+            days_since = (today - last_dt).days
+        except ValueError:
+            days_since = 0
+        stalest_list.append({
+            "namespace": ns,
+            "slug": slug,
+            "last_date": last,
+            "days_since": days_since,
+        })
+
+    freshness = {
+        "heatmap": heatmap_days,
+        "heatmap_max": max((d["count"] for d in heatmap_days), default=1),
+        "stalest_topics": stalest_list,
+    }
+
+    # -----------------------------------------------------------------
+    # D. Gaps & Opportunities
+    # -----------------------------------------------------------------
+    # Topics with 0 external evidence (all currently — placeholder until Readwise)
+    external_source_types = {"external-blog", "external-academic", "external-vendor",
+                              "external-case-study", "external-whitepaper", "external-book",
+                              "external-platform-docs"}
+    topics_with_external: set[tuple[str, str]] = set()
+    topics_with_internal: set[tuple[str, str]] = set()
+    for frag in fragments:
+        if frag["is_synthesis"]:
+            continue
+        parts = frag["path"].split("/")
+        if len(parts) >= 3 and parts[0] == "wiki":
+            ns, slug = parts[1], parts[2]
+            if frag["source_type"] in external_source_types:
+                topics_with_external.add((ns, slug))
+            else:
+                topics_with_internal.add((ns, slug))
+
+    all_topic_keys = set(topic_counts.keys())
+    topics_internal_only = all_topic_keys - topics_with_external
+    topics_external_only = all_topic_keys - topics_with_internal
+    topics_both = topics_with_internal & topics_with_external
+
+    sparse_topics = sorted(
+        [(k, v) for k, v in topic_counts.items() if 0 < v < 10],
+        key=lambda x: x[1],
+    )
+
+    gaps = {
+        "topics_internal_only": len(topics_internal_only),
+        "topics_external_only": len(topics_external_only),
+        "topics_both": len(topics_both),
+        "sparse_topics": [
+            {"namespace": ns, "slug": slug, "count": count}
+            for (ns, slug), count in sparse_topics
+        ],
+        "unclassified_commits": by_namespace.get("unclassified", 0),
+    }
+
+    return {
+        "total_fragments": total_fragments,
+        "provenance": provenance,
+        "coverage": coverage,
+        "freshness": freshness,
+        "gaps": gaps,
+    }
+
+
+@app.route("/graph/")
+def graph_page():
+    """Knowledge graph visualization — Cytoscape.js force-directed network."""
+    return render_template("graph.html")
+
+
+@app.route("/graph/data.json")
+def graph_data():
+    """Return the knowledge graph as Cytoscape.js nodes/edges JSON."""
+    return jsonify(_compute_knowledge_graph())
+
+
+def _compute_knowledge_graph() -> dict:
+    """Walk the wiki and build a container-level knowledge graph.
+
+    Nodes: topics (business/engineering), industries, clients, projects.
+    Edges: topic→topic (via Related Topics wikilinks in L3 articles),
+    client→topic (citations in client stubs), project→engineering-topic,
+    industry→client (from clients.yaml), industry→business-topic (via
+    wiki/industries content).
+    """
+    nodes: list[dict] = []
+    edges: list[dict] = []
+    seen_edges: set[tuple[str, str]] = set()
+
+    def add_edge(source: str, target: str, kind: str) -> None:
+        if source == target:
+            return
+        key = (source, target) if source < target else (target, source)
+        if key in seen_edges:
+            return
+        seen_edges.add(key)
+        edges.append({
+            "data": {
+                "id": f"{source}__{target}",
+                "source": source,
+                "target": target,
+                "kind": kind,
+            }
+        })
+
+    # ---- Business topics from wiki/knowledge ----
+    knowledge_dir = WIKI_DIR / "knowledge"
+    business_topic_slugs: set[str] = set()
+    if knowledge_dir.exists():
+        for d in knowledge_dir.iterdir():
+            if not d.is_dir():
+                continue
+            slug = d.name
+            frag_count = sum(
+                1 for f in d.rglob("*.md")
+                if f.name not in ("_index.md", "index.md")
+            )
+            has_l3 = False
+            if (d / "index.md").exists():
+                try:
+                    if "layer: 3" in (d / "index.md").read_text(encoding="utf-8", errors="replace"):
+                        has_l3 = True
+                except Exception:
+                    pass
+            node_id = f"topic:{slug}"
+            business_topic_slugs.add(slug)
+            nodes.append({
+                "data": {
+                    "id": node_id,
+                    "label": TOPIC_NAMES.get(slug, slug.replace("-", " ").title()),
+                    "type": "business_topic",
+                    "namespace": "business",
+                    "size": max(6, min(40, frag_count // 3 + 6)),
+                    "fragment_count": frag_count,
+                    "has_l3": has_l3,
+                    "href": f"/topic/{slug}",
+                }
+            })
+
+    # ---- Engineering topics ----
+    eng_topic_slugs: set[str] = set()
+    if ENGINEERING_DIR.exists():
+        for d in ENGINEERING_DIR.iterdir():
+            if not d.is_dir():
+                continue
+            slug = d.name
+            frag_count = sum(
+                1 for f in d.glob("*.md")
+                if f.name not in ("README.md", "_index.md", "index.md")
+            )
+            has_l3 = (d / "index.md").exists()
+            node_id = f"eng:{slug}"
+            eng_topic_slugs.add(slug)
+            nodes.append({
+                "data": {
+                    "id": node_id,
+                    "label": ENGINEERING_TOPIC_NAMES.get(slug, slug.replace("-", " ").title()),
+                    "type": "engineering_topic",
+                    "namespace": "engineering",
+                    "size": max(6, min(40, frag_count // 10 + 6)),
+                    "fragment_count": frag_count,
+                    "has_l3": has_l3,
+                    "href": f"/engineering/{slug}",
+                }
+            })
+
+    # ---- Industries ----
+    industries_dir = WIKI_DIR / "industries"
+    industry_slugs: set[str] = set()
+    if industries_dir.exists():
+        for d in industries_dir.iterdir():
+            if not d.is_dir():
+                continue
+            slug = d.name
+            frag_count = sum(
+                1 for f in d.glob("*.md")
+                if f.name not in ("_index.md", "index.md", "PLACEHOLDER.md")
+            )
+            node_id = f"industry:{slug}"
+            industry_slugs.add(slug)
+            nodes.append({
+                "data": {
+                    "id": node_id,
+                    "label": slug.replace("-", " ").title(),
+                    "type": "industry",
+                    "namespace": "industry",
+                    "size": max(6, min(40, frag_count // 2 + 8)),
+                    "fragment_count": frag_count,
+                    "href": f"/industry/{slug}",
+                }
+            })
+
+    # ---- Clients ----
+    client_slugs: set[str] = set()
+    clients_dir = WIKI_DIR / "clients" / "current"
+    if clients_dir.exists():
+        for d in clients_dir.iterdir():
+            if not d.is_dir():
+                continue
+            slug = d.name
+            node_id = f"client:{slug}"
+            client_slugs.add(slug)
+            nodes.append({
+                "data": {
+                    "id": node_id,
+                    "label": CLIENT_NAMES.get(slug, slug.replace("-", " ").title()),
+                    "type": "client",
+                    "namespace": "client",
+                    "size": 10,
+                    "href": f"/client/{slug}",
+                }
+            })
+
+    # ---- Projects ----
+    for p in PROJECTS:
+        slug = p.get("slug", "")
+        if not slug:
+            continue
+        commit_count = 0
+        if ENGINEERING_DIR.exists():
+            commit_count = sum(
+                1
+                for f in ENGINEERING_DIR.rglob(f"{slug}-*.md")
+                if f.name not in ("README.md", "_index.md", "index.md")
+            )
+        node_id = f"project:{slug}"
+        nodes.append({
+            "data": {
+                "id": node_id,
+                "label": p.get("name", slug),
+                "type": "project",
+                "namespace": "project",
+                "size": max(6, min(40, commit_count // 8 + 6)),
+                "fragment_count": commit_count,
+                "href": f"/project/{slug}",
+            }
+        })
+
+    # ---- Edges: Topic → Topic (from Related Topics in L3 articles) ----
+    wikilink_pat = re.compile(r"\[\[([^|\]]+)")
+    if knowledge_dir.exists():
+        for idx in knowledge_dir.rglob("index.md"):
+            try:
+                content = idx.read_text(encoding="utf-8", errors="replace")
+            except Exception:
+                continue
+            if "layer: 3" not in content:
+                continue
+            source_slug = idx.parent.name
+            source_id = f"topic:{source_slug}"
+            # Find a "## Related Topics" section and extract wikilinks
+            related_match = re.search(r"##\s+Related Topics\s*\n(.*?)(?=\n##|\Z)", content, re.DOTALL)
+            if not related_match:
+                continue
+            section = related_match.group(1)
+            for link in wikilink_pat.findall(section):
+                # Extract slug from link like "wiki/knowledge/seo" or "seo"
+                target_slug = link.strip().split("/")[-1].replace(".md", "")
+                if target_slug in business_topic_slugs and target_slug != source_slug:
+                    add_edge(source_id, f"topic:{target_slug}", "related")
+
+    # ---- Edges: Client → Business topic (from client _index.md wikilinks) ----
+    if clients_dir.exists():
+        for d in clients_dir.iterdir():
+            if not d.is_dir():
+                continue
+            client_slug = d.name
+            idx = d / "_index.md"
+            if not idx.exists():
+                continue
+            try:
+                content = idx.read_text(encoding="utf-8", errors="replace")
+            except Exception:
+                continue
+            # Match links to knowledge/ topics
+            for m in re.finditer(r"\[\[knowledge/([^|\]/]+)", content):
+                topic = m.group(1).replace(".md", "")
+                if topic in business_topic_slugs:
+                    add_edge(f"client:{client_slug}", f"topic:{topic}", "cited_by")
+
+    # ---- Edges: Project → Engineering topic (from classified commits) ----
+    if ENGINEERING_DIR.exists():
+        project_topic_edges: set[tuple[str, str]] = set()
+        for f in ENGINEERING_DIR.rglob("*.md"):
+            if f.name in ("README.md", "_index.md", "index.md"):
+                continue
+            topic_slug = f.parent.name
+            # Filename format: <project-slug>-<short-sha>-<slug>.md
+            name = f.stem
+            # Project slug is everything up to the first hex-looking segment
+            for p in PROJECTS:
+                ps = p.get("slug", "")
+                if ps and name.startswith(f"{ps}-"):
+                    project_topic_edges.add((ps, topic_slug))
+                    break
+        for proj, topic in project_topic_edges:
+            if topic in eng_topic_slugs:
+                add_edge(f"project:{proj}", f"eng:{topic}", "has_commits")
+
+    # ---- Edges: Industry → Client (from clients.yaml industry field) ----
+    if CLIENTS_YAML.exists():
+        try:
+            data = yaml.safe_load(CLIENTS_YAML.read_text(encoding="utf-8")) or {}
+            for entry in data.get("clients", []):
+                if not isinstance(entry, dict):
+                    continue
+                client_slug = entry.get("slug", "")
+                industry = entry.get("industry", "")
+                if client_slug and industry and client_slug in client_slugs and industry in industry_slugs:
+                    add_edge(f"industry:{industry}", f"client:{client_slug}", "contains")
+        except yaml.YAMLError:
+            pass
+
+    return {"nodes": nodes, "edges": edges, "stats": {
+        "node_count": len(nodes),
+        "edge_count": len(edges),
+    }}
 
 
 @app.route("/ask", methods=["GET", "POST"])

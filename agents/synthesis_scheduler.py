@@ -116,7 +116,7 @@ def get_queue_status() -> dict:
     return status
 
 
-def process_pending(limit: int = 5):
+def process_pending(limit: int = 5, force: bool = False):
     """Process the next N pending topics."""
     import importlib.util
     spec = importlib.util.spec_from_file_location("synthesizer", ROOT / "agents" / "synthesizer.py")
@@ -147,7 +147,7 @@ def process_pending(limit: int = 5):
 
         print(f"\nSynthesizing: {topic}", file=sys.stderr)
         try:
-            result = synthesize_topic(topic)
+            result = synthesize_topic(topic, force=force)
 
             for q in queue:
                 if q["topic"] == topic:
@@ -184,6 +184,7 @@ def main():
     parser.add_argument("--populate", action="store_true", help="Populate queue from topics.yaml")
     parser.add_argument("--status", action="store_true", help="Show queue status")
     parser.add_argument("--limit", type=int, default=5, help="Max topics to process")
+    parser.add_argument("--force", action="store_true", help="Overwrite existing Layer 3 articles")
     args = parser.parse_args()
 
     if args.populate:
@@ -197,7 +198,7 @@ def main():
         return
 
     # Process pending
-    results = process_pending(args.limit)
+    results = process_pending(args.limit, force=args.force)
     output = {
         "status": "ok",
         "processed": len(results),

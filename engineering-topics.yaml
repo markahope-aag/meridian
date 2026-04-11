@@ -1,0 +1,108 @@
+# Meridian Engineering Topics Registry
+#
+# The topic taxonomy for the engineering knowledge namespace
+# (wiki/engineering/). This is the functional-capability axis for
+# technical knowledge — what you've learned about specific technologies,
+# frameworks, workflows, and practices while building things.
+#
+# The compiler and ingestors MUST match against this taxonomy before
+# filing into wiki/engineering/<slug>/. New topics require human
+# approval — never silently create a new folder.
+#
+# Starter seed is deliberately tight (15 topics) and biased toward
+# Mark's actual stack: Next.js + Radix + Tailwind + Anthropic SDK +
+# Clerk/Supabase + Vercel, plus Meridian-specific Python/Flask/Coolify.
+# Expand as the corpus reveals gaps.
+#
+# Each entry:
+#   name         — display name
+#   slug         — kebab-case, unique
+#   category     — frontend | backend | data | ai-llm | infra | workflow
+#   aliases      — common variants the compiler should normalize to slug
+
+topics:
+
+  # === FRONTEND / FRAMEWORK ===
+
+  - name: "Next.js"
+    slug: nextjs
+    category: frontend
+    aliases: [next, nextjs-app-router, next-js, next-app]
+
+  - name: "React Patterns"
+    slug: react-patterns
+    category: frontend
+    aliases: [react, react-hooks, react-server-components, react-state]
+
+  - name: "Radix UI"
+    slug: radix-ui
+    category: frontend
+    aliases: [radix, shadcn, shadcn-ui]
+
+  - name: "TypeScript"
+    slug: typescript
+    category: frontend
+    aliases: [ts, tsx, typescript-types, tsconfig]
+
+  # === AUTH / BACKEND / DATA ===
+
+  - name: "Clerk Auth"
+    slug: clerk-auth
+    category: backend
+    aliases: [clerk, clerk-nextjs, clerk-middleware]
+
+  - name: "Supabase"
+    slug: supabase
+    category: data
+    aliases: [supabase-auth, supabase-rls, supabase-edge-functions, postgres-supabase]
+
+  - name: "Postgres + pgvector"
+    slug: postgres-pgvector
+    category: data
+    aliases: [pgvector, postgres-extensions, vector-search, embeddings-postgres]
+
+  # === AI / LLM ===
+
+  - name: "LLM Integration (Anthropic)"
+    slug: llm-integration-anthropic
+    category: ai-llm
+    aliases: [anthropic-sdk, claude-api, anthropic-api, claude-integration, messages-api]
+
+  - name: "Prompt Engineering"
+    slug: prompt-engineering
+    category: ai-llm
+    aliases: [prompts, prompt-design, system-prompts, prompt-templates]
+
+  - name: "Claude Code"
+    slug: claude-code
+    category: ai-llm
+    aliases: [claude-code-cli, claude-code-hooks, claude-code-agents, cc-sessions]
+
+  # === INFRASTRUCTURE / DEPLOYMENT ===
+
+  - name: "Vercel Deployment"
+    slug: vercel-deployment
+    category: infra
+    aliases: [vercel, vercel-edge, vercel-serverless, vercel-cron]
+
+  - name: "Coolify Deployment"
+    slug: coolify-deployment
+    category: infra
+    aliases: [coolify, coolify-bind-mount, coolify-docker, self-hosted]
+
+  - name: "Docker"
+    slug: docker
+    category: infra
+    aliases: [dockerfile, docker-compose, containers, containerization]
+
+  # === WORKFLOW / CROSS-CUTTING ===
+
+  - name: "n8n Workflows"
+    slug: n8n-workflows
+    category: workflow
+    aliases: [n8n, n8n-cron, n8n-webhook, workflow-automation]
+
+  - name: "Debugging Playbooks"
+    slug: debugging
+    category: workflow
+    aliases: [debugging-techniques, error-investigation, root-cause-analysis, troubleshooting]

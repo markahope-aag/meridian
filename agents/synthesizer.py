@@ -69,6 +69,7 @@ DIMENSION_CONFIG: dict[str, dict] = {
         "registry_file": "topics.yaml",
         "registry_key":  "categories",   # historical — topics.yaml uses "categories"
         "default_domain_type": "strategy",
+        "write_prompt": "synthesizer_write.md",
     },
     "industry": {
         "fragment_root": WIKI_DIR / "industries",
@@ -77,6 +78,16 @@ DIMENSION_CONFIG: dict[str, dict] = {
         "registry_file": "industries.yaml",
         "registry_key":  "industries",
         "default_domain_type": "strategy",
+        "write_prompt": "synthesizer_write.md",
+    },
+    "engineering": {
+        "fragment_root": WIKI_DIR / "engineering",
+        "cache_subdir":  "engineering",
+        "versions_subdir": "engineering",
+        "registry_file": "engineering-topics.yaml",
+        "registry_key":  "topics",
+        "default_domain_type": "platform-mechanics",  # engineering tends to change fast
+        "write_prompt": "synthesizer_write_engineering.md",
     },
 }
 
@@ -407,9 +418,12 @@ def merge_extractions(extractions: list[dict]) -> dict:
 def write_synthesis(client: anthropic.Anthropic, topic_name: str, topic_slug: str,
                     extractions: dict, fragment_count: int, earliest_date: str,
                     latest_date: str, domain_type: str, monitoring_freq: str,
-                    config: dict) -> str:
+                    config: dict, dimension: str = "topic") -> str:
     """Write the Layer 3 synthesis article."""
-    system_prompt = (PROMPTS_DIR / "synthesizer_write.md").read_text(encoding="utf-8")
+    prompt_file = DIMENSION_CONFIG.get(dimension, DIMENSION_CONFIG["topic"]).get(
+        "write_prompt", "synthesizer_write.md"
+    )
+    system_prompt = (PROMPTS_DIR / prompt_file).read_text(encoding="utf-8")
     writing_model = config.get("compiler", {}).get(
         "writing_model", "claude-sonnet-4-6"
     )
@@ -698,6 +712,7 @@ def do_write(
         bundle["domain_type"],
         bundle["monitoring_freq"],
         config,
+        dimension,
     )
 
     # Stamp provenance so we can always answer "which prompt / model /
@@ -706,7 +721,9 @@ def do_write(
     provenance = {
         "generated_at": _now_iso(),
         "run_id": run_id,
-        "synthesizer_prompt_sha": _sha12(PROMPTS_DIR / "synthesizer_write.md"),
+        "synthesizer_prompt_sha": _sha12(PROMPTS_DIR / DIMENSION_CONFIG.get(
+            dimension, DIMENSION_CONFIG["topic"]
+        ).get("write_prompt", "synthesizer_write.md")),
         "extract_prompt_sha": _sha12(PROMPTS_DIR / "synthesizer_extract.md"),
         "writer_model": writer_model,
         "extract_model": extract_model,

@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}Knowledge Graph — Meridian{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 8px;">Knowledge Graph</h1>
+<div style="color: var(--text-muted); margin-bottom: 16px;">
+    Force-directed view of topics, industries, clients, and projects.
+    Node size reflects fragment count. Click a node to navigate.
+</div>
+
+<div id="graph-controls" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center;">
+    <input type="search" id="graph-search" class="fragment-search" placeholder="Search nodes…" autocomplete="off" style="min-width: 240px;">
+    <button type="button" class="chip active" data-ns="all">All</button>
+    <button type="button" class="chip" data-ns="business">Business topics</button>
+    <button type="button" class="chip" data-ns="engineering">Engineering topics</button>
+    <button type="button" class="chip" data-ns="industry">Industries</button>
+    <button type="button" class="chip" data-ns="client">Clients</button>
+    <button type="button" class="chip" data-ns="project">Projects</button>
+    <button type="button" id="graph-fit" class="download-btn" style="margin-left: auto;">Fit to screen</button>
+</div>
+
+<div id="cy" style="height: 75vh; min-height: 560px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;"></div>
+
+<div id="graph-status" style="color: var(--text-muted); font-size: 12px; margin-top: 8px;">Loading graph…</div>
+
+<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+<script>
+(async function () {
+    const status = document.getElementById('graph-status');
+    const cyEl = document.getElementById('cy');
+
+    let data;
+    try {
+        const resp = await fetch('/graph/data.json');
+        data = await resp.json();
+    } catch (e) {
+        status.textContent = 'Failed to load graph data: ' + e;
+        return;
+    }
+
+    status.textContent = `${data.stats.node_count} nodes · ${data.stats.edge_count} edges`;
+
+    const colorByNamespace = {
+        business:    '#58a6ff',
+        engineering: '#f0883e',
+        industry:    '#a371f7',
+        client:      '#3fb950',
+        project:     '#d29922',
+    };
+
+    const cy = cytoscape({
+        container: cyEl,
+        elements: [...data.nodes, ...data.edges],
+        style: [
+            {
+                selector: 'node',
+                style: {
+                    'background-color': (ele) => colorByNamespace[ele.data('namespace')] || '#8b949e',
+                    'label': 'data(label)',
+                    'color': '#e6edf3',
+                    'font-size': '10px',
+                    'text-valign': 'bottom',
+                    'text-halign': 'center',
+                    'text-margin-y': 4,
+                    'width': 'data(size)',
+                    'height': 'data(size)',
+                    'border-width': 1,
+                    'border-color': '#0d1117',
+                    'min-zoomed-font-size': 8,
+                }
+            },
+            {
+                selector: 'node[has_l3]',
+                style: {
+                    'border-color': '#3fb950',
+                    'border-width': 2,
+                }
+            },
+            {
+                selector: 'edge',
+                style: {
+                    'width': 1,
+                    'line-color': '#30363d',
+                    'curve-style': 'bezier',
+                    'opacity': 0.6,
+                }
+            },
+            {
+                selector: 'edge[kind = "related"]',
+                style: {
+                    'line-color': '#58a6ff',
+                    'opacity': 0.5,
+                }
+            },
+            {
+                selector: 'node:selected, node.highlighted',
+                style: {
+                    'border-color': '#f85149',
+                    'border-width': 3,
+                }
+            },
+            {
+                selector: 'node.dim',
+                style: {
+                    'opacity': 0.15,
+                }
+            },
+            {
+                selector: 'edge.dim',
+                style: {
+                    'opacity': 0.1,
+                }
+            }
+        ],
+        layout: {
+            name: 'cose',
+            animate: false,
+            nodeRepulsion: 6000,
+            idealEdgeLength: 90,
+            edgeElasticity: 0.4,
+            gravity: 0.3,
+            numIter: 1500,
+            fit: true,
+            padding: 40,
+        },
+        wheelSensitivity: 0.2,
+    });
+
+    // Click navigation
+    cy.on('tap', 'node', (evt) => {
+        const href = evt.target.data('href');
+        if (href) window.location.href = href;
+    });
+
+    // Hover tooltip via cytoscape's built-in title (the data.label shows already)
+    cy.on('mouseover', 'node', (evt) => {
+        const n = evt.target;
+        const parts = [n.data('label')];
+        if (n.data('fragment_count') !== undefined) parts.push(n.data('fragment_count') + ' frags');
+        if (n.data('has_l3')) parts.push('L3');
+        status.textContent = parts.join(' · ');
+    });
+    cy.on('mouseout', 'node', () => {
+        status.textContent = `${data.stats.node_count} nodes · ${data.stats.edge_count} edges`;
+    });
+
+    // Filter by namespace
+    const chips = document.querySelectorAll('#graph-controls .chip');
+    chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            chips.forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            const ns = chip.dataset.ns;
+            if (ns === 'all') {
+                cy.elements().removeClass('dim');
+            } else {
+                cy.nodes().forEach(n => {
+                    if (n.data('namespace') === ns) n.removeClass('dim');
+                    else n.addClass('dim');
+                });
+                cy.edges().forEach(e => {
+                    const s = e.source();
+                    const t = e.target();
+                    if (s.data('namespace') === ns || t.data('namespace') === ns) e.removeClass('dim');
+                    else e.addClass('dim');
+                });
+            }
+        });
+    });
+
+    // Search highlighting
+    const search = document.getElementById('graph-search');
+    search.addEventListener('input', (e) => {
+        const q = e.target.value.toLowerCase();
+        cy.nodes().removeClass('highlighted');
+        if (!q) return;
+        cy.nodes().forEach(n => {
+            if (n.data('label').toLowerCase().includes(q)) n.addClass('highlighted');
+        });
+    });
+
+    // Fit button
+    document.getElementById('graph-fit').addEventListener('click', () => cy.fit(null, 40));
+})();
+</script>
+{% endblock %}

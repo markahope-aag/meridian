@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} — Project — Meridian{% endblock %}
+{% block content %}
+<div class="topic-backlink">
+    <a href="/engineering/">&larr; Engineering</a>
+    <span class="topic-backlink-meta">
+        Project: <strong>{{ project.name }}</strong> · {{ total_commits }} commits ingested
+    </span>
+</div>
+
+<h1 style="margin-bottom: 8px;">{{ project.name }}</h1>
+<div style="color: var(--text-muted); margin-bottom: 16px; font-size: 14px;">
+    {{ project.description }}
+</div>
+
+<div class="meta" style="margin-bottom: 24px;">
+    <span>Status: <strong>{{ project.status }}</strong></span>
+    <span>Commits: <strong>{{ total_commits }}</strong></span>
+    {% if unclassified %}<span style="color: var(--yellow);">Unclassified: {{ unclassified|length }}</span>{% endif %}
+</div>
+
+{% if project.stack %}
+<div style="margin-bottom: 24px;">
+    {% for s in project.stack %}
+    <span class="tag">{{ s }}</span>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if topic_counts %}
+<div class="card">
+    <h2>Commits by Topic</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        How this project's engineering knowledge distributes across the topic registry.
+    </div>
+    {% for slug, name, count in topic_counts %}
+    <div class="list-item">
+        <div>
+            <a href="/engineering/{{ slug }}">{{ name }}</a>
+        </div>
+        <span class="count">{{ count }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% for slug, name, count in topic_counts %}
+<div class="card">
+    <h2>{{ name }} ({{ count }})</h2>
+    <ul class="fragment-list">
+        {% for a in commits_by_topic[slug][:20] %}
+        <li class="fragment-item">
+            <div class="fragment-head">
+                <a href="/article/{{ a.path }}" class="fragment-title">{{ a.title }}</a>
+                {% if a.commit_short_sha %}
+                <span class="fragment-client-tag"><code>{{ a.commit_short_sha }}</code></span>
+                {% endif %}
+            </div>
+            {% if a.preview %}
+            <div class="fragment-preview">{{ a.preview }}</div>
+            {% endif %}
+            <div class="fragment-meta">
+                {% if a.files_changed %}{{ a.files_changed }} files · {% endif %}
+                {% if a.insertions or a.deletions %}+{{ a.insertions or 0 }}/-{{ a.deletions or 0 }} · {% endif %}
+                {% if a.sort_date %}{{ a.sort_date }}{% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% if commits_by_topic[slug]|length > 20 %}
+    <div style="padding: 8px 0; color: var(--text-muted); font-size: 13px;">
+        … and {{ commits_by_topic[slug]|length - 20 }} more in <a href="/engineering/{{ slug }}">{{ name }}</a>
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+
+{% if unclassified %}
+<div class="card">
+    <h2>Unclassified ({{ unclassified|length }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Commits the classifier couldn't confidently assign to a topic. Candidates for new topic slugs or manual review.
+    </div>
+    <ul class="fragment-list">
+        {% for a in unclassified[:30] %}
+        <li class="fragment-item">
+            <div class="fragment-head">
+                <span class="fragment-title">{{ a.title }}</span>
+                {% if a.commit_short_sha %}
+                <span class="fragment-client-tag"><code>{{ a.commit_short_sha }}</code></span>
+                {% endif %}
+            </div>
+            {% if a.preview %}
+            <div class="fragment-preview">{{ a.preview }}</div>
+            {% endif %}
+            <div class="fragment-meta">
+                {% if a.sort_date %}{{ a.sort_date }}{% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% if unclassified|length > 30 %}
+    <div style="padding: 8px 0; color: var(--text-muted); font-size: 13px;">
+        … and {{ unclassified|length - 30 }} more
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

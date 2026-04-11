@@ -1,0 +1,105 @@
+# Meridian Projects Registry
+#
+# Projects are the "client" analog for the engineering knowledge namespace
+# (wiki/engineering/). Each project contributes engineering learnings —
+# via git history, claude-code transcripts, manual post-mortems, etc. —
+# that get filed against the slugs below.
+#
+# The compiler and ingestors MUST match against this list. New projects
+# require human approval — never silently create a new folder.
+#
+# Each entry:
+#   name         — display name used in UI / dashboard
+#   slug         — kebab-case, unique, filesystem-safe
+#   description  — one-sentence scope statement
+#   status       — active | dormant | archived
+#   stack        — list of primary technologies / libraries (used for
+#                  routing extractions through stack-appropriate prompts)
+#   repo_path    — absolute path on the primary dev machine; used by
+#                  scripts/ingest-git-history.py to walk commits
+
+projects:
+
+  - name: "Meridian"
+    slug: meridian
+    description: "LLM-powered knowledge synthesis system — personal second brain and Asymmetric institutional memory."
+    status: active
+    stack: [python, flask, sqlite, coolify, n8n, anthropic-api, weasyprint, jinja2]
+    repo_path: C:/Users/markh/projects/meridian
+
+  - name: "ClientBrain"
+    slug: client-brain
+    description: "Team-facing client intelligence over Gmail, Slack, Drive, ClickUp, and Fathom."
+    status: active
+    stack: [typescript, nextjs, supabase, vercel, pgvector, anthropic-api, clerk]
+    repo_path: C:/Users/markh/projects/client-brain
+
+  - name: "Eydn"
+    slug: eydn-app
+    description: "Consumer wedding planner SaaS targeting recurring revenue."
+    status: active
+    stack: [typescript, nextjs, clerk, supabase, vercel, anthropic-api, react-pdf, tavily, upstash-redis, sentry]
+    repo_path: C:/Users/markh/projects/eydn-app
+
+  - name: "Orbit ABM"
+    slug: orbitabm
+    description: "Multi-tenant account-based marketing platform."
+    status: active
+    stack: [typescript, nextjs, radix-ui, tailwind-css]
+    repo_path: C:/Users/markh/projects/orbitabm/orbit
+
+  - name: "AsymXray"
+    slug: asymxray
+    description: "Internal Asymmetric dashboard aggregating Google Ads, GSC, GA4, and other marketing data sources into one coherent view."
+    status: active
+    stack: [typescript, nextjs, radix-ui, anthropic-api, google-generative-ai, tailwind-css]
+    repo_path: C:/Users/markh/projects/asymxray
+
+  - name: "ContentCommand"
+    slug: contentcommand
+    description: "AI-enabled content development platform (under construction)."
+    status: active
+    stack: [typescript, nextjs, radix-ui, anthropic-api, tailwind-css]
+    repo_path: C:/Users/markh/projects/contentcommand
+
+  - name: "LabelCheck"
+    slug: labelcheck
+    description: "US FDA compliance checker for food and beverage labels."
+    status: active
+    stack: [typescript, nextjs, clerk, radix-ui, anthropic-api, aws-s3, tailwind-css]
+    repo_path: C:/Users/markh/projects/labelcheck
+
+  - name: "Stride v2"
+    slug: stride-v2
+    description: "Full-featured ERP for therapeutic horsemanship facilities."
+    status: active
+    stack: [typescript, nextjs, radix-ui, fullcalendar, dnd-kit, tailwind-css]
+    repo_path: C:/Users/markh/projects/stride-v2
+
+  - name: "Hazardos"
+    slug: hazardos
+    description: "Full-featured application for the environmental service industry."
+    status: active
+    stack: [typescript, nextjs, radix-ui, anthropic-api, microsoft-graph, tailwind-css]
+    repo_path: C:/Users/markh/projects/hazardos
+
+  - name: "Sieve"
+    slug: sieve
+    description: "Meridian ingestion tool — pulls documents and Shared Drive contents into the capture pipeline."
+    status: active
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/sieve
+
+  - name: "Asymmetric Website"
+    slug: asymmetric-website
+    description: "Marketing site for Asymmetric."
+    status: archived
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/asymmetric-website
+
+  - name: "Workspace"
+    slug: workspace
+    description: "General-purpose folder for agentic AI experiments, MCP server development, and day-to-day AI tooling work."
+    status: active
+    stack: [python, typescript, mcp, claude-code]
+    repo_path: C:/Users/markh/projects/workspace
