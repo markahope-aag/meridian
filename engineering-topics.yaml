@@ -95,7 +95,36 @@ topics:
     category: infra
     aliases: [dockerfile, docker-compose, containers, containerization]
 
+  # === DATA / STATE / FORMS ===
+
+  - name: "State Management"
+    slug: state-management
+    category: frontend
+    aliases: [usestate, usereducer, context, zustand, redux, jotai, async-state, state-machine, store]
+
+  - name: "Forms & Validation"
+    slug: forms-validation
+    category: frontend
+    aliases: [react-hook-form, zod, form-validation, input-validation, form-state, schema-validation, yup]
+
+  # === BACKEND / INTEGRATION / PERFORMANCE ===
+
+  - name: "API Integration"
+    slug: api-integration
+    category: backend
+    aliases: [third-party-api, rest-api, webhook, oauth, api-auth, pagination, rate-limiting, external-api, fathom-api, clickup-api, google-api]
+
+  - name: "Performance & Caching"
+    slug: performance-caching
+    category: backend
+    aliases: [cache, caching, ttl, optimization, bulk-ingest, performance-tuning, memoization, lazy-loading, batch-processing]
+
   # === WORKFLOW / CROSS-CUTTING ===
+
+  - name: "Testing"
+    slug: testing
+    category: workflow
+    aliases: [unit-tests, integration-tests, test-suite, test-harness, vitest, jest, playwright, cypress, e2e-tests, test-fixtures]
 
   - name: "n8n Workflows"
     slug: n8n-workflows

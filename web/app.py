@@ -401,6 +401,7 @@ def get_stats() -> dict:
         "projects_registered": 0,
         "projects_active": 0,
         "commits_ingested_total": 0,
+        "capture_commits_unclassified": 0,  # classifier examined, no fit
         # === Interests namespace ===
         "interests_topics_registered": 0,
         "interests_topics_with_fragments": 0,
@@ -531,12 +532,27 @@ def get_stats() -> dict:
         stats["capture"] = sum(1 for _ in CAPTURE_DIR.glob("*.md"))
         stats["capture_total"] = sum(1 for _ in CAPTURE_DIR.rglob("*.md"))
     if COMMITS_CAPTURE_DIR.exists():
-        stats["capture_commits_queue"] = sum(
-            1 for _ in COMMITS_CAPTURE_DIR.rglob("*.md")
-        )
-        # Total commits ingested = unclassified (in capture/) + classified (moved to wiki/engineering/)
+        # Two distinct buckets live in capture/external/commits/:
+        #   1. Queue — fragments the classifier hasn't seen yet. Identified
+        #      by the ABSENCE of `classification_confidence` in frontmatter.
+        #      These are "actionable" — they need a classifier pass.
+        #   2. Terminal unclassified — fragments the classifier examined
+        #      and decided didn't fit any topic in the registry. Identified
+        #      by PRESENCE of `classification_confidence`. These sit here
+        #      until the topic registry grows enough to absorb them.
+        queue = 0
+        unclassified_terminal = 0
+        for f in COMMITS_CAPTURE_DIR.rglob("*.md"):
+            fm = _read_frontmatter_only(f)
+            if fm.get("classification_confidence"):
+                unclassified_terminal += 1
+            else:
+                queue += 1
+        stats["capture_commits_queue"] = queue
+        stats["capture_commits_unclassified"] = unclassified_terminal
+        # Total commits ingested = all in capture/ + all classified (moved to wiki/engineering/)
         stats["commits_ingested_total"] = (
-            stats["capture_commits_queue"] + stats["engineering_fragments"]
+            queue + unclassified_terminal + stats["engineering_fragments"]
         )
     if INTERESTS_CAPTURE_DIR.exists():
         stats["interests_capture_queue"] = sum(
