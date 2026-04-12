@@ -3031,6 +3031,7 @@ def ask_page():
     if request.method == "GET":
         return render_template("ask.html", question="", answer="")
 
+    _validate_csrf()
     question = request.form.get("question", "")
     if not question:
         return render_template("ask.html", question="", answer="")
