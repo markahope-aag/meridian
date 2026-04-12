@@ -178,13 +178,15 @@ class TestParseFrontmatter:
     def test_malformed_yaml(self):
         text = "---\n[invalid: yaml: {{\n---\nBody"
         fm, body = parse_frontmatter(text)
-        # Should not crash — returns empty fm
+        # Should not crash — returns empty fm, body is stripped text after ---
         assert isinstance(fm, dict)
+        assert fm == {}
 
     def test_list_frontmatter_rejected(self):
         text = "---\n- item1\n- item2\n---\nBody"
         fm, body = parse_frontmatter(text)
         assert fm == {}
+        assert "Body" in body
 
     def test_complex_frontmatter(self):
         text = (

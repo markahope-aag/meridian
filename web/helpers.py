@@ -254,7 +254,14 @@ def render_markdown(body: str, topic_context: dict | None = None) -> str:
 # ---------------------------------------------------------------------------
 
 def parse_frontmatter(content: str) -> tuple[dict, str]:
-    """Parse YAML frontmatter, return (metadata, body)."""
+    """Parse YAML frontmatter, return (metadata_dict, body_text).
+
+    Matches the authoritative version in web/app.py exactly:
+    - Returns ({}, content) if no frontmatter block found
+    - Returns (parsed_dict, body.strip()) on success
+    - Returns ({}, stripped_body) on YAML parse error (does NOT
+      return the raw content — returns the body after the closing ---)
+    """
     if not content.startswith("---"):
         return {}, content
     parts = content.split("---", 2)
@@ -263,25 +270,46 @@ def parse_frontmatter(content: str) -> tuple[dict, str]:
     try:
         fm = yaml.safe_load(parts[1]) or {}
     except yaml.YAMLError:
-        return {}, content
+        fm = {}
     if not isinstance(fm, dict):
-        return {}, content
-    return fm, parts[2].lstrip("\n")
+        fm = {}
+    return fm, parts[2].strip()
 
 
-def read_article(path: Path) -> dict:
-    """Read and parse a wiki markdown file."""
-    try:
-        content = path.read_text(encoding="utf-8", errors="replace")
-    except OSError:
-        return {"title": path.stem, "body": "", "path": path, "frontmatter": {}}
+def read_article(path: Path, root: Path | None = None) -> dict:
+    """Read a wiki article and return structured data.
+
+    Returns the same rich dict as the authoritative version in
+    web/app.py: path as a repo-relative string, explicit frontmatter
+    fields (type, layer, tags, created, updated, client_source,
+    industry_context), word_count, body, and the raw frontmatter dict.
+
+    `root` defaults to MERIDIAN_ROOT — used for path relativization.
+    Pass a different root in tests.
+    """
+    if root is None:
+        root = MERIDIAN_ROOT
+    content = path.read_text(encoding="utf-8", errors="replace")
     fm, body = parse_frontmatter(content)
+    word_count = len(body.split())
+    try:
+        rel_path = str(path.relative_to(root))
+    except ValueError:
+        rel_path = str(path)
     return {
+        "path": rel_path,
+        "filename": path.name,
         "title": fm.get("title", path.stem),
+        "type": fm.get("type", ""),
+        "layer": fm.get("layer", ""),
+        "tags": fm.get("tags", []),
+        "created": fm.get("created", ""),
+        "updated": fm.get("updated", ""),
+        "client_source": fm.get("client_source", ""),
+        "industry_context": fm.get("industry_context", ""),
+        "word_count": word_count,
         "body": body,
-        "path": path,
         "frontmatter": fm,
-        **{k: v for k, v in fm.items() if k not in ("title",)},
     }
 
 
