@@ -2216,6 +2216,94 @@ REPORT_CATEGORIES = [
 ]
 
 
+@app.route("/admin/")
+@app.route("/admin")
+def admin_page():
+    """System administration — monitoring, schedules, triggers, and configuration."""
+    # Wiki stats (reuse existing)
+    stats = get_stats()
+
+    # Admin stats from the collector script (system, containers, git, backup)
+    admin_stats: dict = {}
+    admin_stats_path = MERIDIAN_ROOT / "state" / "admin-stats.json"
+    if admin_stats_path.exists():
+        try:
+            admin_stats = json.loads(admin_stats_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            admin_stats = {}
+
+    # Synthesis queue
+    synth_queue: dict = {"pending": 0, "complete": 0, "running": 0, "failed": 0, "total": 0}
+    queue_path = MERIDIAN_ROOT / "synthesis_queue.json"
+    if queue_path.exists():
+        try:
+            items = json.loads(queue_path.read_text(encoding="utf-8"))
+            if isinstance(items, list):
+                for item in items:
+                    s = item.get("status", "pending") if isinstance(item, dict) else "unknown"
+                    if s in synth_queue:
+                        synth_queue[s] += 1
+                synth_queue["total"] = len(items)
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    # Config summary — key values from config.yaml
+    config_summary: dict = {}
+    config_path = MERIDIAN_ROOT / "config.yaml"
+    if config_path.exists():
+        try:
+            cfg = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+            config_summary = {
+                "llm_model": cfg.get("llm", {}).get("model", "?"),
+                "planning_model": cfg.get("compiler", {}).get("planning_model", "?"),
+                "writing_model": cfg.get("compiler", {}).get("writing_model", "?"),
+                "distill_min_relevance": cfg.get("distill", {}).get("min_relevance", "?"),
+                "distill_min_quality": cfg.get("distill", {}).get("min_quality", "?"),
+                "synthesis_per_day": cfg.get("synthesis", {}).get("synthesis_per_day", "?"),
+                "stale_threshold_days": cfg.get("evolution", {}).get("stale_threshold_days", "?"),
+            }
+        except yaml.YAMLError:
+            pass
+
+    # Layer 4 summary
+    layer4_articles = _load_layer4_articles()
+    layer4_summary = _layer4_summary_from(layer4_articles)
+
+    # Schedule — hardcoded since we know the full schedule
+    schedule = [
+        {"time": "01:00", "job": "Daily Distill", "type": "n8n", "freq": "daily",
+         "endpoint": "/distill", "method": "POST"},
+        {"time": "02:00", "job": "Daily Compile", "type": "n8n", "freq": "daily",
+         "endpoint": "/compile", "method": "POST"},
+        {"time": "03:00", "job": "Backup (restic)", "type": "cron", "freq": "daily",
+         "endpoint": None, "method": None},
+        {"time": "04:00", "job": "Daily Synthesize", "type": "n8n", "freq": "daily",
+         "endpoint": "/synthesize/schedule", "method": "POST"},
+        {"time": "05:00", "job": "Mode C (emergence)", "type": "n8n", "freq": "daily",
+         "endpoint": "/conceptualize", "method": "POST", "body": '{"mode":"emergence"}'},
+        {"time": "06:00", "job": "Weekly Lint", "type": "cron", "freq": "Sunday",
+         "endpoint": "/lint", "method": "POST"},
+        {"time": "07:00", "job": "Evolution Detector", "type": "cron", "freq": "Sunday",
+         "endpoint": None, "method": None},
+        {"time": "08:00", "job": "Mode A + B (connections + maturation)", "type": "n8n", "freq": "Sunday",
+         "endpoint": "/conceptualize", "method": "POST", "body": '{"mode":"connections"}'},
+        {"time": "10:00", "job": "Mode D (contradictions)", "type": "n8n", "freq": "1st Sunday",
+         "endpoint": "/conceptualize", "method": "POST", "body": '{"mode":"contradictions"}'},
+        {"time": ":15", "job": "Hourly Watchdog", "type": "n8n", "freq": "hourly",
+         "endpoint": "/watchdog", "method": "POST"},
+    ]
+
+    return render_template(
+        "admin.html",
+        stats=stats,
+        admin_stats=admin_stats,
+        synth_queue=synth_queue,
+        config_summary=config_summary,
+        layer4_summary=layer4_summary,
+        schedule=schedule,
+    )
+
+
 @app.route("/reports/")
 @app.route("/reports")
 def reports_page():
