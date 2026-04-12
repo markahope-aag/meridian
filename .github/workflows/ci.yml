@@ -1,0 +1,65 @@
+name: CI — lint + tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -q pyyaml markdown flask requests pytest
+
+      - name: Python syntax check (all .py files)
+        run: |
+          find . -name "*.py" -not -path "./node_modules/*" -not -path "./.venv/*" | \
+            xargs -I{} python -c "import ast; ast.parse(open('{}').read())"
+          echo "All Python files pass syntax check"
+
+      - name: Shell script syntax check
+        run: |
+          for f in scripts/*.sh; do
+            bash -n "$f" || exit 1
+          done
+          echo "All shell scripts pass syntax check"
+
+      - name: Jinja template block balance
+        run: |
+          python - << 'PYEOF'
+          import re, os, sys
+          errors = 0
+          for root, dirs, files in os.walk("web/templates"):
+              for f in sorted(files):
+                  if not f.endswith(".html"):
+                      continue
+                  path = os.path.join(root, f)
+                  content = open(path).read()
+                  opens = len(re.findall(r"{%-?\s*(if|for|block|macro)\b", content))
+                  closes = len(re.findall(r"{%-?\s*(endif|endfor|endblock|endmacro)\b", content))
+                  if opens != closes:
+                      print(f"FAIL {f}: {opens} opens / {closes} closes")
+                      errors += 1
+                  else:
+                      print(f"  OK {f}: {opens} blocks")
+          if errors:
+              sys.exit(1)
+          print(f"\nAll templates balanced")
+          PYEOF
+
+      - name: Run pytest
+        env:
+          MERIDIAN_ROOT: /tmp/meridian-test
+        run: |
+          mkdir -p /tmp/meridian-test
+          python -m pytest tests/ -v
