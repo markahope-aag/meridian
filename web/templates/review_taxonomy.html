@@ -82,6 +82,7 @@
                 </td>
                 <td style="padding: 10px 4px;">
                     <form method="POST" action="/review/taxonomy" style="display: flex; gap: 6px; align-items: center;">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
                         <input type="hidden" name="slug" value="{{ row.slug }}" />
                         <select name="industry" class="fragment-sort" style="font-size: 12px; padding: 4px 8px; min-width: 180px;">
                             {% for ind in industries %}
@@ -152,6 +153,7 @@
                         </td>
                         <td style="padding: 10px 4px; vertical-align: top;">
                             <form method="POST" action="/review/unclassified/assign" style="display: flex; gap: 4px; margin-bottom: 4px;">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
                                 <input type="hidden" name="filename" value="{{ item.filename }}">
                                 <select name="target" class="fragment-sort" style="font-size: 11px; padding: 3px 6px; flex: 1; min-width: 140px;">
                                     {% for t in engineering_topics_picker %}
@@ -161,6 +163,7 @@
                                 <button type="submit" class="download-btn" style="cursor: pointer; background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; font-size: 11px; padding: 3px 10px;">Assign</button>
                             </form>
                             <form method="POST" action="/review/unclassified/dismiss" style="margin: 0;">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
                                 <input type="hidden" name="filename" value="{{ item.filename }}">
                                 <button type="submit" class="download-btn" style="cursor: pointer; font-size: 10px; padding: 2px 8px; color: var(--text-muted);" title="Mark as permanently unclassified — won't appear here again">Permanently unclassified</button>
                             </form>

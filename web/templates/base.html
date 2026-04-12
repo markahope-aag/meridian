@@ -503,6 +503,9 @@
         <a href="/graph/">Graph</a>
         <a href="/admin/">Admin</a>
         <a href="/review/taxonomy">Review</a>
+        {% if auth_enabled %}
+        <a href="/logout" style="color: var(--text-muted); font-size: 12px; margin-left: 8px;">Logout</a>
+        {% endif %}
         <form class="nav-search" action="/search" method="get">
             <input type="text" name="q" placeholder="Search wiki..." value="{{ request.args.get('q', '') }}">
             <button type="submit">Search</button>

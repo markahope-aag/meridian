@@ -5,15 +5,22 @@ Replaces Obsidian as the primary way to browse and interact with Meridian.
 Reads directly from /meridian/ filesystem. Calls receiver API for agent actions.
 """
 
+import hashlib
+import hmac
 import json
 import os
 import re
+import secrets
 from collections import defaultdict
 from datetime import datetime
+from functools import wraps
 from pathlib import Path
 
 import markdown
-from flask import Flask, Response, jsonify, render_template, request, send_file
+from flask import (
+    Flask, Response, abort, g, jsonify, redirect,
+    render_template, request, send_file, session, url_for,
+)
 import requests
 import yaml
 
@@ -194,6 +201,98 @@ def render_markdown(body: str, topic_context: dict | None = None) -> str:
     return article_html + sources_html
 
 app = Flask(__name__)
+app.secret_key = os.environ.get(
+    "MERIDIAN_SECRET_KEY",
+    secrets.token_hex(32),  # fallback: random per-restart (sessions won't survive restarts)
+)
+
+# ---------------------------------------------------------------------------
+# Authentication — session-based login
+# ---------------------------------------------------------------------------
+# Set MERIDIAN_DASHBOARD_PASSWORD as a Coolify env var. If unset, auth is
+# disabled (dev mode). Username is always "admin".
+
+DASHBOARD_PASSWORD = os.environ.get("MERIDIAN_DASHBOARD_PASSWORD", "")
+
+
+def require_login(f):
+    """Decorator that redirects unauthenticated users to /login."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not DASHBOARD_PASSWORD:
+            # Auth disabled (no password configured) — open access
+            return f(*args, **kwargs)
+        if not session.get("authenticated"):
+            return redirect(url_for("login_page", next=request.path))
+        return f(*args, **kwargs)
+    return decorated
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login_page():
+    """Simple login form. Password checked against MERIDIAN_DASHBOARD_PASSWORD env var."""
+    error = ""
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        if hmac.compare_digest(password, DASHBOARD_PASSWORD):
+            session["authenticated"] = True
+            session.permanent = True
+            next_url = request.args.get("next") or request.form.get("next") or "/"
+            return redirect(next_url)
+        error = "Incorrect password"
+    return render_template("login.html", error=error, next=request.args.get("next", "/"))
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/login")
+
+
+# ---------------------------------------------------------------------------
+# CSRF protection — manual token-per-session
+# ---------------------------------------------------------------------------
+
+def _generate_csrf_token() -> str:
+    """Return the CSRF token for the current session, creating one if needed."""
+    if "_csrf_token" not in session:
+        session["_csrf_token"] = secrets.token_hex(32)
+    return session["_csrf_token"]
+
+
+def _validate_csrf():
+    """Check that the submitted CSRF token matches the session token.
+    Call this at the top of any POST handler that mutates state."""
+    token = request.form.get("_csrf_token") or request.headers.get("X-CSRF-Token")
+    if not token or not hmac.compare_digest(token, session.get("_csrf_token", "")):
+        abort(403, description="CSRF token missing or invalid")
+
+
+@app.before_request
+def _inject_csrf_and_auth():
+    """Make csrf_token available to all templates, and enforce auth on
+    all routes except login/logout and static files."""
+    g.csrf_token = _generate_csrf_token()
+
+    # Auth enforcement — skip for login/logout, static, and health checks
+    if DASHBOARD_PASSWORD:
+        exempt = {"/login", "/logout", "/static", "/favicon.ico"}
+        if request.path not in exempt and not request.path.startswith("/static"):
+            if not session.get("authenticated"):
+                if request.is_json:
+                    abort(401, description="Authentication required")
+                return redirect(url_for("login_page", next=request.path))
+
+
+@app.context_processor
+def _inject_template_globals():
+    """Make csrf_token and auth state available in every template."""
+    return {
+        "csrf_token": _generate_csrf_token(),
+        "is_authenticated": session.get("authenticated", False),
+        "auth_enabled": bool(DASHBOARD_PASSWORD),
+    }
+
 
 MERIDIAN_ROOT = Path(os.environ.get("MERIDIAN_ROOT", "/meridian"))
 WIKI_DIR = MERIDIAN_ROOT / "wiki"
@@ -1213,6 +1312,7 @@ def assign_unclassified():
     """Move a fragment from wiki/engineering/unclassified/ into a target
     engineering topic directory. Updates topic_slug in frontmatter and
     records that the assignment was manual."""
+    _validate_csrf()
     filename = (request.form.get("filename") or "").strip()
     target = (request.form.get("target") or "").strip()
     src = _safe_fragment_path(filename)
@@ -1244,6 +1344,7 @@ def dismiss_unclassified():
     """Mark a fragment as permanently unclassified so it stops
     appearing in the review queue. Writes `review_status: dismissed`
     into frontmatter; the file stays in wiki/engineering/unclassified/."""
+    _validate_csrf()
     filename = (request.form.get("filename") or "").strip()
     src = _safe_fragment_path(filename)
     if src is None:
@@ -1271,6 +1372,7 @@ def review_taxonomy():
     """
     message = ""
     if request.method == "POST":
+        _validate_csrf()
         slug = (request.form.get("slug") or "").strip()
         industry = (request.form.get("industry") or "").strip()
         if slug and industry:

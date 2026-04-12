@@ -4,6 +4,7 @@
 <h1 style="margin-bottom: 24px;">Ask Meridian</h1>
 
 <form class="ask-form" method="POST" action="/ask">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
     <textarea name="question" placeholder="Ask a question about your knowledge base...">{{ question }}</textarea>
     <button type="submit">Ask</button>
 </form>
