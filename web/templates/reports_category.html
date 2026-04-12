@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ cat.title }} — Reports — Meridian{% endblock %}
+{% block content %}
+<div class="topic-backlink">
+    <a href="/reports/">&larr; All Reports</a>
+</div>
+
+<h1 style="margin-bottom: 8px;">{{ cat.title }}</h1>
+<div style="color: var(--text-muted); margin-bottom: 8px;">
+    {{ cat.description }}
+</div>
+<div style="font-size: 11px; color: var(--text-muted); margin-bottom: 24px; opacity: 0.75;">
+    Schedule: {{ cat.schedule }} · {{ files|length }} report{{ 's' if files|length != 1 else '' }} on file
+</div>
+
+{% if files %}
+<div class="card">
+    <ul class="fragment-list">
+        {% for f in files %}
+        <li class="fragment-item" style="padding: 8px 0;">
+            <div class="fragment-head">
+                <a href="/article/{{ f.path }}" class="fragment-title">{{ f.name }}</a>
+                <span class="fragment-client-tag">{{ (f.size / 1024) | round(1) }} KB</span>
+            </div>
+            {% if f.date %}
+            <div class="fragment-meta">{{ f.date }}</div>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% else %}
+<div class="card">
+    <div style="color: var(--text-muted); padding: 12px 0;">
+        No reports in this category yet.
+    </div>
+</div>
+{% endif %}
+{% endblock %}
