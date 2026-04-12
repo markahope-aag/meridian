@@ -29,6 +29,7 @@ ROOT = Path(__file__).parent.parent
 WIKI_DIR = ROOT / "wiki"
 CAPTURE_DIR = ROOT / "capture"
 OUTPUTS_DIR = ROOT / "outputs"
+REPORTS_DIR = ROOT / "reports" / "lint"
 PROMPTS_DIR = ROOT / "prompts"
 
 # Hard caps to prevent the linter from doing damage on a corpus it
@@ -936,12 +937,16 @@ def main():
     # Write reports
     now = now_str()
     if not args.dry_run:
-        # Full report to outputs/
-        OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
-        out_path = OUTPUTS_DIR / f"lint-{now}.md"
-        out_path.write_text(report, encoding="utf-8")
+        # Primary report to reports/lint/ (git-tracked, dashboard-browsable)
+        REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+        report_path = REPORTS_DIR / f"lint-{now}.md"
+        report_path.write_text(report, encoding="utf-8")
 
-        # Condensed version to wiki/
+        # Legacy copies — kept for backward compatibility with the
+        # dashboard's Pipeline Freshness card (reads wiki/articles/lint-*)
+        # and the outputs/ archive.
+        OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+        (OUTPUTS_DIR / f"lint-{now}.md").write_text(report, encoding="utf-8")
         wiki_path = WIKI_DIR / "articles" / f"lint-{now}.md"
         wiki_path.parent.mkdir(parents=True, exist_ok=True)
         wiki_path.write_text(report, encoding="utf-8")

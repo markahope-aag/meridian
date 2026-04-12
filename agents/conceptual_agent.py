@@ -66,6 +66,7 @@ SYNTHESIS_QUEUE = ROOT / "synthesis_queue.json"
 
 PROMPTS_DIR = ROOT / "prompts"
 OUTPUTS_DIR = ROOT / "outputs"
+REPORTS_DIR = ROOT / "reports" / "layer4"
 
 L3_MAP_SCHEMA_VERSION = 1
 

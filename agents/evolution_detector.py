@@ -80,6 +80,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 WIKI_DIR = ROOT / "wiki"
 OUTPUTS_DIR = ROOT / "outputs"
+REPORTS_DIR = ROOT / "reports" / "evolution"
 LAYER4_DIR = WIKI_DIR / "layer4"
 DRIFT_DIR = LAYER4_DIR / "drift"
 VERSIONS_ROOT = ROOT / "state" / "synthesis_versions"
@@ -981,10 +982,13 @@ def main() -> int:
         apply_results[label] = apply_detections(article, detections, args.dry_run)
 
     # Write the report
-    OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+    # Write to reports/ (git-tracked, dashboard-browsable) and outputs/ (legacy)
     report = generate_report(detections_by_article, len(articles), args.dry_run, apply_results)
-    report_path = OUTPUTS_DIR / f"evolution-{_today()}.md"
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    report_path = REPORTS_DIR / f"evolution-{_today()}.md"
     report_path.write_text(report, encoding="utf-8")
+    OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+    (OUTPUTS_DIR / f"evolution-{_today()}.md").write_text(report, encoding="utf-8")
 
     print(json.dumps({
         "status": "ok",

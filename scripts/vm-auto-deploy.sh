@@ -51,6 +51,13 @@ CHECKPOINT_FILES=(
     "clients.yaml"
 )
 
+# Directories written to at runtime that must survive git reset --hard.
+# Same principle as CHECKPOINT_FILES but these are entire trees, not
+# individual files. Checkpointed with cp -rp and restored after reset.
+CHECKPOINT_DIRS=(
+    "reports"
+)
+
 mkdir -p "$LOG_DIR"
 cd "$REPO_DIR"
 
@@ -104,6 +111,13 @@ fi
             echo "  checkpointed $rel ($(wc -l < "$src") lines)"
         fi
     done
+    for rel in "${CHECKPOINT_DIRS[@]}"; do
+        src="$REPO_DIR/$rel"
+        if [ -d "$src" ]; then
+            cp -rp "$src" "$CHECKPOINT_DIR/$rel"
+            echo "  checkpointed dir $rel ($(find "$src" -type f | wc -l) files)"
+        fi
+    done
 
     # Fast-forward to the remote HEAD. Hard reset so local scp fiddling
     # can never block a deploy — git is authoritative for tracked
@@ -123,6 +137,16 @@ fi
             # Preserve the ownership the agents expect
             chown --reference="$REPO_DIR/agents" "$dst" 2>/dev/null || true
             echo "  restored $rel"
+        fi
+    done
+    for rel in "${CHECKPOINT_DIRS[@]}"; do
+        ckpt="$CHECKPOINT_DIR/$rel"
+        dst="$REPO_DIR/$rel"
+        if [ -d "$ckpt" ]; then
+            mkdir -p "$dst"
+            cp -rp "$ckpt/"* "$dst/" 2>/dev/null || true
+            chown -R --reference="$REPO_DIR/agents" "$dst" 2>/dev/null || true
+            echo "  restored dir $rel"
         fi
     done
 
