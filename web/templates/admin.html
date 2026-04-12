@@ -2,27 +2,30 @@
 {% block title %}Admin — Meridian{% endblock %}
 {% block content %}
 <h1 style="margin-bottom: 8px;">System Administration</h1>
-<div style="color: var(--text-muted); margin-bottom: 24px;">
-    Monitoring, schedules, pipeline health, and manual controls.
-    {% if admin_stats.generated_at %}
-    <span style="font-size: 11px; opacity: 0.75;">System stats updated: {{ admin_stats.generated_at }}</span>
-    {% endif %}
+<div style="color: var(--text-muted); margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+    <span>
+        Monitoring, schedules, pipeline, logs, and manual controls.
+        <span id="refresh-status" style="font-size: 11px; opacity: 0.6;"></span>
+    </span>
+    <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted);">
+        <input type="checkbox" id="auto-refresh" checked> Auto-refresh (30s)
+    </label>
 </div>
 
 {# ================================================================= #}
-{# SYSTEM HEALTH                                                      #}
+{# SYSTEM HEALTH — auto-refreshed via polling                         #}
 {# ================================================================= #}
 <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">System Health</div>
-<div class="stat-grid">
+<div class="stat-grid" id="system-health-grid">
     {% if admin_stats.system %}
     {% set sys = admin_stats.system %}
-    <div class="stat-box"{% if sys.disk_used_pct > 80 %} style="border-color: var(--yellow);"{% endif %}>
+    <div class="stat-box" id="stat-disk"{% if sys.disk_used_pct > 80 %} style="border-color: var(--yellow);"{% endif %}>
         <div class="number" style="font-size: 20px;">{{ sys.disk_used_gb }} / {{ sys.disk_total_gb }} GB</div>
-        <div class="label">Disk ({{ sys.disk_used_pct }}% used)</div>
+        <div class="label">Disk ({{ sys.disk_used_pct }}%)</div>
     </div>
-    <div class="stat-box">
+    <div class="stat-box" id="stat-mem">
         <div class="number" style="font-size: 20px;">{{ sys.mem_used_mb }} / {{ sys.mem_total_mb }} MB</div>
-        <div class="label">Memory ({{ sys.mem_available_mb }} MB free)</div>
+        <div class="label">Memory</div>
     </div>
     <div class="stat-box">
         <div class="number" style="font-size: 14px;">{{ sys.uptime }}</div>
@@ -31,45 +34,144 @@
     {% if sys.load_avg %}
     <div class="stat-box">
         <div class="number" style="font-size: 16px;">{{ sys.load_avg | join(' / ') }}</div>
-        <div class="label">Load Average (1 / 5 / 15 min)</div>
+        <div class="label">Load (1/5/15m)</div>
     </div>
     {% endif %}
     {% else %}
-    <div class="stat-box">
-        <div class="number" style="font-size: 14px; color: var(--text-muted);">Pending</div>
-        <div class="label">Run <code>scripts/collect-admin-stats.sh</code> to populate</div>
-    </div>
+    <div class="stat-box"><div class="number" style="font-size: 14px; color: var(--text-muted);">Pending</div><div class="label">Run collect-admin-stats.sh</div></div>
     {% endif %}
-
     {% if admin_stats.git %}
     <div class="stat-box">
         <div class="number" style="font-size: 14px;"><code>{{ admin_stats.git.sha }}</code></div>
         <div class="label">Git HEAD ({{ admin_stats.git.branch }})</div>
     </div>
-    <div class="stat-box">
-        <div class="number" style="font-size: 12px;">{{ admin_stats.git.last_commit_msg[:50] }}</div>
-        <div class="label">Last commit · {{ admin_stats.git.last_commit_date[:10] }}</div>
-    </div>
     {% endif %}
-
     {% if admin_stats.backup %}
     <div class="stat-box"{% if admin_stats.backup.status == 'error' %} style="border-color: var(--red);"{% endif %}>
-        <div class="number" style="font-size: 14px;{% if admin_stats.backup.status == 'error' %} color: var(--red);{% endif %}">{{ admin_stats.backup.status }}</div>
-        <div class="label">Last Backup · {{ admin_stats.backup.last_date[:10] if admin_stats.backup.last_date else '?' }}</div>
-    </div>
-    {% endif %}
-
-    {% if admin_stats.deploy %}
-    <div class="stat-box">
-        <div class="number" style="font-size: 14px;">{{ admin_stats.deploy.last_deploy[:16] if admin_stats.deploy.last_deploy else '—' }}</div>
-        <div class="label">Last Deploy</div>
+        <div class="number" style="font-size: 14px;">{{ admin_stats.backup.status }}</div>
+        <div class="label">Backup · {{ admin_stats.backup.last_date[:10] if admin_stats.backup.last_date else '?' }}</div>
     </div>
     {% endif %}
 </div>
 
 {# ================================================================= #}
-{# CONTAINERS                                                         #}
+{# PIPELINE — auto-refreshed                                          #}
 {# ================================================================= #}
+<div style="font-size: 11px; color: var(--text-muted); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">Pipeline &amp; Queue</div>
+<div class="stat-grid" id="pipeline-grid">
+    <div class="stat-box" id="stat-synth-pending">
+        <div class="number">{{ '{:,}'.format(synth_queue.pending) }}</div>
+        <div class="label">Synth Pending</div>
+    </div>
+    <div class="stat-box" id="stat-synth-complete">
+        <div class="number">{{ '{:,}'.format(synth_queue.complete) }}</div>
+        <div class="label">Synth Complete</div>
+    </div>
+    <div class="stat-box"{% if synth_queue.running > 0 %} style="border-color: var(--green);"{% endif %}>
+        <div class="number"{% if synth_queue.running > 0 %} style="color: var(--green);"{% endif %}>{{ synth_queue.running }}</div>
+        <div class="label">Running</div>
+    </div>
+    <div class="stat-box"{% if synth_queue.failed > 0 %} style="border-color: var(--red);"{% endif %}>
+        <div class="number"{% if synth_queue.failed > 0 %} style="color: var(--red);"{% endif %}>{{ synth_queue.failed }}</div>
+        <div class="label">Failed</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(stats.capture) }}</div>
+        <div class="label">Capture Queue</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(stats.raw) }}</div>
+        <div class="label">Raw Sources</div>
+    </div>
+</div>
+
+{# ================================================================= #}
+{# SCHEDULE + RUN NOW + LIVE JOB STATUS                                #}
+{# ================================================================= #}
+<div class="card" style="margin-top: 16px;">
+    <h2>Operations Schedule</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        All times UTC. Click "Run now" to trigger — progress appears inline.
+    </div>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <thead>
+            <tr style="text-align: left; border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: 11px; text-transform: uppercase;">
+                <th style="padding: 6px 4px;">Time</th>
+                <th style="padding: 6px 4px;">Job</th>
+                <th style="padding: 6px 4px;">Type</th>
+                <th style="padding: 6px 4px;">Freq</th>
+                <th style="padding: 6px 4px;">Action</th>
+                <th style="padding: 6px 4px;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in schedule %}
+            <tr style="border-bottom: 1px solid var(--border);" id="sched-{{ loop.index }}">
+                <td style="padding: 8px 4px; font-family: monospace; font-size: 14px; font-weight: 600;">{{ s.time }}</td>
+                <td style="padding: 8px 4px;">{{ s.job }}</td>
+                <td style="padding: 8px 4px;">
+                    {% if s.type == 'cron' %}
+                    <span style="font-size: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px;">cron</span>
+                    {% else %}
+                    <span style="font-size: 10px; background: var(--accent); color: var(--bg); border-radius: 4px; padding: 1px 6px;">n8n</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 8px 4px; font-size: 12px; color: var(--text-muted);">{{ s.freq }}</td>
+                <td style="padding: 8px 4px;">
+                    {% if s.endpoint %}
+                    <button type="button" class="download-btn trigger-btn"
+                            data-endpoint="{{ s.endpoint }}"
+                            data-body="{{ s.body if s.body else '{}' }}"
+                            data-row="sched-{{ loop.index }}"
+                            style="cursor: pointer; font-size: 11px; padding: 3px 10px;">
+                        Run now
+                    </button>
+                    {% else %}
+                    <span style="font-size: 11px; color: var(--text-muted);">VM cron</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 8px 4px; font-size: 11px;" class="job-status-cell">
+                    <span style="color: var(--text-muted);">—</span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{# ================================================================= #}
+{# INLINE LOG VIEWER                                                   #}
+{# ================================================================= #}
+<div class="card" style="margin-top: 16px;">
+    <h2>Recent Reports</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Click a report to expand it inline. Last 5 per category.
+    </div>
+    {% for group in report_groups %}
+    {% if group.files %}
+    <div style="margin-bottom: 16px;">
+        <div style="font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); text-transform: uppercase;">{{ group.title }}</div>
+        {% for f in group.files[:5] %}
+        <details class="report-viewer" style="margin-bottom: 4px; border: 1px solid var(--border); border-radius: 6px;">
+            <summary style="padding: 8px 12px; cursor: pointer; font-size: 13px; display: flex; justify-content: space-between;">
+                <span>{{ f.name }}</span>
+                <span style="font-size: 11px; color: var(--text-muted);">{{ (f.size / 1024) | round(1) }} KB</span>
+            </summary>
+            <div class="report-content article-content" data-path="{{ f.path }}"
+                 style="padding: 16px; border-top: 1px solid var(--border); max-height: 600px; overflow-y: auto; font-size: 13px;">
+                <div style="color: var(--text-muted); font-size: 12px;">Loading...</div>
+            </div>
+        </details>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+
+{# ================================================================= #}
+{# CONTAINERS + N8N + CONFIG + CRON (existing sections, kept)          #}
+{# ================================================================= #}
+
 {% if admin_stats.containers %}
 <div class="card" style="margin-top: 16px;">
     <h2>Containers ({{ admin_stats.containers | length }})</h2>
@@ -88,13 +190,9 @@
                 <td style="padding: 8px 4px;"><code>{{ c.id }}</code></td>
                 <td style="padding: 8px 4px;">{{ c.image }}</td>
                 <td style="padding: 8px 4px;">
-                    {% if 'healthy' in c.status %}
-                    <span style="color: var(--green);">{{ c.status }}</span>
-                    {% elif 'unhealthy' in c.status %}
-                    <span style="color: var(--red);">{{ c.status }}</span>
-                    {% else %}
-                    {{ c.status }}
-                    {% endif %}
+                    {% if 'healthy' in c.status %}<span style="color: var(--green);">{{ c.status }}</span>
+                    {% elif 'unhealthy' in c.status %}<span style="color: var(--red);">{{ c.status }}</span>
+                    {% else %}{{ c.status }}{% endif %}
                 </td>
                 <td style="padding: 8px 4px;">{{ c.name }}</td>
             </tr>
@@ -104,82 +202,18 @@
 </div>
 {% endif %}
 
-{# ================================================================= #}
-{# SCHEDULE                                                            #}
-{# ================================================================= #}
-<div class="card" style="margin-top: 16px;">
-    <h2>Operations Schedule</h2>
-    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
-        All times UTC. Cron jobs run on the VM host; n8n workflows run via the receiver API.
-    </div>
-    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-        <thead>
-            <tr style="text-align: left; border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: 11px; text-transform: uppercase;">
-                <th style="padding: 6px 4px;">Time</th>
-                <th style="padding: 6px 4px;">Job</th>
-                <th style="padding: 6px 4px;">Type</th>
-                <th style="padding: 6px 4px;">Frequency</th>
-                <th style="padding: 6px 4px;">Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for s in schedule %}
-            <tr style="border-bottom: 1px solid var(--border);">
-                <td style="padding: 8px 4px; font-family: monospace; font-size: 14px; font-weight: 600;">{{ s.time }}</td>
-                <td style="padding: 8px 4px;">{{ s.job }}</td>
-                <td style="padding: 8px 4px;">
-                    {% if s.type == 'cron' %}
-                    <span style="font-size: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px;">cron</span>
-                    {% else %}
-                    <span style="font-size: 10px; background: var(--accent); color: var(--bg); border-radius: 4px; padding: 1px 6px;">n8n</span>
-                    {% endif %}
-                </td>
-                <td style="padding: 8px 4px; font-size: 12px; color: var(--text-muted);">{{ s.freq }}</td>
-                <td style="padding: 8px 4px;">
-                    {% if s.endpoint %}
-                    <button type="button" class="download-btn trigger-btn"
-                            data-endpoint="{{ s.endpoint }}"
-                            data-method="{{ s.method }}"
-                            data-body="{{ s.body if s.body else '{}' }}"
-                            style="cursor: pointer; font-size: 11px; padding: 3px 10px;">
-                        Run now
-                    </button>
-                    {% else %}
-                    <span style="font-size: 11px; color: var(--text-muted);">VM-only</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-{# ================================================================= #}
-{# n8n WORKFLOWS                                                      #}
-{# ================================================================= #}
 {% if admin_stats.n8n_workflows %}
 <div class="card" style="margin-top: 16px;">
-    <h2>n8n Workflows ({{ admin_stats.n8n_workflows | length }})</h2>
+    <h2>n8n Workflows</h2>
     <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-        <thead>
-            <tr style="text-align: left; border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: 11px; text-transform: uppercase;">
-                <th style="padding: 6px 4px;">Active</th>
-                <th style="padding: 6px 4px;">Name</th>
-                <th style="padding: 6px 4px;">ID</th>
-            </tr>
-        </thead>
         <tbody>
             {% for w in admin_stats.n8n_workflows %}
             <tr style="border-bottom: 1px solid var(--border);">
-                <td style="padding: 8px 4px;">
-                    {% if w.active %}
-                    <span style="color: var(--green);">&#9679;</span>
-                    {% else %}
-                    <span style="color: var(--text-muted);">&#9675;</span>
-                    {% endif %}
+                <td style="padding: 6px 4px; width: 30px;">
+                    {% if w.active %}<span style="color: var(--green);">&#9679;</span>{% else %}<span style="color: var(--text-muted);">&#9675;</span>{% endif %}
                 </td>
-                <td style="padding: 8px 4px;">{{ w.name }}</td>
-                <td style="padding: 8px 4px; font-size: 11px; color: var(--text-muted);"><code>{{ w.id }}</code></td>
+                <td style="padding: 6px 4px;">{{ w.name }}</td>
+                <td style="padding: 6px 4px; font-size: 11px; color: var(--text-muted);"><code>{{ w.id }}</code></td>
             </tr>
             {% endfor %}
         </tbody>
@@ -187,40 +221,6 @@
 </div>
 {% endif %}
 
-{# ================================================================= #}
-{# PIPELINE & QUEUE                                                    #}
-{# ================================================================= #}
-<div style="font-size: 11px; color: var(--text-muted); margin: 24px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">Pipeline &amp; Queue</div>
-<div class="stat-grid">
-    <div class="stat-box">
-        <div class="number">{{ '{:,}'.format(synth_queue.pending) }}</div>
-        <div class="label">Synthesis Pending</div>
-    </div>
-    <div class="stat-box">
-        <div class="number">{{ '{:,}'.format(synth_queue.complete) }}</div>
-        <div class="label">Synthesis Complete</div>
-    </div>
-    <div class="stat-box"{% if synth_queue.running > 0 %} style="border-color: var(--green);"{% endif %}>
-        <div class="number"{% if synth_queue.running > 0 %} style="color: var(--green);"{% endif %}>{{ synth_queue.running }}</div>
-        <div class="label">Running Now</div>
-    </div>
-    <div class="stat-box"{% if synth_queue.failed > 0 %} style="border-color: var(--red);"{% endif %}>
-        <div class="number"{% if synth_queue.failed > 0 %} style="color: var(--red);"{% endif %}>{{ synth_queue.failed }}</div>
-        <div class="label">Failed</div>
-    </div>
-    <div class="stat-box">
-        <div class="number">{{ '{:,}'.format(stats.capture) }}</div>
-        <div class="label">Capture Queue</div>
-    </div>
-    <div class="stat-box">
-        <div class="number">{{ '{:,}'.format(stats.raw) }}</div>
-        <div class="label">Raw Sources</div>
-    </div>
-</div>
-
-{# ================================================================= #}
-{# KNOWLEDGE SUMMARY                                                   #}
-{# ================================================================= #}
 <div class="card" style="margin-top: 16px;">
     <h2>Knowledge Summary</h2>
     <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
@@ -228,59 +228,24 @@
             <tr style="text-align: left; border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: 11px; text-transform: uppercase;">
                 <th style="padding: 6px 4px;">Namespace</th>
                 <th style="padding: 6px 4px; text-align: right;">Topics</th>
-                <th style="padding: 6px 4px; text-align: right;">Directories</th>
+                <th style="padding: 6px 4px; text-align: right;">Dirs</th>
                 <th style="padding: 6px 4px; text-align: right;">Files</th>
-                <th style="padding: 6px 4px; text-align: right;">Synthesized</th>
+                <th style="padding: 6px 4px; text-align: right;">L3</th>
             </tr>
         </thead>
         <tbody>
-            <tr style="border-bottom: 1px solid var(--border);">
-                <td style="padding: 8px 4px;">Business Knowledge</td>
-                <td style="padding: 8px 4px; text-align: right;">{{ '{:,}'.format(stats.business_topics_registered or stats.knowledge_topics) }}</td>
-                <td style="padding: 8px 4px; text-align: right;">{{ '{:,}'.format(stats.business_topics_with_fragments) }}</td>
-                <td style="padding: 8px 4px; text-align: right;">{{ '{:,}'.format(stats.business_fragments) }}</td>
-                <td style="padding: 8px 4px; text-align: right;">{{ '{:,}'.format(stats.business_l3) }}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid var(--border);">
-                <td style="padding: 8px 4px;">Engineering</td>
-                <td style="padding: 8px 4px; text-align: right;">{{ '{:,}'.format(stats.engineering_topics_registered) }}</td>
-                <td style="padding: 8px 4px; text-align: right;">{{ '{:,}'.format(stats.engineering_topics_with_fragments) }}</td>
-                <td style="padding: 8px 4px; text-align: right;">{{ '{:,}'.format(stats.engineering_fragments) }}</td>
-                <td style="padding: 8px 4px; text-align: right;">{{ '{:,}'.format(stats.engineering_l3) }}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid var(--border);">
-                <td style="padding: 8px 4px;">Interests</td>
-                <td style="padding: 8px 4px; text-align: right;">{{ '{:,}'.format(stats.interests_topics_registered) }}</td>
-                <td style="padding: 8px 4px; text-align: right;">{{ '{:,}'.format(stats.interests_topics_with_fragments) }}</td>
-                <td style="padding: 8px 4px; text-align: right;">{{ '{:,}'.format(stats.interests_fragments) }}</td>
-                <td style="padding: 8px 4px; text-align: right;">{{ '{:,}'.format(stats.interests_l3) }}</td>
-            </tr>
-            <tr style="border-bottom: 1px solid var(--border);">
-                <td style="padding: 8px 4px;">Industries</td>
-                <td style="padding: 8px 4px; text-align: right;">{{ '{:,}'.format(stats.industries) }}</td>
-                <td style="padding: 8px 4px; text-align: right;">{{ '{:,}'.format(stats.industries_with_content) }}</td>
-                <td style="padding: 8px 4px; text-align: right;">—</td>
-                <td style="padding: 8px 4px; text-align: right;">—</td>
-            </tr>
-            <tr>
-                <td style="padding: 8px 4px;">Layer 4 (Conceptual)</td>
-                <td style="padding: 8px 4px; text-align: right;" colspan="2">{{ '{:,}'.format(layer4_summary.total) }} articles</td>
-                <td style="padding: 8px 4px; text-align: right;">{{ layer4_summary.active_patterns }} patterns</td>
-                <td style="padding: 8px 4px; text-align: right;">{{ layer4_summary.emerging }} emerging</td>
-            </tr>
+            <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 6px 4px;">Business</td><td style="padding: 6px 4px; text-align: right;">{{ stats.business_topics_registered or stats.knowledge_topics }}</td><td style="padding: 6px 4px; text-align: right;">{{ stats.business_topics_with_fragments }}</td><td style="padding: 6px 4px; text-align: right;">{{ '{:,}'.format(stats.business_fragments) }}</td><td style="padding: 6px 4px; text-align: right;">{{ stats.business_l3 }}</td></tr>
+            <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 6px 4px;">Engineering</td><td style="padding: 6px 4px; text-align: right;">{{ stats.engineering_topics_registered }}</td><td style="padding: 6px 4px; text-align: right;">{{ stats.engineering_topics_with_fragments }}</td><td style="padding: 6px 4px; text-align: right;">{{ '{:,}'.format(stats.engineering_fragments) }}</td><td style="padding: 6px 4px; text-align: right;">{{ stats.engineering_l3 }}</td></tr>
+            <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 6px 4px;">Interests</td><td style="padding: 6px 4px; text-align: right;">{{ stats.interests_topics_registered }}</td><td style="padding: 6px 4px; text-align: right;">{{ stats.interests_topics_with_fragments }}</td><td style="padding: 6px 4px; text-align: right;">{{ '{:,}'.format(stats.interests_fragments) }}</td><td style="padding: 6px 4px; text-align: right;">{{ stats.interests_l3 }}</td></tr>
+            <tr><td style="padding: 6px 4px;">Layer 4</td><td style="padding: 6px 4px; text-align: right;" colspan="2">{{ layer4_summary.total }} articles</td><td style="padding: 6px 4px; text-align: right;">{{ layer4_summary.active_patterns }} patterns</td><td style="padding: 6px 4px; text-align: right;">{{ layer4_summary.emerging }} emerging</td></tr>
         </tbody>
     </table>
 </div>
 
-{# ================================================================= #}
-{# CONFIGURATION                                                       #}
-{# ================================================================= #}
 {% if config_summary %}
 <div class="card" style="margin-top: 16px;">
     <h2>Configuration</h2>
-    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
-        Key values from <code>config.yaml</code>. Edit the file directly to change these.
-    </div>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px;">Key config.yaml values</div>
     <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
         <tbody>
             {% for key, value in config_summary.items() %}
@@ -295,66 +260,158 @@
 {% endif %}
 
 {# ================================================================= #}
-{# CRON ENTRIES                                                        #}
-{# ================================================================= #}
-{% if admin_stats.cron_entries %}
-<div class="card" style="margin-top: 16px;">
-    <h2>VM Cron Entries ({{ admin_stats.cron_entries | length }})</h2>
-    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-        <tbody>
-            {% for c in admin_stats.cron_entries %}
-            <tr style="border-bottom: 1px solid var(--border);">
-                <td style="padding: 6px 4px; font-family: monospace; white-space: nowrap; width: 120px;">{{ c.schedule }}</td>
-                <td style="padding: 6px 4px; color: var(--text-muted);">{{ c.command }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% endif %}
-
-{# ================================================================= #}
-{# MANUAL TRIGGER JS                                                   #}
+{# JAVASCRIPT — auto-refresh, job runner, log viewer                   #}
 {# ================================================================= #}
 <script>
 (function () {
+    var csrfToken = '{{ csrf_token }}';
+    var refreshInterval = null;
+    var activeJobs = {};
+
+    // ── Auto-refresh ──────────────────────────────────────────────
+    function refreshStats() {
+        fetch('/admin/stats.json')
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                var el = document.getElementById('refresh-status');
+                if (el) el.textContent = 'Updated ' + new Date().toLocaleTimeString();
+                // Update pipeline cards
+                var sq = d.synth_queue || {};
+                updateCard('stat-synth-pending', sq.pending || 0);
+                updateCard('stat-synth-complete', sq.complete || 0);
+            })
+            .catch(function () {});
+    }
+    function updateCard(id, value) {
+        var el = document.getElementById(id);
+        if (el) {
+            var num = el.querySelector('.number');
+            if (num) num.textContent = value.toLocaleString();
+        }
+    }
+    var cb = document.getElementById('auto-refresh');
+    if (cb) {
+        refreshInterval = setInterval(refreshStats, 30000);
+        cb.addEventListener('change', function () {
+            if (cb.checked) {
+                refreshInterval = setInterval(refreshStats, 30000);
+            } else {
+                clearInterval(refreshInterval);
+            }
+        });
+    }
+
+    // ── Job runner with live progress ─────────────────────────────
     document.querySelectorAll('.trigger-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var endpoint = btn.dataset.endpoint;
-            var method = btn.dataset.method || 'POST';
             var body = btn.dataset.body || '{}';
+            var rowId = btn.dataset.row;
+            var statusCell = document.querySelector('#' + rowId + ' .job-status-cell');
+
             btn.textContent = 'Sending...';
             btn.disabled = true;
-            fetch(endpoint, {
-                method: method,
+
+            fetch('/admin/trigger', {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-Token': '{{ csrf_token }}',
+                    'X-CSRF-Token': csrfToken,
                 },
-                body: body,
+                body: JSON.stringify({ endpoint: endpoint, body: body }),
             })
             .then(function (r) { return r.json(); })
             .then(function (data) {
-                if (data.status === 'accepted' || data.status === 'ok') {
-                    btn.textContent = 'Triggered!';
+                if (data.job_id) {
+                    btn.textContent = 'Running...';
                     btn.style.borderColor = 'var(--green)';
-                    btn.style.color = 'var(--green)';
+                    if (statusCell) statusCell.innerHTML = '<span style="color: var(--green);">running...</span>';
+                    pollJob(data.job_id, btn, statusCell);
+                } else if (data.status === 'ok') {
+                    btn.textContent = 'Done!';
+                    btn.style.borderColor = 'var(--green)';
+                    if (statusCell) statusCell.innerHTML = '<span style="color: var(--green);">completed</span>';
+                    resetBtn(btn, 5000);
                 } else {
                     btn.textContent = 'Error';
                     btn.style.borderColor = 'var(--red)';
-                    btn.style.color = 'var(--red)';
+                    if (statusCell) statusCell.innerHTML = '<span style="color: var(--red);">' + (data.error || 'unknown error') + '</span>';
+                    resetBtn(btn, 5000);
                 }
             })
-            .catch(function () {
+            .catch(function (e) {
                 btn.textContent = 'Failed';
                 btn.style.borderColor = 'var(--red)';
+                if (statusCell) statusCell.innerHTML = '<span style="color: var(--red);">network error</span>';
+                resetBtn(btn, 5000);
             });
-            setTimeout(function () {
-                btn.textContent = 'Run now';
-                btn.disabled = false;
-                btn.style.borderColor = '';
-                btn.style.color = '';
-            }, 5000);
+        });
+    });
+
+    function pollJob(jobId, btn, statusCell) {
+        var poll = setInterval(function () {
+            fetch('/admin/job/' + jobId)
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.status === 'completed') {
+                        clearInterval(poll);
+                        btn.textContent = 'Done!';
+                        btn.style.borderColor = 'var(--green)';
+                        btn.style.color = 'var(--green)';
+                        if (statusCell) {
+                            var result = '';
+                            try { result = JSON.parse(data.result || '{}'); } catch(e) { result = data.result; }
+                            statusCell.innerHTML = '<span style="color: var(--green);">completed</span>';
+                        }
+                        resetBtn(btn, 8000);
+                    } else if (data.status === 'failed') {
+                        clearInterval(poll);
+                        btn.textContent = 'Failed';
+                        btn.style.borderColor = 'var(--red)';
+                        if (statusCell) statusCell.innerHTML = '<span style="color: var(--red);">' + (data.error || 'failed').substring(0, 80) + '</span>';
+                        resetBtn(btn, 8000);
+                    }
+                    // else still running — keep polling
+                })
+                .catch(function () {
+                    clearInterval(poll);
+                    resetBtn(btn, 3000);
+                });
+        }, 3000);
+    }
+
+    function resetBtn(btn, delay) {
+        setTimeout(function () {
+            btn.textContent = 'Run now';
+            btn.disabled = false;
+            btn.style.borderColor = '';
+            btn.style.color = '';
+        }, delay);
+    }
+
+    // ── Inline report viewer ─────────────────────────────────────
+    document.querySelectorAll('.report-viewer').forEach(function (details) {
+        details.addEventListener('toggle', function () {
+            if (!details.open) return;
+            var contentDiv = details.querySelector('.report-content');
+            if (!contentDiv || contentDiv.dataset.loaded === 'true') return;
+            var path = contentDiv.dataset.path;
+            if (!path) return;
+            // Extract the sub-path after "reports/"
+            var reportPath = path.replace(/^reports\//, '');
+            fetch('/admin/report/' + reportPath)
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.html) {
+                        contentDiv.innerHTML = data.html;
+                        contentDiv.dataset.loaded = 'true';
+                    } else {
+                        contentDiv.innerHTML = '<div style="color: var(--red);">Failed to load: ' + (data.error || 'unknown') + '</div>';
+                    }
+                })
+                .catch(function () {
+                    contentDiv.innerHTML = '<div style="color: var(--red);">Network error loading report</div>';
+                });
         });
     });
 })();

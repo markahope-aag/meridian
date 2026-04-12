@@ -2077,6 +2077,28 @@ def admin_page():
          "endpoint": "/watchdog", "method": "POST"},
     ]
 
+    # Recent reports for the inline log viewer
+    report_groups: list[dict] = []
+    for cat in REPORT_CATEGORIES:
+        subdir = REPORTS_DIR / cat["key"]
+        files: list[dict] = []
+        if subdir.exists():
+            raw = sorted(
+                [f for f in subdir.glob("*.md") if f.name not in ("README.md", ".gitkeep")],
+                key=lambda f: f.name,
+                reverse=True,
+            )
+            files = [
+                {
+                    "name": f.name,
+                    "path": f.relative_to(MERIDIAN_ROOT).as_posix(),
+                    "size": f.stat().st_size,
+                    "date": f.name.split("-", 1)[-1].replace(".md", "") if "-" in f.name else "",
+                }
+                for f in raw
+            ]
+        report_groups.append({**cat, "count": len(files), "files": files})
+
     return render_template(
         "admin.html",
         stats=stats,
@@ -2085,7 +2107,94 @@ def admin_page():
         config_summary=config_summary,
         layer4_summary=layer4_summary,
         schedule=schedule,
+        report_groups=report_groups,
     )
+
+
+@app.route("/admin/stats.json")
+def admin_stats_json():
+    """Live admin stats for auto-refresh polling."""
+    stats = get_stats()
+    admin_stats: dict = {}
+    admin_stats_path = MERIDIAN_ROOT / "state" / "admin-stats.json"
+    if admin_stats_path.exists():
+        try:
+            admin_stats = json.loads(admin_stats_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            pass
+    synth_queue: dict = {"pending": 0, "complete": 0, "running": 0, "failed": 0}
+    queue_path = MERIDIAN_ROOT / "synthesis_queue.json"
+    if queue_path.exists():
+        try:
+            items = json.loads(queue_path.read_text(encoding="utf-8"))
+            if isinstance(items, list):
+                for item in items:
+                    s = item.get("status", "pending") if isinstance(item, dict) else "unknown"
+                    if s in synth_queue:
+                        synth_queue[s] += 1
+        except (json.JSONDecodeError, OSError):
+            pass
+    return jsonify({
+        "system": admin_stats.get("system", {}),
+        "git": admin_stats.get("git", {}),
+        "backup": admin_stats.get("backup", {}),
+        "deploy": admin_stats.get("deploy", {}),
+        "generated_at": admin_stats.get("generated_at", ""),
+        "synth_queue": synth_queue,
+        "capture_queue": stats.get("capture", 0),
+        "raw_sources": stats.get("raw", 0),
+    })
+
+
+@app.route("/admin/report/<path:report_path>")
+def admin_view_report(report_path):
+    """Render a report file inline as HTML for the admin log viewer."""
+    filepath = _safe_resolve(f"reports/{report_path}")
+    if filepath is None:
+        filepath = _safe_resolve(f"wiki/articles/{report_path}")
+    if filepath is None:
+        return jsonify({"error": "not found"}), 404
+    try:
+        content = filepath.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return jsonify({"error": "read failed"}), 500
+    html = render_markdown(content)
+    return jsonify({"html": html, "path": str(filepath.relative_to(MERIDIAN_ROOT))})
+
+
+@app.route("/admin/trigger", methods=["POST"])
+def admin_trigger():
+    """Proxy trigger requests to the receiver with auth."""
+    _validate_csrf()
+    data = request.get_json(force=True) if request.data else {}
+    endpoint = data.get("endpoint", "")
+    body = data.get("body", "{}")
+    if not endpoint or not endpoint.startswith("/"):
+        return jsonify({"error": "invalid endpoint"}), 400
+    try:
+        resp = requests.post(
+            f"{RECEIVER_URL}{endpoint}",
+            headers=receiver_headers(),
+            json=json.loads(body) if isinstance(body, str) else body,
+            timeout=30,
+        )
+        return jsonify(resp.json()), resp.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 502
+
+
+@app.route("/admin/job/<job_id>")
+def admin_job_status(job_id):
+    """Proxy job status polling to the receiver."""
+    try:
+        resp = requests.get(
+            f"{RECEIVER_URL}/jobs/{job_id}",
+            headers=receiver_headers(),
+            timeout=10,
+        )
+        return jsonify(resp.json()), resp.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 502
 
 
 @app.route("/reports/")
