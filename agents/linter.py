@@ -35,7 +35,7 @@ PROMPTS_DIR = ROOT / "prompts"
 # Hard caps to prevent the linter from doing damage on a corpus it
 # doesn't fully understand. These are belt-and-suspenders defenses
 # alongside the prompt-level rules in prompts/linter.md.
-MAX_INDEX_AUTO_ADDS = 200     # auto-add entries to _index.md (raised from 50 — corpus is 4,800+)
+MAX_INDEX_AUTO_ADDS = 500     # auto-add entries to _index.md (corpus is 4,800+)
 MAX_AUTO_STUBS = 50           # auto-create stub files per run (raised from 20)
 MAX_AUTO_CONNECTIONS = 15     # auto-add Related Topics wikilinks per run
 MAX_AUTO_CLIENT_STATUS = 5    # auto-update client status changes per run
@@ -681,8 +681,8 @@ def generate_report(analysis: dict, actions: list[str], deferred: list[str],
 
     # Gaps
     gaps = analysis.get("gaps", [])
-    auto_gaps = [g for g in gaps if g.get("mention_count", 0) >= 5]
-    flag_gaps = [g for g in gaps if 3 <= g.get("mention_count", 0) < 5]
+    auto_gaps = [g for g in gaps if g.get("mention_count", 0) >= 3]
+    flag_gaps = [g for g in gaps if 2 <= g.get("mention_count", 0) < 3]
 
     if auto_gaps:
         lines.append(f"## Auto-Created Stubs ({len(auto_gaps)})\n")
@@ -898,7 +898,7 @@ def main():
         gaps = analysis.get("gaps", [])
         stubs_created = 0
         for gap in gaps:
-            if gap.get("mention_count", 0) < 5:
+            if gap.get("mention_count", 0) < 3:
                 continue
             if stubs_created >= MAX_AUTO_STUBS:
                 deferred.append(
@@ -959,22 +959,25 @@ def main():
                 text_b = path_b.read_text(encoding="utf-8", errors="replace")
             except OSError:
                 continue
-            # Only auto-link if both articles already have a Related Topics section
+            # Add the link to each article's Related Topics section.
+            # If the section doesn't exist, create it at the end of the file.
             marker = "## Related Topics"
-            if marker not in text_a or marker not in text_b:
-                continue
-            # Check if the link already exists
             link_a_to_b = f"[[{article_b.replace('wiki/', '')}]]"
             link_b_to_a = f"[[{article_a.replace('wiki/', '')}]]"
             changed = False
             with _write_lock:
                 if link_a_to_b not in text_a:
-                    # Append to A's Related Topics
-                    text_a = text_a.rstrip() + f"\n- {link_a_to_b}\n"
+                    if marker in text_a:
+                        text_a = text_a.rstrip() + f"\n- {link_a_to_b}\n"
+                    else:
+                        text_a = text_a.rstrip() + f"\n\n{marker}\n\n- {link_a_to_b}\n"
                     path_a.write_text(text_a, encoding="utf-8")
                     changed = True
                 if link_b_to_a not in text_b:
-                    text_b = text_b.rstrip() + f"\n- {link_b_to_a}\n"
+                    if marker in text_b:
+                        text_b = text_b.rstrip() + f"\n- {link_b_to_a}\n"
+                    else:
+                        text_b = text_b.rstrip() + f"\n\n{marker}\n\n- {link_b_to_a}\n"
                     path_b.write_text(text_b, encoding="utf-8")
                     changed = True
             if changed:
