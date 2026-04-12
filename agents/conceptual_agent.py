@@ -857,57 +857,981 @@ def run_mode_c_emergence(l3map: L3Map, dry_run: bool, verbose: bool) -> dict:
 # Mode A/B/D — stubs for follow-up commits
 # =============================================================================
 
+def _linked_pairs(l3map: L3Map) -> set[tuple[str, str]]:
+    """Return the set of topic-pair tuples already linked via Related Topics."""
+    linked: set[tuple[str, str]] = set()
+    for slug, summary in l3map.topics.items():
+        for related in summary.related_topics:
+            if related in l3map.topics and related != slug:
+                a, b = sorted([slug, related])
+                linked.add((a, b))
+    return linked
+
+
+def _score_candidate_pair(a: L3Summary, b: L3Summary) -> float:
+    """Score a candidate topic pair for potential cross-topic connection.
+
+    Higher score = better candidate. Composed of:
+    - vocabulary overlap (common distinctive tokens)
+    - shared client mentions (weighted 3x — a client illustrating a
+      pattern across topics is the strongest signal in the L3 corpus)
+    """
+    tokens_a = set(a.topic_body_tokens)
+    tokens_b = set(b.topic_body_tokens)
+    vocab_overlap = len(tokens_a & tokens_b)
+    clients_a = set(c.lower() for c in a.client_mentions)
+    clients_b = set(c.lower() for c in b.client_mentions)
+    shared_clients = len(clients_a & clients_b)
+    return float(vocab_overlap) + 3.0 * float(shared_clients)
+
+
+def _get_candidate_pairs(l3map: L3Map, max_candidates: int = 12) -> list[tuple[L3Summary, L3Summary, float]]:
+    """Return the top-N topic pairs ranked by candidate score, excluding
+    pairs already linked via Related Topics."""
+    already_linked = _linked_pairs(l3map)
+    slugs = sorted(l3map.topics.keys())
+    scored: list[tuple[L3Summary, L3Summary, float]] = []
+    for i, a_slug in enumerate(slugs):
+        a = l3map.topics[a_slug]
+        for b_slug in slugs[i + 1:]:
+            pair = tuple(sorted([a_slug, b_slug]))
+            if pair in already_linked:
+                continue
+            b = l3map.topics[b_slug]
+            score = _score_candidate_pair(a, b)
+            if score < 3.0:
+                # Floor: no meaningful overlap signal
+                continue
+            scored.append((a, b, score))
+    scored.sort(key=lambda x: -x[2])
+    return scored[:max_candidates]
+
+
+def _read_l3_body(rel_path: str) -> str:
+    """Read a Layer 3 article's body (after frontmatter). Used by Mode A
+    to give the LLM the full context for each candidate topic."""
+    full = ROOT / rel_path
+    if not full.exists():
+        return ""
+    try:
+        text = full.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+    _, body = parse_frontmatter(text)
+    return body.strip()
+
+
+def _build_candidate_user_message(a: L3Summary, b: L3Summary, a_body: str, b_body: str) -> str:
+    """Assemble the user message for a single candidate evaluation."""
+    # Truncate bodies to keep the prompt bounded. The LLM only needs
+    # enough context to judge whether a genuine connection exists and
+    # to cite specific claims — not the full article text.
+    max_body_chars = 8000
+    if len(a_body) > max_body_chars:
+        a_body = a_body[:max_body_chars] + "\n\n[...body truncated]"
+    if len(b_body) > max_body_chars:
+        b_body = b_body[:max_body_chars] + "\n\n[...body truncated]"
+
+    return (
+        f"## Candidate connection\n\n"
+        f"You are evaluating whether there is a non-obvious, evidence-grounded\n"
+        f"connection between these two Layer 3 articles that would pass the\n"
+        f"three-question quality gate in your system prompt.\n\n"
+        f"### Topic A: {a.title} (`{a.slug}`)\n"
+        f"Path: `{a.path}`  \n"
+        f"Confidence: {a.confidence}  \n"
+        f"Evidence count: {a.evidence_count}  \n"
+        f"Client mentions: {', '.join(a.client_mentions) or '(none)'}  \n\n"
+        f"**Body:**\n\n{a_body}\n\n"
+        f"---\n\n"
+        f"### Topic B: {b.title} (`{b.slug}`)\n"
+        f"Path: `{b.path}`  \n"
+        f"Confidence: {b.confidence}  \n"
+        f"Evidence count: {b.evidence_count}  \n"
+        f"Client mentions: {', '.join(b.client_mentions) or '(none)'}  \n\n"
+        f"**Body:**\n\n{b_body}\n\n"
+        f"---\n\n"
+        f"## Your task\n\n"
+        f"Apply the three-question quality gate from your system prompt:\n"
+        f"1. Does this connection already appear in either article's Related Topics section?\n"
+        f"2. Is there at least one piece of non-obvious evidence?\n"
+        f"3. Can the connection be stated in one sentence that would surprise a practitioner?\n\n"
+        f"If ANY answer is no, reject the candidate. Otherwise, write the Layer 4\n"
+        f"article per the template in your system prompt.\n\n"
+        f"**Respond with JSON only.** No prose outside the JSON. Schema:\n\n"
+        f"```json\n"
+        f"{{\n"
+        f'  "gate_passed": true | false,\n'
+        f'  "reason_if_rejected": "<short explanation if gate_passed is false, otherwise null>",\n'
+        f'  "slug": "<kebab-case slug for the new article filename, e.g. \'landing-page-quality-as-forcing-function\'>",\n'
+        f'  "article_markdown": "<full markdown content of the Layer 4 pattern article, starting with --- frontmatter, or null if rejected>"\n'
+        f"}}\n"
+        f"```\n\n"
+        f"The article_markdown must be a complete Layer 4 article matching the\n"
+        f"template in your system prompt: frontmatter, '## The Connection',\n"
+        f"'## Why This Matters', '## Evidence', '## Implication', '## Questions\n"
+        f"This Raises'. Use only canonical topic slugs (the two above) in\n"
+        f"`topics_connected`. Today's date is {_today()}.\n"
+    )
+
+
+def _evaluate_candidate_with_llm(
+    client,  # anthropic.Anthropic
+    system_prompt: str,
+    model: str,
+    a: L3Summary,
+    b: L3Summary,
+    verbose: bool,
+) -> dict | None:
+    """Send one candidate to Sonnet, return the parsed JSON response."""
+    a_body = _read_l3_body(a.path)
+    b_body = _read_l3_body(b.path)
+    user_msg = _build_candidate_user_message(a, b, a_body, b_body)
+
+    try:
+        response = client.messages.create(
+            model=model,
+            max_tokens=3000,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_msg}],
+        )
+    except Exception as e:
+        if verbose:
+            print(f"  LLM error for {a.slug} x {b.slug}: {e}", file=sys.stderr)
+        return None
+
+    text = response.content[0].text.strip()
+    # Strip optional code fences around the JSON
+    text = re.sub(r"^```(?:json)?\s*", "", text)
+    text = re.sub(r"\s*```$", "", text)
+    # Extract the outermost JSON object
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if not match:
+        if verbose:
+            print(f"  No JSON in response for {a.slug} x {b.slug}", file=sys.stderr)
+        return None
+    try:
+        return json.loads(match.group(0))
+    except json.JSONDecodeError as e:
+        if verbose:
+            print(f"  JSON parse error for {a.slug} x {b.slug}: {e}", file=sys.stderr)
+        return None
+
+
+def _slugify_connection(value: str, fallback: str = "connection") -> str:
+    """Normalize a candidate filename slug."""
+    s = re.sub(r"[^a-z0-9\s-]", "", value.lower())
+    s = re.sub(r"\s+", "-", s).strip("-")
+    s = re.sub(r"-{2,}", "-", s)
+    if len(s) > 80:
+        s = s[:80].rstrip("-")
+    return s or fallback
+
+
+def _validate_pattern_article(
+    article_text: str,
+    expected_a: L3Summary,
+    expected_b: L3Summary,
+    registries: dict[str, set[str]],
+) -> tuple[bool, str]:
+    """Pre-write validation. Returns (ok, reason_if_not_ok).
+
+    Enforces:
+    - Article starts with --- frontmatter
+    - layer: 4
+    - concept_type: pattern
+    - topics_connected contains BOTH expected slugs (as paths)
+    - Every topics_connected path resolves to a canonical topic slug
+    - Every industries_connected path resolves to a canonical industry slug
+    - Article body contains the four required sections
+    """
+    if not article_text.startswith("---"):
+        return False, "article does not start with frontmatter block"
+
+    fm, body = parse_frontmatter(article_text)
+    if not fm:
+        return False, "frontmatter could not be parsed"
+
+    if fm.get("layer") != 4:
+        return False, f"layer is {fm.get('layer')!r}, expected 4"
+    if fm.get("concept_type") != "pattern":
+        return False, f"concept_type is {fm.get('concept_type')!r}, expected 'pattern'"
+
+    topics_connected = fm.get("topics_connected") or []
+    if not isinstance(topics_connected, list) or len(topics_connected) < 2:
+        return False, "topics_connected must be a list of at least 2 entries"
+
+    # Extract slugs from paths like wiki/knowledge/<slug>/index.md
+    linked_slugs: set[str] = set()
+    for entry in topics_connected:
+        if not isinstance(entry, str):
+            return False, f"topics_connected entry is not a string: {entry!r}"
+        parts = entry.strip("/").split("/")
+        if len(parts) < 3 or parts[0] != "wiki" or parts[1] not in ("knowledge", "industries"):
+            return False, f"topics_connected entry {entry!r} not a valid wiki/knowledge or wiki/industries path"
+        slug = parts[2]
+        if parts[1] == "knowledge" and slug not in registries.get("topics", set()):
+            return False, f"topic slug {slug!r} not in topics.yaml"
+        if parts[1] == "industries" and slug not in registries.get("industries", set()):
+            return False, f"industry slug {slug!r} not in industries.yaml"
+        linked_slugs.add(slug)
+
+    if expected_a.slug not in linked_slugs or expected_b.slug not in linked_slugs:
+        return False, (
+            f"topics_connected does not include both expected slugs "
+            f"({expected_a.slug}, {expected_b.slug})"
+        )
+
+    industries_connected = fm.get("industries_connected") or []
+    if not isinstance(industries_connected, list):
+        return False, "industries_connected must be a list"
+    for entry in industries_connected:
+        if not isinstance(entry, str):
+            continue
+        parts = entry.strip("/").split("/")
+        if len(parts) >= 3 and parts[0] == "wiki" and parts[1] == "industries":
+            slug = parts[2]
+            if slug not in registries.get("industries", set()):
+                return False, f"industries_connected slug {slug!r} not in industries.yaml"
+
+    # Body structure check — all four required sections
+    required_sections = [
+        "## The Connection",
+        "## Why This Matters",
+        "## Evidence",
+        "## Implication",
+    ]
+    for section in required_sections:
+        if section not in body:
+            return False, f"body missing required section: {section}"
+
+    return True, ""
+
+
+def _patterns_dir_has_slug(slug: str) -> bool:
+    """Return True if a pattern article with that slug already exists."""
+    return (PATTERNS_DIR / f"{slug}.md").exists()
+
+
 def run_mode_a_connections(l3map: L3Map, registries: dict[str, set[str]],
                             dry_run: bool, verbose: bool, limit: int | None = None) -> dict:
-    """Mode A — Connection Discovery (NOT YET IMPLEMENTED in this commit).
+    """Mode A — Connection Discovery.
 
-    Reads L3 map, finds non-obvious cross-topic connections via Sonnet,
-    writes at most 5 pattern articles to wiki/layer4/patterns/. Uses
-    prompts/conceptual_connections.md. Hard quality gate before writing:
-    not already linked, at least 2 pieces of evidence, surprising to a
-    practitioner. This will be built in the next Phase 7 commit.
+    1. Score candidate topic pairs locally (vocabulary overlap + shared
+       clients, excluding pairs already linked via Related Topics).
+    2. For each top candidate, read both articles in full and send to
+       Sonnet with the connections system prompt. The LLM applies the
+       three-question quality gate and either rejects or returns a
+       complete Layer 4 article.
+    3. Validate the article against the registry + required sections,
+       slugify the filename, and write to wiki/layer4/patterns/.
+    4. Cap at `limit` articles (default 5).
     """
-    raise NotImplementedError(
-        "Mode A (connections) not implemented yet — follow-up commit. "
-        "Foundation, prompts, and shared L3 map are in place; next commit "
-        "wires the Sonnet writing loop + quality gate."
+    import anthropic  # late import — Mode B/C don't need the SDK
+
+    max_articles = limit if limit is not None else 5
+    prompt_path = PROMPTS_DIR / "conceptual_connections.md"
+    if not prompt_path.exists():
+        raise FileNotFoundError(f"missing system prompt: {prompt_path}")
+    system_prompt = prompt_path.read_text(encoding="utf-8")
+
+    # Pull the writing-pass model from config.yaml (same as the synthesizer)
+    try:
+        config = yaml.safe_load((ROOT / "config.yaml").read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        config = {}
+    model = (
+        config.get("compiler", {}).get("writing_model")
+        or config.get("llm", {}).get("model")
+        or "claude-sonnet-4-6"
     )
+
+    candidates = _get_candidate_pairs(l3map, max_candidates=12)
+    if verbose:
+        print(f"Mode A: {len(candidates)} candidate pairs above score floor", file=sys.stderr)
+        for a, b, score in candidates[:10]:
+            print(f"  score={score:5.1f}  {a.slug}  x  {b.slug}", file=sys.stderr)
+
+    client = anthropic.Anthropic()
+    written: list[dict] = []
+    rejected: list[dict] = []
+    validation_failures: list[dict] = []
+    llm_errors: list[dict] = []
+
+    for a, b, score in candidates:
+        if len(written) >= max_articles:
+            if verbose:
+                print(f"Mode A: hit max_articles cap ({max_articles}), stopping", file=sys.stderr)
+            break
+
+        if verbose:
+            print(f"Evaluating {a.slug} x {b.slug} (score {score:.1f})...", file=sys.stderr)
+
+        result = _evaluate_candidate_with_llm(
+            client, system_prompt, model, a, b, verbose
+        )
+        if result is None:
+            llm_errors.append({"a": a.slug, "b": b.slug, "score": score})
+            continue
+
+        if not result.get("gate_passed"):
+            rejection_reason = result.get("reason_if_rejected") or "no reason given"
+            rejected.append({
+                "a": a.slug,
+                "b": b.slug,
+                "score": score,
+                "reason": rejection_reason,
+            })
+            if verbose:
+                print(f"  rejected: {rejection_reason}", file=sys.stderr)
+            continue
+
+        article_markdown = result.get("article_markdown") or ""
+        slug_suggestion = result.get("slug") or f"{a.slug}-{b.slug}"
+        slug = _slugify_connection(slug_suggestion, fallback=f"{a.slug}-{b.slug}")
+
+        # Validate the article
+        ok, reason = _validate_pattern_article(article_markdown, a, b, registries)
+        if not ok:
+            validation_failures.append({
+                "a": a.slug,
+                "b": b.slug,
+                "slug": slug,
+                "reason": reason,
+            })
+            if verbose:
+                print(f"  validation failed: {reason}", file=sys.stderr)
+            continue
+
+        # Avoid collisions with existing files
+        base_slug = slug
+        counter = 2
+        while _patterns_dir_has_slug(slug):
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+            if counter > 10:
+                break
+
+        target_path = PATTERNS_DIR / f"{slug}.md"
+
+        written.append({
+            "a": a.slug,
+            "b": b.slug,
+            "score": score,
+            "slug": slug,
+            "path": str(target_path.relative_to(ROOT)),
+        })
+
+        if not dry_run:
+            ensure_layer4_dirs()
+            target_path.write_text(article_markdown, encoding="utf-8")
+            if verbose:
+                print(f"  wrote {target_path.relative_to(ROOT)}", file=sys.stderr)
+
+    return {
+        "mode": "connections",
+        "dry_run": dry_run,
+        "candidates_evaluated": len(written) + len(rejected) + len(validation_failures) + len(llm_errors),
+        "written": written,
+        "rejected": rejected,
+        "validation_failures": validation_failures,
+        "llm_errors": llm_errors,
+        "model": model,
+    }
+
+
+def _confidence_from_count(supporting: int) -> str:
+    """Map evidence count to confidence level per the Layer 4 gradation."""
+    if supporting >= 10:
+        return "established"
+    if supporting >= 5:
+        return "high"
+    if supporting >= 3:
+        return "medium"
+    return "low"
+
+
+def _archive_layer4(path: Path) -> Path:
+    """Copy a Layer 4 article to state/synthesis_versions/layer4/<subdir>/<slug>/<timestamp>.md
+    before modifying it. Mirrors the synthesizer's archive_existing_synthesis."""
+    subdir = path.parent.name  # patterns | emergence | contradictions | drift
+    slug = path.stem
+    versions = VERSIONS_ROOT / "layer4" / subdir / slug
+    versions.mkdir(parents=True, exist_ok=True)
+    dst = versions / f"{_now_stamp()}.md"
+    import shutil
+    shutil.copy2(path, dst)
+    return dst
+
+
+def _count_pattern_evidence(
+    pattern: Layer4Article,
+    l3map: L3Map,
+    contradiction_keywords: list[str],
+) -> tuple[int, int]:
+    """Count supporting and contradicting evidence for a pattern article.
+
+    Supporting evidence: a Layer 3 article in topics_connected that was
+    (re)generated after the pattern's first_detected — meaning fresh
+    information has come in that doesn't contradict the pattern.
+
+    Contradicting evidence: a Layer 3 article in topics_connected whose
+    body contains strong contradiction-keyword language in its prose
+    sections (code blocks stripped, same logic as the evolution detector).
+    """
+    first_detected = _coerce_date(pattern.first_detected)
+    supporting = 0
+    contradicting = 0
+
+    for topic_path in pattern.topics_connected:
+        parts = topic_path.strip("/").split("/")
+        if len(parts) < 4 or parts[0] != "wiki":
+            continue
+        namespace, slug = parts[1], parts[2]
+        if namespace not in ("knowledge", "industries"):
+            continue
+        summary = (l3map.topics if namespace == "knowledge" else l3map.industries).get(slug)
+        if summary is None:
+            continue
+
+        # Read full body for contradiction scanning
+        full_body = _read_l3_body(summary.path)
+        if not full_body:
+            continue
+        prose = re.sub(r"```[^`]*?```", "", full_body, flags=re.DOTALL)
+        prose_lower = prose.lower()
+
+        is_contradicting = any(kw in prose_lower for kw in contradiction_keywords)
+
+        if is_contradicting:
+            contradicting += 1
+            continue
+
+        # Supporting: was it generated after the pattern was first detected?
+        try:
+            topic_gen = datetime.strptime(summary.generated_at[:10], "%Y-%m-%d").date()
+        except ValueError:
+            topic_gen = None
+        if first_detected and topic_gen and topic_gen >= first_detected:
+            supporting += 1
+        elif first_detected is None:
+            # Pattern has no first_detected date — treat every linked article as supporting
+            supporting += 1
+
+    return supporting, contradicting
 
 
 def run_mode_b_maturation(l3map: L3Map, dry_run: bool, verbose: bool) -> dict:
-    """Mode B — Pattern Maturation (NOT YET IMPLEMENTED in this commit).
+    """Mode B — Pattern Maturation.
 
-    Reads existing wiki/layer4/patterns/*.md, counts new supporting +
-    contradicting evidence since first_detected, updates confidence
-    per the standard evidence gradation, flips hypothesis: false when
-    confidence reaches medium+ with zero contradictions. Pure Python —
-    no LLM calls. Uses synthesis versioning before any mutation.
-    Will be built in the next Phase 7 commit.
+    Walks every wiki/layer4/patterns/*.md article, counts current
+    supporting and contradicting evidence across its connected topics,
+    and updates the article's frontmatter:
+      - supporting_evidence_count: recomputed
+      - contradicting_evidence_count: recomputed
+      - confidence: from the supporting count (low/medium/high/established)
+      - hypothesis: flipped to false when confidence >= medium AND
+        contradicting_evidence_count == 0
+      - last_updated: today
+      - status: set to "active" if contradictions exist but unresolved,
+        otherwise left as-is
+
+    Pure Python — no LLM calls. Uses synthesis versioning before every
+    mutation so every change is recoverable.
     """
-    raise NotImplementedError(
-        "Mode B (maturation) not implemented yet — follow-up commit. "
-        "Foundation (archiving, frontmatter rewriting) is in place; "
-        "next commit adds the evidence-counting + confidence update loop."
+    # Load contradiction keywords from config.yaml (reuse the evolution
+    # detector's tuned list — same signals matter for pattern maturation).
+    try:
+        config = yaml.safe_load((ROOT / "config.yaml").read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        config = {}
+    contradiction_keywords = [
+        k.lower() for k in
+        config.get("evolution", {}).get("contradiction_keywords", [
+            "no longer", "deprecated", "superseded by", "replaced by",
+            "now requires", "breaking change", "no longer supported",
+            "removed in",
+        ])
+    ]
+
+    patterns = iter_layer4_articles(concept_type="pattern")
+    if verbose:
+        print(f"Mode B: reviewing {len(patterns)} pattern articles", file=sys.stderr)
+
+    updates: list[dict] = []
+    unchanged = 0
+
+    for pattern in patterns:
+        supporting, contradicting = _count_pattern_evidence(
+            pattern, l3map, contradiction_keywords
+        )
+        new_confidence = _confidence_from_count(supporting)
+        new_hypothesis = pattern.hypothesis
+        if new_confidence in ("medium", "high", "established") and contradicting == 0:
+            new_hypothesis = False
+
+        changes: dict = {}
+        if supporting != pattern.supporting_count:
+            changes["supporting_evidence_count"] = {
+                "before": pattern.supporting_count,
+                "after": supporting,
+            }
+        if contradicting != pattern.contradicting_count:
+            changes["contradicting_evidence_count"] = {
+                "before": pattern.contradicting_count,
+                "after": contradicting,
+            }
+        if new_confidence != pattern.confidence:
+            changes["confidence"] = {
+                "before": pattern.confidence,
+                "after": new_confidence,
+            }
+        if new_hypothesis != pattern.hypothesis:
+            changes["hypothesis"] = {
+                "before": pattern.hypothesis,
+                "after": new_hypothesis,
+            }
+
+        if not changes:
+            unchanged += 1
+            continue
+
+        if verbose:
+            print(f"  {pattern.title}: {len(changes)} change(s)", file=sys.stderr)
+
+        update_record = {
+            "path": str(pattern.path.relative_to(ROOT)),
+            "title": pattern.title,
+            "changes": changes,
+        }
+
+        if not dry_run:
+            # Re-read the article to update frontmatter in place
+            try:
+                text = pattern.path.read_text(encoding="utf-8", errors="replace")
+            except OSError as e:
+                update_record["error"] = f"read failed: {e}"
+                updates.append(update_record)
+                continue
+            fm, body = parse_frontmatter(text)
+            if not fm:
+                update_record["error"] = "frontmatter parse failed"
+                updates.append(update_record)
+                continue
+
+            # Archive before writing
+            archived = _archive_layer4(pattern.path)
+            update_record["archived_to"] = str(archived.relative_to(ROOT))
+
+            fm["supporting_evidence_count"] = supporting
+            fm["contradicting_evidence_count"] = contradicting
+            fm["confidence"] = new_confidence
+            fm["hypothesis"] = new_hypothesis
+            fm["last_updated"] = _today()
+
+            new_text = write_frontmatter(fm, body)
+            pattern.path.write_text(new_text, encoding="utf-8")
+
+        updates.append(update_record)
+
+    return {
+        "mode": "maturation",
+        "dry_run": dry_run,
+        "patterns_reviewed": len(patterns),
+        "updates_applied": len(updates),
+        "unchanged": unchanged,
+        "updates": updates,
+    }
+
+
+def _find_l3_articles_with_contradictions(l3map: L3Map) -> list[L3Summary]:
+    """Return L3 summaries that have non-empty contradicting_sources."""
+    result: list[L3Summary] = []
+    for summary in list(l3map.topics.values()) + list(l3map.industries.values()):
+        if summary.contradicting_sources:
+            result.append(summary)
+    return result
+
+
+def _read_contradicting_source(path_str: str) -> tuple[str, str]:
+    """Read a contradicting-source fragment's title + body. The paths
+    in contradicting_sources are repo-relative strings like
+    'wiki/knowledge/seo/bluepoint-state-pages.md'."""
+    full = ROOT / path_str
+    if not full.exists():
+        return ("", "")
+    try:
+        text = full.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ("", "")
+    fm, body = parse_frontmatter(text)
+    title = str(fm.get("title", full.stem)) if fm else full.stem
+    # Truncate to bound the prompt
+    body = body.strip()[:6000]
+    return (title, body)
+
+
+def _build_contradiction_user_message(
+    article: L3Summary,
+    supporting_claims: str,
+    supporting_paths: list[str],
+    contradicting_sources: list[tuple[str, str, str]],  # (path, title, body)
+) -> str:
+    """Assemble the user message for one contradiction-resolution call."""
+    parts: list[str] = []
+    parts.append(f"## The Layer 3 article with the contradiction\n")
+    parts.append(f"**Topic:** {article.title} (`{article.slug}`)  ")
+    parts.append(f"**Path:** `{article.path}`  ")
+    parts.append(f"**Domain type:** {article.domain_type}  ")
+    parts.append(f"**Confidence:** {article.confidence}  ")
+    parts.append("")
+    parts.append("### Supporting claims (from the Layer 3 article's own body)\n")
+    parts.append(supporting_claims[:4000] or "_(no explicit supporting claims extracted — see full article on disk)_")
+    parts.append("")
+
+    parts.append("## Contradicting sources\n")
+    if not contradicting_sources:
+        parts.append("_(no contradicting sources readable from disk)_")
+    for i, (path, title, body) in enumerate(contradicting_sources, 1):
+        parts.append(f"### Contradicting source #{i}: {title}")
+        parts.append(f"**Path:** `{path}`")
+        parts.append("")
+        parts.append(body[:3000] or "_(empty body)_")
+        parts.append("")
+
+    parts.append("---\n")
+    parts.append("## Your task\n")
+    parts.append(
+        "Apply the five-frame explanation framework from your system prompt\n"
+        "(industry / size / timeline / methodology / context) to explain the\n"
+        "apparent contradiction between the Layer 3 article's supporting\n"
+        "claims and the contradicting sources above.\n\n"
+        "If you can produce a grounded one-sentence decision rule, write a\n"
+        "Layer 4 contradiction-resolution article per the template in your\n"
+        "system prompt and return status=resolved. If you cannot resolve\n"
+        "the contradiction from the evidence above, return status=unresolved\n"
+        "and flag for web augmentation.\n\n"
     )
+    parts.append("**Respond with JSON only.** Schema:\n\n")
+    parts.append(
+        '```json\n'
+        '{\n'
+        '  "slug": "<kebab-case filename slug>",\n'
+        '  "status": "resolved" | "unresolved",\n'
+        '  "frame": "industry" | "size" | "timeline" | "methodology" | "context" | null,\n'
+        '  "decision_rule": "<one-sentence rule if resolved, otherwise null>",\n'
+        '  "article_markdown": "<full markdown content, starting with --- frontmatter>",\n'
+        '  "annotate_source": true | false,\n'
+        '  "source_annotation": "<short markdown block to append to the source article\'s Evolution and Change section if annotate_source is true>"\n'
+        '}\n'
+        '```\n\n'
+    )
+    parts.append(
+        f"The article_markdown must be a complete Layer 4 contradiction article\n"
+        f"matching the template in your system prompt. Use only the canonical\n"
+        f"topic/industry slugs from the paths above. Today's date is {_today()}.\n"
+    )
+    return "\n".join(parts)
+
+
+def _validate_contradiction_article(
+    article_text: str,
+    expected_topic: L3Summary,
+    registries: dict[str, set[str]],
+) -> tuple[bool, str]:
+    """Validate a Layer 4 contradiction-resolution article before writing."""
+    if not article_text.startswith("---"):
+        return False, "article does not start with frontmatter block"
+
+    fm, body = parse_frontmatter(article_text)
+    if not fm:
+        return False, "frontmatter could not be parsed"
+
+    if fm.get("layer") != 4:
+        return False, f"layer is {fm.get('layer')!r}, expected 4"
+    if fm.get("concept_type") != "contradiction":
+        return False, f"concept_type is {fm.get('concept_type')!r}, expected 'contradiction'"
+    if fm.get("status") not in ("resolved", "unresolved"):
+        return False, f"status {fm.get('status')!r} must be 'resolved' or 'unresolved'"
+
+    topics_connected = fm.get("topics_connected") or []
+    if not isinstance(topics_connected, list) or not topics_connected:
+        return False, "topics_connected must be a non-empty list"
+
+    found_expected = False
+    for entry in topics_connected:
+        if not isinstance(entry, str):
+            return False, f"topics_connected entry is not a string: {entry!r}"
+        parts = entry.strip("/").split("/")
+        if len(parts) < 3 or parts[0] != "wiki" or parts[1] not in ("knowledge", "industries"):
+            return False, f"topics_connected entry {entry!r} not a valid wiki/knowledge or wiki/industries path"
+        slug = parts[2]
+        if parts[1] == "knowledge" and slug not in registries.get("topics", set()):
+            return False, f"topic slug {slug!r} not in topics.yaml"
+        if parts[1] == "industries" and slug not in registries.get("industries", set()):
+            return False, f"industry slug {slug!r} not in industries.yaml"
+        if slug == expected_topic.slug:
+            found_expected = True
+
+    if not found_expected:
+        return False, (
+            f"topics_connected does not include the source topic slug "
+            f"{expected_topic.slug!r}"
+        )
+
+    # Body structure check — contradiction articles have different required
+    # sections than pattern articles
+    required_sections = ["## The Contradiction", "## The Resolution"]
+    for section in required_sections:
+        if section not in body:
+            return False, f"body missing required section: {section}"
+
+    return True, ""
+
+
+def _annotate_source_article(
+    source_path: Path,
+    annotation_markdown: str,
+    resolution_slug: str,
+    dry_run: bool,
+) -> tuple[bool, str]:
+    """Append a 'Contradiction resolved' note to the ## Evolution and Change
+    section of a Layer 3 article. Archives before modification so every
+    edit is recoverable."""
+    if not source_path.exists():
+        return False, f"source article does not exist: {source_path}"
+    try:
+        text = source_path.read_text(encoding="utf-8", errors="replace")
+    except OSError as e:
+        return False, f"read failed: {e}"
+    fm, body = parse_frontmatter(text)
+    if not fm:
+        return False, "source article has no parseable frontmatter"
+
+    # Find or create the "## Evolution and Change" section
+    marker = "## Evolution and Change"
+    annotation_block = (
+        f"\n\n### Contradiction resolved: {resolution_slug}\n\n"
+        f"{annotation_markdown.strip()}\n"
+    )
+
+    if marker in body:
+        # Append to the end of the Evolution and Change section
+        # (before the next top-level section or end of file)
+        pattern = rf"({re.escape(marker)}.*?)(?=\n##\s|\Z)"
+        match = re.search(pattern, body, re.DOTALL)
+        if match:
+            before = body[:match.end()]
+            after = body[match.end():]
+            new_body = before.rstrip() + annotation_block + after
+        else:
+            new_body = body + annotation_block
+    else:
+        # Section doesn't exist; add it at the end
+        new_body = body.rstrip() + f"\n\n{marker}\n{annotation_block}"
+
+    if dry_run:
+        return True, "would annotate (dry-run, no write)"
+
+    # Archive the source L3 article before modifying
+    subdir = "topic" if "/knowledge/" in str(source_path) else "industry"
+    slug = source_path.parent.name
+    versions = VERSIONS_ROOT / subdir / slug
+    versions.mkdir(parents=True, exist_ok=True)
+    import shutil
+    archive = versions / f"{_now_stamp()}.md"
+    shutil.copy2(source_path, archive)
+
+    new_text = write_frontmatter(fm, new_body)
+    source_path.write_text(new_text, encoding="utf-8")
+    return True, f"annotated, archived to {archive.relative_to(ROOT)}"
 
 
 def run_mode_d_contradictions(l3map: L3Map, registries: dict[str, set[str]],
                                 dry_run: bool, verbose: bool) -> dict:
-    """Mode D — Contradiction Resolution (NOT YET IMPLEMENTED in this commit).
+    """Mode D — Contradiction Resolution.
 
-    Walks Layer 3 articles with non-empty contradicting_sources,
-    attempts to explain each via the 5-frame framework (industry /
-    size / timeline / methodology / context), writes resolution
-    articles to wiki/layer4/contradictions/. Uses Sonnet via
-    prompts/conceptual_contradictions.md. Adds "Contradiction Resolved"
-    notes to source Layer 3 articles via synthesis versioning.
-    Will be built in the next Phase 7 commit.
+    For each Layer 3 article with non-empty contradicting_sources:
+
+    1. Read the full article body from disk for supporting context.
+    2. Read each contradicting source fragment from disk.
+    3. Send both to Sonnet with the contradictions system prompt.
+    4. Expect JSON back: either a resolved resolution article with a
+       one-sentence decision rule, or an unresolved flag for web
+       augmentation.
+    5. Validate the article (frontmatter, registry, required sections).
+    6. Write to wiki/layer4/contradictions/<slug>.md.
+    7. If `annotate_source` is true and resolved, append a
+       "Contradiction resolved" note to the source Layer 3 article's
+       Evolution and Change section — archived via synthesis versioning
+       so every edit is recoverable.
     """
-    raise NotImplementedError(
-        "Mode D (contradictions) not implemented yet — follow-up commit. "
-        "Foundation, prompts, and shared L3 map are in place; next commit "
-        "wires the Sonnet resolution loop + source article annotation."
+    import anthropic
+
+    prompt_path = PROMPTS_DIR / "conceptual_contradictions.md"
+    if not prompt_path.exists():
+        raise FileNotFoundError(f"missing system prompt: {prompt_path}")
+    system_prompt = prompt_path.read_text(encoding="utf-8")
+
+    try:
+        config = yaml.safe_load((ROOT / "config.yaml").read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError:
+        config = {}
+    model = (
+        config.get("compiler", {}).get("writing_model")
+        or config.get("llm", {}).get("model")
+        or "claude-sonnet-4-6"
     )
+
+    candidates = _find_l3_articles_with_contradictions(l3map)
+    if verbose:
+        print(f"Mode D: {len(candidates)} Layer 3 articles have contradicting_sources", file=sys.stderr)
+
+    if not candidates:
+        return {
+            "mode": "contradictions",
+            "dry_run": dry_run,
+            "candidates": 0,
+            "resolved": [],
+            "unresolved": [],
+            "validation_failures": [],
+            "llm_errors": [],
+        }
+
+    client = anthropic.Anthropic()
+    resolved: list[dict] = []
+    unresolved: list[dict] = []
+    validation_failures: list[dict] = []
+    llm_errors: list[dict] = []
+
+    for article in candidates:
+        if verbose:
+            print(f"Resolving contradictions for {article.slug}...", file=sys.stderr)
+
+        # Read supporting claims from the article's body
+        _, supporting_body = parse_frontmatter(
+            (ROOT / article.path).read_text(encoding="utf-8", errors="replace")
+            if (ROOT / article.path).exists() else ""
+        )
+        # Read each contradicting source
+        sources_read: list[tuple[str, str, str]] = []
+        for src_path in article.contradicting_sources[:5]:  # cap at 5
+            title, body = _read_contradicting_source(src_path)
+            if title:
+                sources_read.append((src_path, title, body))
+
+        if not sources_read:
+            unresolved.append({
+                "topic": article.slug,
+                "reason": "no contradicting sources readable from disk",
+            })
+            continue
+
+        user_msg = _build_contradiction_user_message(
+            article, supporting_body, article.contradicting_sources, sources_read
+        )
+
+        try:
+            response = client.messages.create(
+                model=model,
+                max_tokens=3000,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_msg}],
+            )
+        except Exception as e:
+            llm_errors.append({"topic": article.slug, "error": str(e)})
+            if verbose:
+                print(f"  LLM error: {e}", file=sys.stderr)
+            continue
+
+        text = response.content[0].text.strip()
+        text = re.sub(r"^```(?:json)?\s*", "", text)
+        text = re.sub(r"\s*```$", "", text)
+        match = re.search(r"\{.*\}", text, re.DOTALL)
+        if not match:
+            llm_errors.append({"topic": article.slug, "error": "no JSON in response"})
+            continue
+        try:
+            result = json.loads(match.group(0))
+        except json.JSONDecodeError as e:
+            llm_errors.append({"topic": article.slug, "error": f"JSON parse: {e}"})
+            continue
+
+        slug_suggestion = result.get("slug") or f"{article.slug}-contradiction"
+        slug = _slugify_connection(slug_suggestion, fallback=f"{article.slug}-contradiction")
+        article_markdown = result.get("article_markdown") or ""
+        status = result.get("status", "unresolved")
+
+        if not article_markdown:
+            validation_failures.append({
+                "topic": article.slug,
+                "slug": slug,
+                "reason": "LLM returned no article_markdown",
+            })
+            continue
+
+        ok, reason = _validate_contradiction_article(article_markdown, article, registries)
+        if not ok:
+            validation_failures.append({
+                "topic": article.slug,
+                "slug": slug,
+                "reason": reason,
+            })
+            if verbose:
+                print(f"  validation failed: {reason}", file=sys.stderr)
+            continue
+
+        # Avoid collisions
+        base_slug = slug
+        counter = 2
+        while (CONTRADICTIONS_DIR / f"{slug}.md").exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+            if counter > 10:
+                break
+
+        target_path = CONTRADICTIONS_DIR / f"{slug}.md"
+
+        record = {
+            "topic": article.slug,
+            "slug": slug,
+            "path": str(target_path.relative_to(ROOT)),
+            "status": status,
+            "frame": result.get("frame"),
+            "decision_rule": result.get("decision_rule"),
+        }
+
+        if not dry_run:
+            ensure_layer4_dirs()
+            target_path.write_text(article_markdown, encoding="utf-8")
+
+            # Annotate the source Layer 3 article (if the LLM requested it)
+            if status == "resolved" and result.get("annotate_source") and result.get("source_annotation"):
+                source_path = ROOT / article.path
+                annotated, note = _annotate_source_article(
+                    source_path,
+                    result["source_annotation"],
+                    slug,
+                    dry_run=False,
+                )
+                record["source_annotation"] = note
+                record["source_annotation_ok"] = annotated
+
+        if status == "resolved":
+            resolved.append(record)
+        else:
+            unresolved.append(record)
+
+    return {
+        "mode": "contradictions",
+        "dry_run": dry_run,
+        "candidates": len(candidates),
+        "resolved": resolved,
+        "unresolved": unresolved,
+        "validation_failures": validation_failures,
+        "llm_errors": llm_errors,
+        "model": model,
+    }
 
 
 # =============================================================================
