@@ -24,13 +24,10 @@ from flask import (
 import requests
 import yaml
 
-# Modular versions of critical helpers live in web.helpers, web.registry,
-# and web.config. These modules mirror the inline definitions below and
-# are what pytest tests run against. Full refactor (deleting inline copies)
-# is a follow-up — requires unifying parse_frontmatter/read_article shapes.
-import web.config   # noqa: F401 — path constants
-import web.helpers  # noqa: F401 — sanitize_html, safe_resolve, render_markdown
-import web.registry  # noqa: F401 — CLIENT_NAMES, TOPIC_NAMES, loaders
+# Modular copies of critical helpers live in web/helpers.py, web/registry.py,
+# and web/config.py for pytest testing. NOT imported at runtime because the
+# Docker container bakes web/ contents flat into /app/ (no web/ package).
+# The inline definitions below are the runtime-authoritative copies.
 
 
 def get_md():
