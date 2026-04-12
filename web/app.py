@@ -5,7 +5,6 @@ Replaces Obsidian as the primary way to browse and interact with Meridian.
 Reads directly from /meridian/ filesystem. Calls receiver API for agent actions.
 """
 
-import hashlib
 import hmac
 import json
 import os
@@ -16,7 +15,6 @@ from datetime import datetime
 from functools import wraps
 from pathlib import Path
 
-import markdown
 from flask import (
     Flask, Response, abort, g, jsonify, redirect,
     render_template, request, send_file, session, url_for,
@@ -24,315 +22,29 @@ from flask import (
 import requests
 import yaml
 
-# Modular copies of critical helpers live in web/helpers.py, web/registry.py,
-# and web/config.py for pytest testing. NOT imported at runtime because the
-# Docker container bakes web/ contents flat into /app/ (no web/ package).
-# The inline definitions below are the runtime-authoritative copies.
+# Critical helpers imported from web.helpers, web.registry, web.config.
+# These modules are the canonical, tested versions. The vm-auto-deploy
+# script copies web/*.py into /app/web/ inside the container so imports
+# resolve at runtime.
+from web.config import (
+    MERIDIAN_ROOT, WIKI_DIR, RAW_DIR, CAPTURE_DIR, REPORTS_DIR,
+    ENGINEERING_DIR, INTERESTS_DIR, LAYER4_DIR,
+    COMMITS_CAPTURE_DIR, INTERESTS_CAPTURE_DIR,
+    CLIENTS_YAML, TOPICS_YAML, ENGINEERING_TOPICS_YAML,
+    PROJECTS_YAML, INTERESTS_TOPICS_YAML,
+    RECEIVER_URL, RECEIVER_TOKEN,
+)
+from web.helpers import (
+    parse_frontmatter, read_article, render_markdown,
+    sanitize_html, safe_resolve as _safe_resolve,
+    coerce_date_str as _coerce_date_str,
+)
+from web.registry import (
+    CLIENT_NAMES, TOPIC_NAMES, ENGINEERING_TOPIC_NAMES,
+    INTERESTS_TOPIC_NAMES, PROJECTS,
+    client_display_name, _non_synthesizable_topic_slugs,
+)
 
-
-def get_md():
-    """Create a fresh Markdown converter."""
-    return markdown.Markdown(extensions=[
-        "extra",
-        "codehilite",
-        "toc",
-        "nl2br",
-        "sane_lists",
-    ])
-
-
-def process_citations(text: str) -> tuple[str, list[dict]]:
-    """Convert [[source1, source2]] inline citations to footnote numbers."""
-    citations = []
-    citation_map = {}
-    counter = [1]
-
-    def clean_name(s: str) -> str:
-        s = s.strip().replace(".md", "").replace(".MD", "")
-        s = s.split("/")[-1]  # take filename only
-        s = s.replace("-", " ").replace("_", " ")
-        return s.title()
-
-    def replace_citation(match):
-        raw = match.group(1)
-        sources = [s.strip() for s in raw.split(",")]
-
-        # Heuristic: citations have commas (multiple sources) or .md suffixes.
-        # Single items without .md are wikilinks — leave for wikilink converter.
-        has_comma = "," in raw
-        has_md = ".md" in raw.lower()
-        if not has_comma and not has_md:
-            # Single wikilink, not a citation — leave for wikilink converter
-            return match.group(0)
-
-        key = "|".join(sorted(sources))
-        if key in citation_map:
-            num = citation_map[key]
-        else:
-            num = counter[0]
-            citation_map[key] = num
-            citations.append({
-                "number": num,
-                "sources": sources,
-                "display_names": [clean_name(s) for s in sources],
-            })
-            counter[0] += 1
-
-        return (
-            f'<sup class="citation" id="cite-{num}">'
-            f'<a href="#source-{num}">[{num}]</a>'
-            f"</sup>"
-        )
-
-    processed = re.sub(r"\[\[([^\]]+)\]\]", replace_citation, text)
-    return processed, citations
-
-
-def build_sources_html(
-    citations: list[dict],
-    topic_context: dict | None = None,
-) -> str:
-    """Build footnote-style citations section.
-
-    Called "Citations" (not "Sources") because it only shows fragments
-    actually cited inline in the synthesis body — not the full set of
-    fragments under the topic. When `topic_context` is provided, the
-    header includes a "N cited of M total fragments" framing and a link
-    to browse the full fragment list.
-
-    topic_context, if set, should contain:
-        slug: str
-        display_name: str
-        total_fragments: int
-    """
-    if not citations:
-        return ""
-
-    header_lines = ['<div class="sources-section">', "<h2>Citations</h2>"]
-    if topic_context:
-        slug = topic_context.get("slug", "")
-        name = topic_context.get("display_name", slug)
-        total = topic_context.get("total_fragments", 0)
-        cited = len(citations)
-        header_lines.append(
-            f'<p class="sources-subhead">'
-            f'{cited} fragment{"" if cited == 1 else "s"} cited inline. '
-            f'<a href="/topic/{slug}">Browse all {total} fragments in {name} &rarr;</a>'
-            f"</p>"
-        )
-
-    lines = header_lines + ['<ol class="sources-list">']
-    for cite in citations:
-        lines.append(f'<li id="source-{cite["number"]}">')
-        links = []
-        for source, display in zip(cite["sources"], cite["display_names"]):
-            slug = source.strip().replace(".md", "")
-            if not slug.startswith("wiki/"):
-                slug = f"wiki/{slug}"
-            links.append(f'<a href="/article/{slug}.md" class="source-link">{display}</a>')
-        lines.append(" &middot; ".join(links))
-        # Back-link to the citation in the body so readers can return
-        # to where they were reading without scrolling.
-        lines.append(
-            f' <a href="#cite-{cite["number"]}" class="source-backref" '
-            f'aria-label="Back to citation {cite["number"]}">&#8617;</a>'
-        )
-        lines.append("</li>")
-    lines.append("</ol></div>")
-    return "\n".join(lines)
-
-
-def convert_wikilinks(text: str) -> str:
-    """Convert remaining [[wikilinks]] to clickable HTML links."""
-    def replace_link(match):
-        full = match.group(1)
-        if "|" in full:
-            target, display = full.split("|", 1)
-        else:
-            target = full
-            display = target.split("/")[-1].replace("-", " ").title()
-        if not target.startswith("wiki/"):
-            target = f"wiki/{target}"
-        if not target.endswith(".md"):
-            target += ".md"
-        return f"[{display}](/article/{target})"
-    return re.sub(r"\[\[([^\]]+)\]\]", replace_link, text)
-
-
-def _split_related_topics(body: str) -> tuple[str, str]:
-    """Split the article body at the `## Related Topics` header.
-
-    Returns (body_before, related_topics_and_after). If the header is
-    missing, the whole body is treated as "before" and the second value
-    is empty. Case-insensitive match so a lowercase or mixed-case header
-    still splits correctly.
-
-    This exists because the Related Topics section is a bulleted list of
-    bare wikilinks like `[[wiki/knowledge/seo/index.md]]`. The citation
-    processor, which runs first, would otherwise turn each of those into
-    a numbered footnote (they contain `.md`), and the rendered article
-    would show a list of numbers with no text at the bottom.
-    """
-    m = re.search(r"(?mi)^##\s+Related\s+Topics\s*$", body)
-    if not m:
-        return body, ""
-    return body[: m.start()], body[m.start():]
-
-
-# ---------------------------------------------------------------------------
-# HTML sanitizer — allowlist-based, zero dependencies beyond stdlib
-# ---------------------------------------------------------------------------
-# Every route that renders LLM-generated markdown to HTML passes the
-# output through sanitize_html() before it reaches a `| safe` template
-# filter. This prevents script injection from malicious or hallucinated
-# raw HTML in markdown content.
-
-from html.parser import HTMLParser
-import html as _html_mod
-
-_ALLOWED_TAGS = frozenset({
-    "p", "h1", "h2", "h3", "h4", "h5", "h6",
-    "ul", "ol", "li", "a", "strong", "em", "b", "i",
-    "code", "pre", "blockquote", "table", "thead", "tbody", "tfoot",
-    "tr", "th", "td", "br", "hr", "img", "sup", "sub",
-    "span", "div", "dl", "dt", "dd", "details", "summary",
-    "caption", "colgroup", "col",
-})
-_VOID_TAGS = frozenset({"br", "hr", "img", "col"})
-_SAFE_ATTRS_BY_TAG: dict[str, frozenset] = {
-    "a":       frozenset({"href", "title", "class", "id", "target", "rel"}),
-    "img":     frozenset({"src", "alt", "title", "width", "height", "class"}),
-    "code":    frozenset({"class"}),
-    "pre":     frozenset({"class"}),
-    "span":    frozenset({"class", "id", "style"}),
-    "div":     frozenset({"class", "id", "style"}),
-    "td":      frozenset({"style", "class", "colspan", "rowspan"}),
-    "th":      frozenset({"style", "class", "colspan", "rowspan"}),
-    "sup":     frozenset({"class", "id"}),
-    "table":   frozenset({"class", "style"}),
-    "details": frozenset({"style", "class"}),
-    "summary": frozenset({"style", "class"}),
-    "rect":    frozenset(),  # SVG elements from inline heatmaps — stripped
-    "svg":     frozenset(),
-    "title":   frozenset(),
-}
-_FALLBACK_ATTRS = frozenset({"class", "id"})
-_DANGEROUS_URL_SCHEMES = frozenset({"javascript", "vbscript", "data"})
-
-
-class _HTMLSanitizer(HTMLParser):
-    """Tag-allowlist HTML sanitizer. Strips disallowed tags entirely
-    (their text content is preserved). Strips dangerous attributes
-    (event handlers, javascript: URLs, expression() in style)."""
-
-    def __init__(self):
-        super().__init__(convert_charrefs=False)
-        self._out: list[str] = []
-
-    def _safe_attrs(self, tag: str, attrs: list[tuple[str, str | None]]) -> str:
-        allowed = _SAFE_ATTRS_BY_TAG.get(tag, _FALLBACK_ATTRS)
-        parts: list[str] = []
-        for name, value in attrs:
-            name = name.lower()
-            if name.startswith("on"):  # event handlers
-                continue
-            if name not in allowed:
-                continue
-            value = value or ""
-            if name in ("href", "src", "action"):
-                scheme = value.split(":")[0].lower().strip()
-                if scheme in _DANGEROUS_URL_SCHEMES:
-                    continue
-            if name == "style":
-                v = value.lower()
-                if "expression" in v or "javascript" in v or "url(" in v:
-                    continue
-            parts.append(f'{name}="{_html_mod.escape(value, quote=True)}"')
-        return (" " + " ".join(parts)) if parts else ""
-
-    def handle_starttag(self, tag, attrs):
-        tag = tag.lower()
-        if tag not in _ALLOWED_TAGS:
-            return
-        self._out.append(f"<{tag}{self._safe_attrs(tag, attrs)}>")
-
-    def handle_endtag(self, tag):
-        tag = tag.lower()
-        if tag in _ALLOWED_TAGS and tag not in _VOID_TAGS:
-            self._out.append(f"</{tag}>")
-
-    def handle_startendtag(self, tag, attrs):
-        tag = tag.lower()
-        if tag not in _ALLOWED_TAGS:
-            return
-        self._out.append(f"<{tag}{self._safe_attrs(tag, attrs)} />")
-
-    def handle_data(self, data):
-        self._out.append(data)
-
-    def handle_entityref(self, name):
-        self._out.append(f"&{name};")
-
-    def handle_charref(self, name):
-        self._out.append(f"&#{name};")
-
-    def handle_comment(self, data):
-        pass  # strip HTML comments
-
-    def get_output(self) -> str:
-        return "".join(self._out)
-
-
-def sanitize_html(html_str: str) -> str:
-    """Strip disallowed HTML tags and dangerous attributes from a string.
-
-    Uses an allowlist approach: only tags in _ALLOWED_TAGS pass through,
-    all others are removed (their text content is preserved). Attributes
-    are filtered per-tag against _SAFE_ATTRS_BY_TAG. Event handlers
-    (on*), javascript: URLs, and expression() in style attrs are always
-    stripped regardless of the allowlist.
-
-    Called automatically at the end of render_markdown() so every
-    `| safe` template filter in the dashboard receives sanitized HTML.
-    """
-    sanitizer = _HTMLSanitizer()
-    try:
-        sanitizer.feed(html_str)
-    except Exception:
-        # If the parser chokes, escape the whole thing rather than
-        # passing through unsanitized HTML.
-        return _html_mod.escape(html_str)
-    return sanitizer.get_output()
-
-
-def render_markdown(body: str, topic_context: dict | None = None) -> str:
-    """Convert markdown body to HTML with citation footnotes and wikilinks.
-
-    `topic_context` is an optional dict passed from view_article when the
-    article is a Level 3 synthesis. It lets the citations footer show
-    "N cited of M total" and link to the full fragment browser.
-    """
-    # Step 1: Separate the Related Topics section so its wikilinks are not
-    # mistaken for citations.
-    body_before, related = _split_related_topics(body)
-
-    # Step 2: Process citations on the analytical body only.
-    body_before, citations = process_citations(body_before)
-
-    # Step 3: Convert wikilinks in both segments.
-    body_before = convert_wikilinks(body_before)
-    related = convert_wikilinks(related)
-
-    # Step 4: Render markdown to HTML.
-    md = get_md()
-    article_html = md.convert(body_before + "\n\n" + related)
-
-    # Step 5: Append citations section (footnote-style, topic-aware).
-    sources_html = build_sources_html(citations, topic_context=topic_context)
-
-    # Step 6: Sanitize — strip any raw HTML the LLM may have injected
-    # into the markdown (script tags, event handlers, javascript: URLs).
-    return sanitize_html(article_html + sources_html)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get(
@@ -451,135 +163,6 @@ RECEIVER_TOKEN = os.environ.get("MERIDIAN_RECEIVER_TOKEN", "")
 # Registry lookups — loaded once at startup, refreshed on demand via reload.
 # ---------------------------------------------------------------------------
 
-def _load_client_names() -> dict:
-    """Map client slug -> display name. Empty if clients.yaml is missing."""
-    if not CLIENTS_YAML.exists():
-        return {}
-    try:
-        data = yaml.safe_load(CLIENTS_YAML.read_text(encoding="utf-8")) or {}
-    except yaml.YAMLError:
-        return {}
-    lookup: dict[str, str] = {}
-    for entry in data.get("clients", []):
-        slug = (entry.get("slug") or "").strip()
-        name = (entry.get("name") or "").strip()
-        if slug and name:
-            lookup[slug] = name
-    return lookup
-
-
-def _load_topic_names() -> dict:
-    """Map topic slug -> display name. Falls back to title-cased slug.
-
-    topics.yaml uses the historical `categories` key at the top level
-    (a carryover from when the taxonomy was organized as categories).
-    Also accept `topics` for forward compatibility with future files.
-    """
-    if not TOPICS_YAML.exists():
-        return {}
-    try:
-        data = yaml.safe_load(TOPICS_YAML.read_text(encoding="utf-8")) or {}
-    except yaml.YAMLError:
-        return {}
-    lookup: dict[str, str] = {}
-    entries = data.get("categories") or data.get("topics") or []
-    for entry in entries:
-        if not isinstance(entry, dict):
-            continue
-        slug = (entry.get("slug") or "").strip()
-        name = (entry.get("name") or "").strip()
-        if slug and name:
-            lookup[slug] = name
-    return lookup
-
-
-def _load_engineering_topic_names() -> dict:
-    """Map engineering topic slug -> display name. Reads engineering-topics.yaml."""
-    if not ENGINEERING_TOPICS_YAML.exists():
-        return {}
-    try:
-        data = yaml.safe_load(ENGINEERING_TOPICS_YAML.read_text(encoding="utf-8")) or {}
-    except yaml.YAMLError:
-        return {}
-    lookup: dict[str, str] = {}
-    for entry in data.get("topics", []):
-        slug = (entry.get("slug") or "").strip()
-        name = (entry.get("name") or "").strip()
-        if slug and name:
-            lookup[slug] = name
-    return lookup
-
-
-def _load_projects() -> list[dict]:
-    """Return the list of project dicts from projects.yaml. Empty list if missing."""
-    if not PROJECTS_YAML.exists():
-        return []
-    try:
-        data = yaml.safe_load(PROJECTS_YAML.read_text(encoding="utf-8")) or {}
-    except yaml.YAMLError:
-        return []
-    return data.get("projects", [])
-
-
-def _non_synthesizable_topic_slugs() -> set:
-    """Return set of (namespace, slug) tuples for topics flagged
-    `synthesize: false` in their registry YAML. These topics are
-    excluded from "ready to synthesize" lists and L3 coverage math.
-
-    Currently only engineering-topics.yaml supports the flag, but the
-    helper is generic so other namespaces can opt in later.
-    """
-    result: set = set()
-    sources = [
-        ("engineering", ENGINEERING_TOPICS_YAML, "topics"),
-        ("interests",   INTERESTS_TOPICS_YAML,   "topics"),
-    ]
-    for ns, path, key in sources:
-        if not path.exists():
-            continue
-        try:
-            data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        except yaml.YAMLError:
-            continue
-        for entry in data.get(key, []):
-            if isinstance(entry, dict) and entry.get("synthesize") is False:
-                slug = (entry.get("slug") or "").strip()
-                if slug:
-                    result.add((ns, slug))
-    return result
-
-
-def _load_interests_topic_names() -> dict:
-    """Map interests topic slug -> display name. Reads interests-topics.yaml."""
-    if not INTERESTS_TOPICS_YAML.exists():
-        return {}
-    try:
-        data = yaml.safe_load(INTERESTS_TOPICS_YAML.read_text(encoding="utf-8")) or {}
-    except yaml.YAMLError:
-        return {}
-    lookup: dict[str, str] = {}
-    for entry in data.get("topics", []):
-        slug = (entry.get("slug") or "").strip()
-        name = (entry.get("name") or "").strip()
-        if slug and name:
-            lookup[slug] = name
-    return lookup
-
-
-CLIENT_NAMES: dict = _load_client_names()
-TOPIC_NAMES: dict = _load_topic_names()
-ENGINEERING_TOPIC_NAMES: dict = _load_engineering_topic_names()
-INTERESTS_TOPIC_NAMES: dict = _load_interests_topic_names()
-PROJECTS: list = _load_projects()
-
-
-def client_display_name(slug_or_name: str) -> str:
-    """Resolve a client slug to its display name, or return the input unchanged."""
-    if not slug_or_name:
-        return ""
-    key = slug_or_name.strip().lower()
-    return CLIENT_NAMES.get(key, slug_or_name)
-
 
 def receiver_headers():
     return {"Authorization": f"Bearer {RECEIVER_TOKEN}", "Content-Type": "application/json"}
@@ -588,41 +171,6 @@ def receiver_headers():
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-def parse_frontmatter(content: str) -> tuple[dict, str]:
-    """Parse YAML frontmatter, return (metadata, body)."""
-    if not content.startswith("---"):
-        return {}, content
-    parts = content.split("---", 2)
-    if len(parts) < 3:
-        return {}, content
-    try:
-        fm = yaml.safe_load(parts[1]) or {}
-    except yaml.YAMLError:
-        fm = {}
-    return fm, parts[2].strip()
-
-
-def read_article(path: Path) -> dict:
-    """Read a wiki article and return structured data."""
-    content = path.read_text(encoding="utf-8", errors="replace")
-    fm, body = parse_frontmatter(content)
-    word_count = len(body.split())
-    return {
-        "path": str(path.relative_to(MERIDIAN_ROOT)),
-        "filename": path.name,
-        "title": fm.get("title", path.stem),
-        "type": fm.get("type", ""),
-        "layer": fm.get("layer", ""),
-        "tags": fm.get("tags", []),
-        "created": fm.get("created", ""),
-        "updated": fm.get("updated", ""),
-        "client_source": fm.get("client_source", ""),
-        "industry_context": fm.get("industry_context", ""),
-        "word_count": word_count,
-        "body": body,
-        "frontmatter": fm,
-    }
 
 
 def get_stats() -> dict:
@@ -1626,23 +1174,6 @@ def _topic_context_for(filepath: Path) -> dict | None:
     }
 
 
-def _safe_resolve(article_path: str) -> Path | None:
-    """Resolve a user-supplied article path to a safe absolute path
-    inside MERIDIAN_ROOT. Returns None if the path escapes the root
-    (via .., symlinks, or any other traversal). Uses Path.resolve()
-    so symlinks are followed before the containment check."""
-    if ".." in article_path or article_path.startswith("/"):
-        return None
-    filepath = (MERIDIAN_ROOT / article_path).resolve()
-    try:
-        filepath.relative_to(MERIDIAN_ROOT.resolve())
-    except ValueError:
-        return None
-    if not filepath.exists():
-        return None
-    return filepath
-
-
 @app.route("/article/<path:article_path>")
 def view_article(article_path):
     filepath = _safe_resolve(article_path)
@@ -2619,23 +2150,6 @@ def analytics_page():
     """Deep insights into the data — provenance, density, freshness, gaps."""
     analytics = _compute_analytics()
     return render_template("analytics.html", analytics=analytics)
-
-
-def _coerce_date_str(value) -> str:
-    """Normalize a frontmatter date field to a YYYY-MM-DD string.
-
-    PyYAML auto-parses ISO-like date strings into datetime.date objects,
-    which then fail `isinstance(x, str)` checks downstream. Handle both.
-    """
-    if not value:
-        return ""
-    if isinstance(value, str):
-        return value[:10] if len(value) >= 10 else value
-    # datetime.date / datetime.datetime
-    try:
-        return value.strftime("%Y-%m-%d")
-    except Exception:
-        return str(value)[:10]
 
 
 def _read_frontmatter_only(path: Path) -> dict:
