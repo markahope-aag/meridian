@@ -174,6 +174,132 @@ def _split_related_topics(body: str) -> tuple[str, str]:
     return body[: m.start()], body[m.start():]
 
 
+# ---------------------------------------------------------------------------
+# HTML sanitizer — allowlist-based, zero dependencies beyond stdlib
+# ---------------------------------------------------------------------------
+# Every route that renders LLM-generated markdown to HTML passes the
+# output through sanitize_html() before it reaches a `| safe` template
+# filter. This prevents script injection from malicious or hallucinated
+# raw HTML in markdown content.
+
+from html.parser import HTMLParser
+import html as _html_mod
+
+_ALLOWED_TAGS = frozenset({
+    "p", "h1", "h2", "h3", "h4", "h5", "h6",
+    "ul", "ol", "li", "a", "strong", "em", "b", "i",
+    "code", "pre", "blockquote", "table", "thead", "tbody", "tfoot",
+    "tr", "th", "td", "br", "hr", "img", "sup", "sub",
+    "span", "div", "dl", "dt", "dd", "details", "summary",
+    "caption", "colgroup", "col",
+})
+_VOID_TAGS = frozenset({"br", "hr", "img", "col"})
+_SAFE_ATTRS_BY_TAG: dict[str, frozenset] = {
+    "a":       frozenset({"href", "title", "class", "id", "target", "rel"}),
+    "img":     frozenset({"src", "alt", "title", "width", "height", "class"}),
+    "code":    frozenset({"class"}),
+    "pre":     frozenset({"class"}),
+    "span":    frozenset({"class", "id", "style"}),
+    "div":     frozenset({"class", "id", "style"}),
+    "td":      frozenset({"style", "class", "colspan", "rowspan"}),
+    "th":      frozenset({"style", "class", "colspan", "rowspan"}),
+    "sup":     frozenset({"class", "id"}),
+    "table":   frozenset({"class", "style"}),
+    "details": frozenset({"style", "class"}),
+    "summary": frozenset({"style", "class"}),
+    "rect":    frozenset(),  # SVG elements from inline heatmaps — stripped
+    "svg":     frozenset(),
+    "title":   frozenset(),
+}
+_FALLBACK_ATTRS = frozenset({"class", "id"})
+_DANGEROUS_URL_SCHEMES = frozenset({"javascript", "vbscript", "data"})
+
+
+class _HTMLSanitizer(HTMLParser):
+    """Tag-allowlist HTML sanitizer. Strips disallowed tags entirely
+    (their text content is preserved). Strips dangerous attributes
+    (event handlers, javascript: URLs, expression() in style)."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=False)
+        self._out: list[str] = []
+
+    def _safe_attrs(self, tag: str, attrs: list[tuple[str, str | None]]) -> str:
+        allowed = _SAFE_ATTRS_BY_TAG.get(tag, _FALLBACK_ATTRS)
+        parts: list[str] = []
+        for name, value in attrs:
+            name = name.lower()
+            if name.startswith("on"):  # event handlers
+                continue
+            if name not in allowed:
+                continue
+            value = value or ""
+            if name in ("href", "src", "action"):
+                scheme = value.split(":")[0].lower().strip()
+                if scheme in _DANGEROUS_URL_SCHEMES:
+                    continue
+            if name == "style":
+                v = value.lower()
+                if "expression" in v or "javascript" in v or "url(" in v:
+                    continue
+            parts.append(f'{name}="{_html_mod.escape(value, quote=True)}"')
+        return (" " + " ".join(parts)) if parts else ""
+
+    def handle_starttag(self, tag, attrs):
+        tag = tag.lower()
+        if tag not in _ALLOWED_TAGS:
+            return
+        self._out.append(f"<{tag}{self._safe_attrs(tag, attrs)}>")
+
+    def handle_endtag(self, tag):
+        tag = tag.lower()
+        if tag in _ALLOWED_TAGS and tag not in _VOID_TAGS:
+            self._out.append(f"</{tag}>")
+
+    def handle_startendtag(self, tag, attrs):
+        tag = tag.lower()
+        if tag not in _ALLOWED_TAGS:
+            return
+        self._out.append(f"<{tag}{self._safe_attrs(tag, attrs)} />")
+
+    def handle_data(self, data):
+        self._out.append(data)
+
+    def handle_entityref(self, name):
+        self._out.append(f"&{name};")
+
+    def handle_charref(self, name):
+        self._out.append(f"&#{name};")
+
+    def handle_comment(self, data):
+        pass  # strip HTML comments
+
+    def get_output(self) -> str:
+        return "".join(self._out)
+
+
+def sanitize_html(html_str: str) -> str:
+    """Strip disallowed HTML tags and dangerous attributes from a string.
+
+    Uses an allowlist approach: only tags in _ALLOWED_TAGS pass through,
+    all others are removed (their text content is preserved). Attributes
+    are filtered per-tag against _SAFE_ATTRS_BY_TAG. Event handlers
+    (on*), javascript: URLs, and expression() in style attrs are always
+    stripped regardless of the allowlist.
+
+    Called automatically at the end of render_markdown() so every
+    `| safe` template filter in the dashboard receives sanitized HTML.
+    """
+    sanitizer = _HTMLSanitizer()
+    try:
+        sanitizer.feed(html_str)
+    except Exception:
+        # If the parser chokes, escape the whole thing rather than
+        # passing through unsanitized HTML.
+        return _html_mod.escape(html_str)
+    return sanitizer.get_output()
+
+
 def render_markdown(body: str, topic_context: dict | None = None) -> str:
     """Convert markdown body to HTML with citation footnotes and wikilinks.
 
@@ -198,7 +324,10 @@ def render_markdown(body: str, topic_context: dict | None = None) -> str:
 
     # Step 5: Append citations section (footnote-style, topic-aware).
     sources_html = build_sources_html(citations, topic_context=topic_context)
-    return article_html + sources_html
+
+    # Step 6: Sanitize — strip any raw HTML the LLM may have injected
+    # into the markdown (script tags, event handlers, javascript: URLs).
+    return sanitize_html(article_html + sources_html)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get(
