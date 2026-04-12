@@ -1492,10 +1492,27 @@ def _topic_context_for(filepath: Path) -> dict | None:
     }
 
 
+def _safe_resolve(article_path: str) -> Path | None:
+    """Resolve a user-supplied article path to a safe absolute path
+    inside MERIDIAN_ROOT. Returns None if the path escapes the root
+    (via .., symlinks, or any other traversal). Uses Path.resolve()
+    so symlinks are followed before the containment check."""
+    if ".." in article_path or article_path.startswith("/"):
+        return None
+    filepath = (MERIDIAN_ROOT / article_path).resolve()
+    try:
+        filepath.relative_to(MERIDIAN_ROOT.resolve())
+    except ValueError:
+        return None
+    if not filepath.exists():
+        return None
+    return filepath
+
+
 @app.route("/article/<path:article_path>")
 def view_article(article_path):
-    filepath = MERIDIAN_ROOT / article_path
-    if not filepath.exists() or not str(filepath).startswith(str(MERIDIAN_ROOT)):
+    filepath = _safe_resolve(article_path)
+    if filepath is None:
         return "Not found", 404
 
     article = read_article(filepath)
@@ -3293,8 +3310,8 @@ def make_download_name(filepath: Path, article_path: str) -> str:
 @app.route("/download/md/<path:article_path>")
 def download_md(article_path):
     """Download article as raw markdown."""
-    filepath = MERIDIAN_ROOT / article_path
-    if not filepath.exists() or not str(filepath).startswith(str(MERIDIAN_ROOT)):
+    filepath = _safe_resolve(article_path)
+    if filepath is None:
         return "Not found", 404
     name = make_download_name(filepath, article_path)
     return send_file(filepath, as_attachment=True, download_name=name,
@@ -3304,8 +3321,8 @@ def download_md(article_path):
 @app.route("/download/pdf/<path:article_path>")
 def download_pdf(article_path):
     """Download article as PDF."""
-    filepath = MERIDIAN_ROOT / article_path
-    if not filepath.exists() or not str(filepath).startswith(str(MERIDIAN_ROOT)):
+    filepath = _safe_resolve(article_path)
+    if filepath is None:
         return "Not found", 404
 
     article = read_article(filepath)
