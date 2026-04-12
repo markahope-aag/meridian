@@ -97,6 +97,38 @@
     </div>
 </div>
 
+{% if layer4_summary %}
+<div style="font-size: 11px; color: var(--text-muted); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">Conceptual Layer (Layer 4)</div>
+<div class="stat-grid">
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(layer4_summary.active_patterns) }}</div>
+        <div class="label">Active Patterns</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(layer4_summary.emerging) }}</div>
+        <div class="label">Emerging</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ '{:,}'.format(layer4_summary.contradictions_resolved) }}</div>
+        <div class="label">Contradictions Resolved</div>
+    </div>
+    <div class="stat-box"{% if layer4_summary.contradictions_unresolved > 0 %} style="border-color: var(--yellow);"{% endif %}>
+        <div class="number"{% if layer4_summary.contradictions_unresolved > 0 %} style="color: var(--yellow);"{% endif %}>{{ '{:,}'.format(layer4_summary.contradictions_unresolved) }}</div>
+        <div class="label">Unresolved</div>
+    </div>
+    <div class="stat-box"{% if layer4_summary.drift > 0 %} style="border-color: var(--yellow);"{% endif %}>
+        <div class="number"{% if layer4_summary.drift > 0 %} style="color: var(--yellow);"{% endif %}>{{ '{:,}'.format(layer4_summary.drift) }}</div>
+        <div class="label">Drift Flags</div>
+    </div>
+    <div class="stat-box">
+        <div style="font-size: 14px; font-weight: 600;">
+            <a href="/concepts/" style="color: var(--accent); text-decoration: none;">View all &rarr;</a>
+        </div>
+        <div class="label">All Layer 4</div>
+    </div>
+</div>
+{% endif %}
+
 <div style="font-size: 11px; color: var(--text-muted); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">Industries &middot; Cross-Cutting</div>
 <div class="stat-grid">
     <div class="stat-box">

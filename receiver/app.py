@@ -862,6 +862,73 @@ def synthesize_queue():
 
 
 # ---------------------------------------------------------------------------
+# POST /conceptualize — run the Layer 4 conceptual agent
+# ---------------------------------------------------------------------------
+
+@app.route("/conceptualize", methods=["POST"])
+@require_auth
+def conceptualize():
+    """Run the conceptual agent in one of four modes.
+
+    Body JSON:
+        mode: "connections" | "maturation" | "emergence" | "contradictions" (required)
+        dry_run: bool (optional) — default false
+        limit: int (optional) — for Mode A, cap the number of articles written
+        verbose: bool (optional) — default false
+
+    Returns 202 with a job_id. Poll GET /jobs/<id> for the result.
+    Add ?sync=true for synchronous execution (blocks up to 10 minutes).
+    """
+    data = request.get_json(force=True) if request.data else {}
+    mode = data.get("mode")
+    if mode not in ("connections", "maturation", "emergence", "contradictions"):
+        return jsonify({"error": "mode must be one of: connections, maturation, emergence, contradictions"}), 400
+
+    dry_run = bool(data.get("dry_run", False))
+    limit = data.get("limit")
+    verbose = bool(data.get("verbose", False))
+    sync = request.args.get("sync", "").lower() == "true"
+
+    args = [
+        sys.executable,
+        str(AGENTS_DIR / "conceptual_agent.py"),
+        "--mode", mode,
+    ]
+    if dry_run:
+        args.append("--dry-run")
+    if verbose:
+        args.append("--verbose")
+    if limit is not None:
+        try:
+            args.extend(["--limit", str(int(limit))])
+        except (TypeError, ValueError):
+            return jsonify({"error": "limit must be an integer"}), 400
+
+    if sync:
+        try:
+            result = subprocess.run(
+                args, capture_output=True, text=True, timeout=600,
+                cwd=str(MERIDIAN_ROOT),
+            )
+            if result.returncode != 0:
+                return jsonify({
+                    "error": "conceptual agent failed",
+                    "stdout": result.stdout,
+                    "stderr": result.stderr,
+                }), 500
+            return jsonify({"status": "ok", "result": result.stdout})
+        except subprocess.TimeoutExpired:
+            return jsonify({"error": "conceptual agent timed out (10 min cap)"}), 504
+        except FileNotFoundError:
+            return jsonify({"error": "conceptual_agent.py not found"}), 501
+
+    job_id = create_job(f"conceptualize-{mode}")
+    thread = threading.Thread(target=run_agent_async, args=(job_id, args), daemon=True)
+    thread.start()
+    return jsonify({"status": "accepted", "job_id": job_id, "mode": mode}), 202
+
+
+# ---------------------------------------------------------------------------
 # GET /jobs/<id> — poll job status
 # ---------------------------------------------------------------------------
 

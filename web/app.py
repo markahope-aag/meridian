@@ -206,6 +206,7 @@ PROJECTS_YAML = MERIDIAN_ROOT / "projects.yaml"
 INTERESTS_TOPICS_YAML = MERIDIAN_ROOT / "interests-topics.yaml"
 ENGINEERING_DIR = WIKI_DIR / "engineering"
 INTERESTS_DIR = WIKI_DIR / "interests"
+LAYER4_DIR = WIKI_DIR / "layer4"
 COMMITS_CAPTURE_DIR = CAPTURE_DIR / "external" / "commits"
 INTERESTS_CAPTURE_DIR = CAPTURE_DIR / "external" / "interests"
 RECEIVER_URL = os.environ.get("MERIDIAN_RECEIVER_URL", "http://localhost:8000")
@@ -843,6 +844,9 @@ def dashboard():
     projects = _load_projects_with_counts()
     # Interests topics — list from registry, enriched with fragment counts
     interests_topics = _load_interests_topics_with_counts()
+    # Layer 4 conceptual summary
+    layer4_articles = _load_layer4_articles()
+    layer4_summary = _layer4_summary_from(layer4_articles)
 
     return render_template("dashboard.html",
                            stats=stats, recent_log=recent_log,
@@ -850,6 +854,7 @@ def dashboard():
                            engineering_topics=engineering_topics,
                            projects=projects,
                            interests_topics=interests_topics,
+                           layer4_summary=layer4_summary,
                            synth_status=synth_status, layer3_count=layer3_count,
                            metrics=metrics)
 
@@ -1973,6 +1978,173 @@ def _enrich_interests_fragment(article: dict) -> dict:
         except ValueError:
             article["path"] = str(path)
     return article
+
+
+def _load_layer4_articles() -> list[dict]:
+    """Walk wiki/layer4/ and return all Layer 4 articles with their frontmatter.
+    Used by /concepts and /concepts/stats.
+    """
+    result = []
+    if not LAYER4_DIR.exists():
+        return result
+    for subdir_name, concept_type in (
+        ("patterns",       "pattern"),
+        ("emergence",      "emergence"),
+        ("contradictions", "contradiction"),
+        ("drift",          "drift"),
+    ):
+        subdir = LAYER4_DIR / subdir_name
+        if not subdir.exists():
+            continue
+        for f in sorted(subdir.glob("*.md")):
+            if f.name == "_index.md":
+                continue
+            try:
+                text = f.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            if not text.startswith("---"):
+                continue
+            try:
+                end = text.index("\n---\n", 4)
+            except ValueError:
+                continue
+            try:
+                fm = yaml.safe_load(text[4:end]) or {}
+            except yaml.YAMLError:
+                continue
+            if not isinstance(fm, dict) or fm.get("layer") != 4:
+                continue
+            body = text[end + 5 :]
+            result.append({
+                "path": f.relative_to(MERIDIAN_ROOT).as_posix(),
+                "slug": f.stem,
+                "concept_type": fm.get("concept_type") or concept_type,
+                "title": fm.get("title") or f.stem,
+                "topics_connected": fm.get("topics_connected") or [],
+                "industries_connected": fm.get("industries_connected") or [],
+                "confidence": fm.get("confidence") or "low",
+                "hypothesis": bool(fm.get("hypothesis", True)),
+                "status": fm.get("status") or "active",
+                "first_detected": str(fm.get("first_detected") or "")[:10],
+                "last_updated": str(fm.get("last_updated") or "")[:10],
+                "supporting_evidence_count": int(fm.get("supporting_evidence_count") or 0),
+                "contradicting_evidence_count": int(fm.get("contradicting_evidence_count") or 0),
+                "decision_rule": fm.get("decision_rule"),
+                "body": body,
+            })
+    return result
+
+
+def _layer4_summary_from(articles: list[dict]) -> dict:
+    """Collapse Layer 4 article list into a summary dict for dashboard stats."""
+    active_patterns = sum(
+        1 for a in articles
+        if a["concept_type"] == "pattern" and not a["hypothesis"] and a["status"] == "active"
+    )
+    emerging = sum(
+        1 for a in articles
+        if a["concept_type"] == "pattern" and a["hypothesis"]
+    )
+    contradictions_resolved = sum(
+        1 for a in articles
+        if a["concept_type"] == "contradiction" and a["status"] == "resolved"
+    )
+    contradictions_unresolved = sum(
+        1 for a in articles
+        if a["concept_type"] == "contradiction" and a["status"] == "unresolved"
+    )
+    drift = sum(1 for a in articles if a["concept_type"] == "drift")
+    by_confidence = defaultdict(int)
+    for a in articles:
+        by_confidence[a["confidence"]] += 1
+    return {
+        "active_patterns": active_patterns,
+        "emerging": emerging,
+        "contradictions_resolved": contradictions_resolved,
+        "contradictions_unresolved": contradictions_unresolved,
+        "drift": drift,
+        "total": len(articles),
+        "by_confidence": dict(by_confidence),
+    }
+
+
+def _topics_connected_slugs(article: dict) -> list[tuple[str, str]]:
+    """Extract (namespace, slug) from each topics_connected path."""
+    result = []
+    for entry in article.get("topics_connected", []):
+        if not isinstance(entry, str):
+            continue
+        parts = entry.strip("/").split("/")
+        if len(parts) >= 3 and parts[0] == "wiki" and parts[1] in ("knowledge", "industries"):
+            result.append((parts[1], parts[2]))
+    return result
+
+
+@app.route("/concepts/")
+@app.route("/concepts")
+def concepts_page():
+    """Layer 4 conceptual knowledge browse page."""
+    articles = _load_layer4_articles()
+    summary = _layer4_summary_from(articles)
+
+    active_patterns = [
+        a for a in articles
+        if a["concept_type"] == "pattern" and not a["hypothesis"] and a["status"] == "active"
+    ]
+    active_patterns.sort(key=lambda x: x["first_detected"], reverse=True)
+
+    emerging = [
+        a for a in articles
+        if a["concept_type"] == "pattern" and a["hypothesis"]
+    ]
+    emerging.sort(key=lambda x: x["first_detected"], reverse=True)
+
+    resolved = [
+        a for a in articles
+        if a["concept_type"] == "contradiction" and a["status"] == "resolved"
+    ]
+    resolved.sort(key=lambda x: x["first_detected"], reverse=True)
+
+    unresolved = [
+        a for a in articles
+        if a["concept_type"] == "contradiction" and a["status"] == "unresolved"
+    ]
+    unresolved.sort(key=lambda x: x["first_detected"], reverse=True)
+
+    drift = [a for a in articles if a["concept_type"] == "drift"]
+    drift.sort(key=lambda x: x["first_detected"], reverse=True)
+
+    # Add human-readable topic names for display
+    def _name_topics(items):
+        for a in items:
+            a["topic_labels"] = [
+                (ns, slug, TOPIC_NAMES.get(slug, slug.replace("-", " ").title()))
+                for ns, slug in _topics_connected_slugs(a)
+            ]
+    _name_topics(active_patterns)
+    _name_topics(emerging)
+    _name_topics(resolved)
+    _name_topics(unresolved)
+    _name_topics(drift)
+
+    return render_template(
+        "concepts.html",
+        summary=summary,
+        active_patterns=active_patterns,
+        emerging=emerging,
+        resolved=resolved,
+        unresolved=unresolved,
+        drift=drift,
+    )
+
+
+@app.route("/concepts/stats")
+def concepts_stats():
+    """JSON stats for the CLI `meridian conceptualize --status` command."""
+    articles = _load_layer4_articles()
+    summary = _layer4_summary_from(articles)
+    return jsonify({"status": "ok", "summary": summary})
 
 
 @app.route("/analytics/")

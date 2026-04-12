@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Concepts (Layer 4) — Meridian{% endblock %}
+{% block content %}
+<h1 style="margin-bottom: 8px;">Conceptual Knowledge (Layer 4)</h1>
+<div style="color: var(--text-muted); margin-bottom: 24px;">
+    Insights that only emerge from reading across multiple Layer 3 articles
+    simultaneously. Patterns, emerging hypotheses, resolved contradictions,
+    and drift flags. Written by the conceptual agent on a schedule —
+    <em>not</em> by hand.
+</div>
+
+<div class="stat-grid" style="margin-bottom: 24px;">
+    <div class="stat-box">
+        <div class="number">{{ summary.active_patterns }}</div>
+        <div class="label">Active Patterns</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ summary.emerging }}</div>
+        <div class="label">Emerging</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ summary.contradictions_resolved }}</div>
+        <div class="label">Contradictions Resolved</div>
+    </div>
+    <div class="stat-box"{% if summary.contradictions_unresolved > 0 %} style="border-color: var(--yellow);"{% endif %}>
+        <div class="number"{% if summary.contradictions_unresolved > 0 %} style="color: var(--yellow);"{% endif %}>{{ summary.contradictions_unresolved }}</div>
+        <div class="label">Contradictions Unresolved</div>
+    </div>
+    <div class="stat-box"{% if summary.drift > 0 %} style="border-color: var(--yellow);"{% endif %}>
+        <div class="number"{% if summary.drift > 0 %} style="color: var(--yellow);"{% endif %}>{{ summary.drift }}</div>
+        <div class="label">Drift Flags</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ summary.total }}</div>
+        <div class="label">Total Layer 4</div>
+    </div>
+</div>
+
+{% macro render_article_card(a) -%}
+<div class="stat-box" style="text-align: left; padding: 14px;">
+    <div style="font-size: 14px; font-weight: 600; margin-bottom: 6px;">
+        <a href="/article/{{ a.path }}" style="color: var(--accent); text-decoration: none;">{{ a.title }}</a>
+        {% if a.hypothesis %}
+        <span style="background: var(--yellow); color: #000; padding: 1px 8px; border-radius: 10px; font-size: 9px; margin-left: 6px; font-weight: 600;">HYPOTHESIS</span>
+        {% endif %}
+        {% if not a.hypothesis and a.confidence == 'established' %}
+        <span style="background: var(--green); color: #000; padding: 1px 8px; border-radius: 10px; font-size: 9px; margin-left: 6px; font-weight: 600;">ESTABLISHED</span>
+        {% endif %}
+    </div>
+    <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5; margin-bottom: 4px;">
+        {% if a.topic_labels %}
+            Connects:
+            {% for ns, slug, name in a.topic_labels %}
+            <a href="/{% if ns == 'industries' %}industry{% else %}topic{% endif %}/{{ slug }}" style="color: var(--accent); text-decoration: none;">{{ name }}</a>{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+    <div style="font-size: 10px; color: var(--text-muted); opacity: 0.75;">
+        confidence: {{ a.confidence }}
+        {% if a.supporting_evidence_count %} · {{ a.supporting_evidence_count }} supporting{% endif %}
+        {% if a.contradicting_evidence_count %} · <span style="color: var(--yellow);">{{ a.contradicting_evidence_count }} contradicting</span>{% endif %}
+        · since {{ a.first_detected }}
+    </div>
+    {% if a.decision_rule %}
+    <div style="font-size: 11px; color: var(--text); margin-top: 6px; padding: 6px 8px; background: var(--bg); border-left: 2px solid var(--accent); border-radius: 3px;">
+        <strong>Decision rule:</strong> {{ a.decision_rule }}
+    </div>
+    {% endif %}
+</div>
+{%- endmacro %}
+
+{% if active_patterns %}
+<div class="card">
+    <h2>Active Patterns ({{ active_patterns|length }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Established cross-topic patterns — confidence has accumulated past the hypothesis threshold.
+    </div>
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+        {% for a in active_patterns %}
+        {{ render_article_card(a) }}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if emerging %}
+<div class="card">
+    <h2>Emerging Hypotheses ({{ emerging|length }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Candidate patterns the conceptual agent noticed but hasn't yet validated across enough evidence to mark as established.
+    </div>
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+        {% for a in emerging %}
+        {{ render_article_card(a) }}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if resolved %}
+<div class="card">
+    <h2>Resolved Contradictions ({{ resolved|length }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Apparent conflicts between Layer 3 claims that the agent resolved into decision rules.
+    </div>
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+        {% for a in resolved %}
+        {{ render_article_card(a) }}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if unresolved %}
+<div class="card">
+    <h2>Unresolved Contradictions ({{ unresolved|length }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Contradictions the agent flagged but couldn't explain from internal evidence alone. Candidates for web augmentation.
+    </div>
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+        {% for a in unresolved %}
+        {{ render_article_card(a) }}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if drift %}
+<div class="card">
+    <h2>Knowledge in Drift ({{ drift|length }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Flagged by the Phase 6 evolution detector — Layer 3 articles where new evidence contradicts the synthesis. Candidates for re-synthesis.
+    </div>
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+        {% for a in drift %}
+        {{ render_article_card(a) }}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if not active_patterns and not emerging and not resolved and not unresolved and not drift %}
+<div class="card">
+    <h2>No Layer 4 articles yet</h2>
+    <div style="color: var(--text-muted); font-size: 13px; line-height: 1.6;">
+        The conceptual agent is scheduled but hasn't produced any articles yet.
+        It runs on these schedules:
+        <ul style="margin-top: 12px; padding-left: 20px;">
+            <li><strong>Mode A (Connections)</strong> — Sunday 09:00 UTC</li>
+            <li><strong>Mode B (Maturation)</strong> — Sunday 09:30 UTC</li>
+            <li><strong>Mode C (Emergence)</strong> — daily 09:00 UTC</li>
+            <li><strong>Mode D (Contradictions)</strong> — first Sunday of month, 10:00 UTC</li>
+        </ul>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

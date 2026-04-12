@@ -213,6 +213,115 @@ def cmd_lint(args):
         sys.exit(1)
 
 
+def cmd_conceptualize(args):
+    """Run a conceptual agent mode, or show Layer 4 status."""
+    if args.status:
+        # Status view uses the dashboard read path via /concepts/stats if
+        # present, falling back to reading layer4 directly via the receiver.
+        result = api_call("GET", "/concepts/stats")
+        if result and result.get("status") == "ok":
+            summary = result.get("summary", {})
+            print("Layer 4 Conceptual Knowledge")
+            print(f"  Active patterns:      {summary.get('active_patterns', 0)}")
+            print(f"  Emerging hypotheses:  {summary.get('emerging', 0)}")
+            print(f"  Resolved contradictions: {summary.get('contradictions_resolved', 0)}")
+            print(f"  Unresolved contradictions: {summary.get('contradictions_unresolved', 0)}")
+            print(f"  Drift articles:       {summary.get('drift', 0)}")
+            by_conf = summary.get("by_confidence", {})
+            if by_conf:
+                print()
+                print("  Confidence distribution:")
+                for k in ("low", "medium", "high", "established"):
+                    if k in by_conf:
+                        print(f"    {k:13}  {by_conf[k]}")
+            print()
+            print("  Next scheduled runs:")
+            print("    Mode A (connections):    Sunday 09:00 UTC")
+            print("    Mode B (maturation):     Sunday 09:30 UTC")
+            print("    Mode C (emergence):      daily 09:00 UTC")
+            print("    Mode D (contradictions): 1st Sunday of month 10:00 UTC")
+            return
+        print("Error: could not fetch Layer 4 status from receiver", file=sys.stderr)
+        sys.exit(1)
+
+    if not args.mode:
+        print("Error: --mode required (or --status)", file=sys.stderr)
+        sys.exit(1)
+
+    data = {"mode": args.mode}
+    if args.dry_run:
+        data["dry_run"] = True
+    if args.verbose:
+        data["verbose"] = True
+    if args.limit is not None:
+        data["limit"] = args.limit
+
+    print(f"Conceptualize: mode={args.mode} dry_run={args.dry_run}", file=sys.stderr)
+    result = api_call("POST", "/conceptualize", data)
+
+    if result.get("status") == "accepted":
+        job_id = result["job_id"]
+        print(f"Conceptual agent job started: {job_id}", file=sys.stderr)
+        import time
+        while True:
+            time.sleep(5)
+            job = api_call("GET", f"/jobs/{job_id}")
+            status = job.get("status")
+            if status == "completed":
+                try:
+                    output = json.loads(job.get("result", "{}"))
+                except (json.JSONDecodeError, TypeError):
+                    print(job.get("result", ""))
+                    return
+                mode = output.get("mode", args.mode)
+                print()
+                print(f"=== {mode} — {'dry-run' if output.get('dry_run') else 'live'} ===")
+                if mode == "connections":
+                    written = output.get("written", [])
+                    rejected = output.get("rejected", [])
+                    print(f"  Candidates evaluated: {output.get('candidates_evaluated', 0)}")
+                    print(f"  Articles written:     {len(written)}")
+                    print(f"  Rejected by LLM gate: {len(rejected)}")
+                    print(f"  Validation failures:  {len(output.get('validation_failures', []))}")
+                    if written:
+                        print()
+                        print("  Written:")
+                        for w in written:
+                            print(f"    {w['path']}  ({w['a']} x {w['b']})")
+                elif mode == "maturation":
+                    print(f"  Patterns reviewed: {output.get('patterns_reviewed', 0)}")
+                    print(f"  Updates applied:   {output.get('updates_applied', 0)}")
+                    print(f"  Unchanged:         {output.get('unchanged', 0)}")
+                elif mode == "emergence":
+                    print(f"  New evidence links: {output.get('new_evidence_count', 0)}")
+                    print(f"  Candidate patterns: {output.get('candidate_patterns_count', 0)}")
+                    print(f"  Promoted to queue:  {output.get('promoted_to_queue', 0)}")
+                elif mode == "contradictions":
+                    resolved = output.get("resolved", [])
+                    unresolved = output.get("unresolved", [])
+                    print(f"  Candidates:  {output.get('candidates', 0)}")
+                    print(f"  Resolved:    {len(resolved)}")
+                    print(f"  Unresolved:  {len(unresolved)}")
+                    if resolved:
+                        print()
+                        print("  Resolved:")
+                        for r in resolved:
+                            print(f"    {r['topic']} → {r['slug']}  [{r.get('frame', '?')}]")
+                            if r.get("decision_rule"):
+                                print(f"      rule: {r['decision_rule']}")
+                return
+            elif status == "failed":
+                print(f"Error: {job.get('error', 'unknown')}", file=sys.stderr)
+                sys.exit(1)
+            else:
+                print(".", end="", flush=True, file=sys.stderr)
+    elif result.get("status") == "ok":
+        print(result.get("result", ""))
+    else:
+        print(f"Error: {result.get('error', 'unknown')}", file=sys.stderr)
+        sys.exit(1)
+
+
 def cmd_synthesize(args):
     """Synthesize a topic or run the schedule."""
     if args.queue:
@@ -332,6 +441,26 @@ def main():
     p_synth.add_argument("--queue", action="store_true", help="Show queue status")
     p_synth.add_argument("--limit", type=int, help="Max topics for --schedule")
     p_synth.set_defaults(func=cmd_synthesize)
+
+    # conceptualize — Layer 4 conceptual agent
+    p_concept = sub.add_parser(
+        "conceptualize",
+        help="Run the Layer 4 conceptual agent (pattern discovery + maturation + emergence + contradictions)",
+    )
+    p_concept.add_argument(
+        "--mode",
+        choices=["connections", "maturation", "emergence", "contradictions"],
+        help="Which mode to run",
+    )
+    p_concept.add_argument("--dry-run", action="store_true",
+                           help="Report only, no writes")
+    p_concept.add_argument("--limit", type=int,
+                           help="For Mode A: cap the number of new articles written (default 5)")
+    p_concept.add_argument("--verbose", action="store_true",
+                           help="Verbose logging from the agent")
+    p_concept.add_argument("--status", action="store_true",
+                           help="Show the current Layer 4 state — counts, confidence, drift")
+    p_concept.set_defaults(func=cmd_conceptualize)
 
     # status
     p_status = sub.add_parser("status", help="Check receiver health")
