@@ -35,8 +35,10 @@ PROMPTS_DIR = ROOT / "prompts"
 # Hard caps to prevent the linter from doing damage on a corpus it
 # doesn't fully understand. These are belt-and-suspenders defenses
 # alongside the prompt-level rules in prompts/linter.md.
-MAX_INDEX_AUTO_ADDS = 50      # never dump more than 50 new entries into _index.md in one run
-MAX_AUTO_STUBS = 20           # never auto-create more than 20 stub files in one run
+MAX_INDEX_AUTO_ADDS = 200     # auto-add entries to _index.md (raised from 50 — corpus is 4,800+)
+MAX_AUTO_STUBS = 50           # auto-create stub files per run (raised from 20)
+MAX_AUTO_CONNECTIONS = 15     # auto-add Related Topics wikilinks per run
+MAX_AUTO_CLIENT_STATUS = 5    # auto-update client status changes per run
 
 _write_lock = threading.Lock()
 
@@ -781,8 +783,8 @@ def generate_report(analysis: dict, actions: list[str], deferred: list[str],
     lines.append(f"- {len(orphans)} orphans flagged")
     lines.append(f"- {len(auto_gaps)} stubs auto-created")
     lines.append(f"- {len(flag_gaps)} new article candidates")
-    lines.append(f"- {len(connections)} connections suggested")
-    lines.append(f"- {len(status_changes)} client status changes flagged")
+    lines.append(f"- {len(connections)} connections (auto-linked where both have Related Topics)")
+    lines.append(f"- {len(status_changes)} client status changes (auto-applied where signal is clear)")
     lines.append(f"- {len(drift)} off-registry directories")
     lines.append(f"- {len(untouched)} untouched capture fragments")
     lines.append(f"- {len(empty_entries)} empty registry entries")
@@ -930,6 +932,106 @@ def main():
                 f"{gap['mention_count']} articles"
             )
             stubs_created += 1
+
+        # 4. Auto-add suggested connections as Related Topics wikilinks.
+        #    Safe: purely additive links that can't break content. Only
+        #    applied when BOTH articles have a Related Topics section
+        #    (we're extending an existing section, not creating one).
+        connections = analysis.get("suggested_connections", [])
+        connections_added = 0
+        for conn in connections:
+            if connections_added >= MAX_AUTO_CONNECTIONS:
+                deferred.append(
+                    f"Connection cap reached ({MAX_AUTO_CONNECTIONS}); "
+                    f"remaining connections held for review."
+                )
+                break
+            article_a = conn.get("article_a", "")
+            article_b = conn.get("article_b", "")
+            if not article_a or not article_b:
+                continue
+            path_a = ROOT / article_a
+            path_b = ROOT / article_b
+            if not path_a.exists() or not path_b.exists():
+                continue
+            try:
+                text_a = path_a.read_text(encoding="utf-8", errors="replace")
+                text_b = path_b.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            # Only auto-link if both articles already have a Related Topics section
+            marker = "## Related Topics"
+            if marker not in text_a or marker not in text_b:
+                continue
+            # Check if the link already exists
+            link_a_to_b = f"[[{article_b.replace('wiki/', '')}]]"
+            link_b_to_a = f"[[{article_a.replace('wiki/', '')}]]"
+            changed = False
+            with _write_lock:
+                if link_a_to_b not in text_a:
+                    # Append to A's Related Topics
+                    text_a = text_a.rstrip() + f"\n- {link_a_to_b}\n"
+                    path_a.write_text(text_a, encoding="utf-8")
+                    changed = True
+                if link_b_to_a not in text_b:
+                    text_b = text_b.rstrip() + f"\n- {link_b_to_a}\n"
+                    path_b.write_text(text_b, encoding="utf-8")
+                    changed = True
+            if changed:
+                actions.append(
+                    f"Added cross-link: {article_a} ↔ {article_b} "
+                    f"— {conn.get('reason', '')[:80]}"
+                )
+                connections_added += 1
+
+        # 5. Auto-update client status when the signal is unambiguous.
+        #    Only current → former, never the reverse. Only when last
+        #    activity is 5+ months stale and the recommendation is clear.
+        status_changes = analysis.get("client_status_changes", [])
+        status_updated = 0
+        for sc in status_changes:
+            if status_updated >= MAX_AUTO_CLIENT_STATUS:
+                deferred.append(
+                    f"Client status cap reached ({MAX_AUTO_CLIENT_STATUS}); "
+                    f"remaining status changes held for review."
+                )
+                break
+            client_slug = sc.get("client", "")
+            suggested = sc.get("suggested_status", "")
+            current = sc.get("current_status", "")
+            if not client_slug or suggested != "former" or current != "current":
+                # Only auto-apply current → former, nothing else
+                continue
+            # Rewrite clients.yaml — use the same surgical rewrite as
+            # the /review/taxonomy endpoint
+            clients_path = ROOT / "clients.yaml"
+            if not clients_path.exists():
+                continue
+            try:
+                lines_yaml = clients_path.read_text(encoding="utf-8").splitlines()
+            except OSError:
+                continue
+            out_lines = []
+            in_target = False
+            touched = False
+            for line in lines_yaml:
+                if re.match(r"^\s*slug:\s*" + re.escape(client_slug) + r"\s*$", line):
+                    in_target = True
+                if in_target and re.match(r"^\s*status:\s*current\s*$", line):
+                    line = line.replace("current", "former")
+                    touched = True
+                    in_target = False
+                if re.match(r"^\s*-\s+name:", line) and in_target:
+                    in_target = False  # moved past the target entry
+                out_lines.append(line)
+            if touched:
+                with _write_lock:
+                    clients_path.write_text("\n".join(out_lines) + "\n", encoding="utf-8")
+                actions.append(
+                    f"Client status: {client_slug} current → former "
+                    f"— {sc.get('signal', '')[:80]}"
+                )
+                status_updated += 1
 
     # Generate report
     report = generate_report(analysis, actions, deferred, len(content_articles), args.dry_run)
