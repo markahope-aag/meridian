@@ -7,7 +7,8 @@ RUN apt-get update -qq && apt-get install -y -qq \
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir flask gunicorn pyyaml requests markdown pymdown-extensions weasyprint
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY . /app/
 

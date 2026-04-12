@@ -92,10 +92,36 @@ All execution happens on the VM. Clients are thin HTTP wrappers.
 
 ### Auth
 
+- Dashboard at `brain.markahope.com` uses session-based login when
+  `MERIDIAN_DASHBOARD_PASSWORD` env var is set. CSRF tokens on all
+  POST forms. HTML sanitizer on all LLM-generated content.
 - All receiver endpoints require `Authorization: Bearer <MERIDIAN_RECEIVER_TOKEN>`
 - Token is set as a Coolify env var on the receiver container
 - Each local machine stores the token in `~/.meridian/config.yaml`
 - n8n includes the token in HTTP Request node headers
+
+### Rate limits and job concurrency
+
+The receiver runs on a 2-worker Gunicorn process. There is no
+explicit request rate limiter — the system assumes a single trusted
+user (Mark) and scheduled n8n triggers. If the API were ever more
+exposed, add these safeguards:
+
+| Concern | Current state | Recommended if public |
+|---|---|---|
+| Request rate | Unlimited (trusted caller) | Flask-Limiter: 60/min per IP |
+| Async job concurrency | Unlimited (threading.Thread per job) | Max 3 concurrent jobs via semaphore |
+| LLM API cost | No cap (ANTHROPIC_API_KEY has Anthropic's own limits) | Per-day dollar cap + alert |
+| Synthesis queue drain | 5 topics per daily run | Keep — prevents runaway cost |
+| Conceptual agent articles | Max 5 per Mode A run | Keep — quality over quantity |
+| File writes | No rate limit | Add fsync + max-writes-per-minute for safety |
+
+Async jobs (lint, synthesis, conceptualize) run in daemon threads
+inside the Gunicorn worker. A worker restart (SIGHUP from auto-deploy)
+kills running background threads — this is the root cause of
+"scheduled lint ran but produced no output" failures. The evolution
+detector and weekly lint now run via VM cron + `docker exec` to
+avoid this problem.
 
 ### Local config (`~/.meridian/config.yaml`)
 

@@ -215,6 +215,16 @@ fi
                         || echo "    templates/$(basename "$tmpl") copy failed"
                 done
             fi
+            # Hot-patch the web/ Python modules so future refactoring
+            # (importing from web.helpers etc) works inside the container.
+            # Creates /app/web/ package if it doesn't exist yet.
+            docker exec "$cid" mkdir -p /app/web 2>/dev/null || true
+            for pymod in "$REPO_DIR/web"/*.py; do
+                [ -f "$pymod" ] || continue
+                docker cp "$pymod" "$cid":"/app/web/$(basename "$pymod")" 2>/dev/null \
+                    && echo "    copied web/$(basename "$pymod")" \
+                    || echo "    web/$(basename "$pymod") copy failed"
+            done
             docker exec "$cid" sh -c 'kill -HUP 1' 2>/dev/null \
                 || echo "    HUP failed"
         else
