@@ -2339,14 +2339,27 @@ def _compute_analytics() -> dict:
         is_topicful = ns in ("knowledge", "industries", "engineering", "interests")
 
         if frag["is_synthesis"]:
-            # Collect L3 metadata for the synthesis-coverage section
+            # Collect L3 metadata for the synthesis-coverage section.
+            #
+            # `synthesis_date` prefers `generated_at` (code-injected
+            # provenance timestamp, always the actual synthesis time)
+            # over `last_updated` (which the LLM writes based on the
+            # latest source date in the corpus — historically ambiguous
+            # and produces nonsense staleness numbers for topics whose
+            # source material spans years before synthesis day).
             if len(parts) >= 3:
                 slug = parts[2]
                 fm = frag["fm"]
+                generated_at = fm.get("generated_at")
+                if isinstance(generated_at, str) and len(generated_at) >= 10:
+                    synth_date = generated_at[:10]
+                else:
+                    synth_date = _coerce_date_str(fm.get("last_updated"))
                 l3_by_namespace[ns].append({
                     "namespace": ns,
                     "slug": slug,
                     "fragment_count": fm.get("fragment_count") or fm.get("evidence_count") or 0,
+                    "synthesis_date": synth_date,
                     "last_updated": _coerce_date_str(fm.get("last_updated")),
                     "confidence": fm.get("confidence", ""),
                 })
@@ -2406,12 +2419,16 @@ def _compute_analytics() -> dict:
             else (sorted_counts[mid - 1] + sorted_counts[mid]) // 2
         )
 
-    # Find the stalest Layer 3 synthesis (oldest last_updated across all namespaces)
+    # Find the stalest Layer 3 synthesis (oldest synthesis_date across
+    # all namespaces). Uses synthesis_date — generated_at preferred
+    # with last_updated fallback — so this number reflects "how long
+    # since we last touched this article", not "how old is the most
+    # recent fragment in it".
     all_l3 = [l3 for items in l3_by_namespace.values() for l3 in items]
     stalest_l3 = None
     stalest_l3_days = 0
     if all_l3:
-        dated = [(l3, l3["last_updated"]) for l3 in all_l3 if l3.get("last_updated")]
+        dated = [(l3, l3["synthesis_date"]) for l3 in all_l3 if l3.get("synthesis_date")]
         if dated:
             dated.sort(key=lambda x: x[1])
             oldest_l3, oldest_date = dated[0]
@@ -2456,13 +2473,16 @@ def _compute_analytics() -> dict:
             "pct": pct,
         })
 
-    # Stale syntheses — L3 articles whose last_updated is > 60 days old
+    # Stale syntheses — L3 articles whose synthesis_date is > 60 days old.
+    # Uses synthesis_date (generated_at preferred) so re-synthesis fresh
+    # runs aren't immediately flagged as stale just because their source
+    # corpus is old.
     stale_syntheses = []
     for l3 in all_l3:
-        if not l3.get("last_updated"):
+        if not l3.get("synthesis_date"):
             continue
         try:
-            d = datetime.strptime(l3["last_updated"], "%Y-%m-%d").date()
+            d = datetime.strptime(l3["synthesis_date"], "%Y-%m-%d").date()
         except ValueError:
             continue
         age_days = (today - d).days
