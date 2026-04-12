@@ -886,6 +886,7 @@ def conceptualize():
 
     dry_run = bool(data.get("dry_run", False))
     limit = data.get("limit")
+    max_per_pair = data.get("max_per_pair")
     verbose = bool(data.get("verbose", False))
     sync = request.args.get("sync", "").lower() == "true"
 
@@ -903,6 +904,11 @@ def conceptualize():
             args.extend(["--limit", str(int(limit))])
         except (TypeError, ValueError):
             return jsonify({"error": "limit must be an integer"}), 400
+    if max_per_pair is not None:
+        try:
+            args.extend(["--max-per-pair", str(int(max_per_pair))])
+        except (TypeError, ValueError):
+            return jsonify({"error": "max_per_pair must be an integer"}), 400
 
     if sync:
         try:

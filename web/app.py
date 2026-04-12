@@ -1517,6 +1517,14 @@ def view_industry(slug):
         {a["client_display"] for a in articles if a.get("client_display")}
     )
 
+    # Layer 4 references — patterns/emergence/contradictions that link this industry
+    layer4_refs = _find_layer4_references("industries", slug)
+    for ref in layer4_refs:
+        ref["topic_labels"] = [
+            (ns, s, TOPIC_NAMES.get(s, s.replace("-", " ").title()))
+            for ns, s in _topics_connected_slugs(ref)
+        ]
+
     # Reuse the topic template — same shape, same rendering needs
     return render_template(
         "topic.html",
@@ -1526,6 +1534,7 @@ def view_industry(slug):
         synthesis=synthesis,
         synthesis_html=synthesis_html,
         clients_on_topic=clients_on_topic,
+        layer4_refs=layer4_refs,
         dimension="industry",
     )
 
@@ -1570,6 +1579,14 @@ def view_topic(slug):
         {a["client_display"] for a in articles if a.get("client_display")}
     )
 
+    # Layer 4 references — patterns/emergence/contradictions that link this topic
+    layer4_refs = _find_layer4_references("knowledge", slug)
+    for ref in layer4_refs:
+        ref["topic_labels"] = [
+            (ns, s, TOPIC_NAMES.get(s, s.replace("-", " ").title()))
+            for ns, s in _topics_connected_slugs(ref)
+        ]
+
     return render_template(
         "topic.html",
         slug=slug,
@@ -1578,6 +1595,7 @@ def view_topic(slug):
         synthesis=synthesis,
         synthesis_html=synthesis_html,
         clients_on_topic=clients_on_topic,
+        layer4_refs=layer4_refs,
     )
 
 
@@ -2067,6 +2085,34 @@ def _layer4_summary_from(articles: list[dict]) -> dict:
         "total": len(articles),
         "by_confidence": dict(by_confidence),
     }
+
+
+def _find_layer4_references(namespace: str, slug: str) -> list[dict]:
+    """Return Layer 4 articles whose topics_connected references this
+    (namespace, slug) pair. Used by view_topic() and view_industry() to
+    render the "Layer 4 Connections" section on Layer 3 pages.
+
+    namespace is one of "knowledge" or "industries".
+    """
+    articles = _load_layer4_articles()
+    matches: list[dict] = []
+    target_fragment = f"wiki/{namespace}/{slug}/"
+    for article in articles:
+        for entry in article.get("topics_connected", []) + article.get("industries_connected", []):
+            if not isinstance(entry, str):
+                continue
+            if entry.startswith(target_fragment) or f"/{slug}/" in entry:
+                # Double-check the namespace segment matches
+                parts = entry.strip("/").split("/")
+                if len(parts) >= 3 and parts[0] == "wiki" and parts[1] == namespace and parts[2] == slug:
+                    matches.append(article)
+                    break
+    # Sort: established first, then emerging, by first_detected desc
+    def _key(a):
+        status_rank = 0 if (not a["hypothesis"] and a["status"] == "active") else 1
+        return (status_rank, -int(a["first_detected"].replace("-", "") or 0))
+    matches.sort(key=_key)
+    return matches
 
 
 def _topics_connected_slugs(article: dict) -> list[tuple[str, str]]:

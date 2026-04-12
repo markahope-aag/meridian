@@ -24,6 +24,47 @@
 </div>
 {% endif %}
 
+{% if layer4_refs %}
+<div class="card" style="border-left: 3px solid #bc8cff;">
+    <h2 style="margin-bottom: 4px;">Layer 4 Connections ({{ layer4_refs|length }})</h2>
+    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px;">
+        Cross-topic patterns and resolved contradictions that reference this topic, written by the conceptual agent.
+    </div>
+    <ul class="fragment-list">
+        {% for ref in layer4_refs %}
+        <li class="fragment-item">
+            <div class="fragment-head">
+                <a href="/article/{{ ref.path }}" class="fragment-title">{{ ref.title }}</a>
+                {% if ref.hypothesis %}
+                <span class="fragment-client-tag" style="color: var(--yellow);">HYPOTHESIS</span>
+                {% elif ref.confidence == 'established' %}
+                <span class="fragment-client-tag" style="color: var(--green);">ESTABLISHED</span>
+                {% else %}
+                <span class="fragment-client-tag">{{ ref.concept_type }}</span>
+                {% endif %}
+            </div>
+            {% if ref.topic_labels %}
+            <div class="fragment-preview" style="font-size: 11px;">
+                Connects:
+                {% for ns, s, name in ref.topic_labels %}
+                    {% if s != slug %}
+                    <a href="/{% if ns == 'industries' %}industry{% else %}topic{% endif %}/{{ s }}">{{ name }}</a>{% if not loop.last %}, {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            <div class="fragment-meta">
+                confidence: {{ ref.confidence }}
+                {% if ref.supporting_evidence_count %} · {{ ref.supporting_evidence_count }} supporting{% endif %}
+                {% if ref.contradicting_evidence_count %} · <span style="color: var(--yellow);">{{ ref.contradicting_evidence_count }} contradicting</span>{% endif %}
+                · since {{ ref.first_detected }}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
 <div class="card" id="fragments-card">
     <div class="fragments-header">
         <h2>Layer 2 Fragments ({{ articles|length }})</h2>

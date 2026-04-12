@@ -868,6 +868,46 @@ def _linked_pairs(l3map: L3Map) -> set[tuple[str, str]]:
     return linked
 
 
+def _existing_pattern_pairs() -> dict[tuple[str, str], int]:
+    """Walk wiki/layer4/patterns/ and count how many Layer 4 pattern
+    articles already connect each topic pair. Returns {pair: count}.
+
+    Used by Mode A to dedupe — by default the scorer drops any pair
+    that already has at least one pattern article, so repeat runs
+    don't keep surfacing the same high-score pair. --max-per-pair
+    can relax this when a pair genuinely deserves multiple distinct
+    angles.
+    """
+    counts: dict[tuple[str, str], int] = {}
+    if not PATTERNS_DIR.exists():
+        return counts
+    for f in PATTERNS_DIR.glob("*.md"):
+        if f.name == "_index.md":
+            continue
+        try:
+            text = f.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        fm, _ = parse_frontmatter(text)
+        if not fm or fm.get("layer") != 4 or fm.get("concept_type") != "pattern":
+            continue
+        connected = fm.get("topics_connected") or []
+        slugs: list[str] = []
+        for entry in connected:
+            if not isinstance(entry, str):
+                continue
+            parts = entry.strip("/").split("/")
+            if len(parts) >= 3 and parts[0] == "wiki":
+                slugs.append(parts[2])
+        # Count every canonical pair present in the article
+        slugs = sorted(set(slugs))
+        for i, a in enumerate(slugs):
+            for b in slugs[i + 1:]:
+                pair = (a, b)
+                counts[pair] = counts.get(pair, 0) + 1
+    return counts
+
+
 def _score_candidate_pair(a: L3Summary, b: L3Summary) -> float:
     """Score a candidate topic pair for potential cross-topic connection.
 
@@ -885,10 +925,22 @@ def _score_candidate_pair(a: L3Summary, b: L3Summary) -> float:
     return float(vocab_overlap) + 3.0 * float(shared_clients)
 
 
-def _get_candidate_pairs(l3map: L3Map, max_candidates: int = 12) -> list[tuple[L3Summary, L3Summary, float]]:
-    """Return the top-N topic pairs ranked by candidate score, excluding
-    pairs already linked via Related Topics."""
+def _get_candidate_pairs(
+    l3map: L3Map,
+    max_candidates: int = 12,
+    max_per_pair: int = 1,
+) -> list[tuple[L3Summary, L3Summary, float]]:
+    """Return the top-N topic pairs ranked by candidate score, excluding:
+
+    - pairs already linked via `## Related Topics` sections in the source
+      articles (the human already noticed them)
+    - pairs that already have `max_per_pair` or more Layer 4 pattern
+      articles connecting them (so repeat runs don't keep re-covering
+      the same ground — the default `max_per_pair=1` means "write at
+      most one pattern per topic pair")
+    """
     already_linked = _linked_pairs(l3map)
+    existing = _existing_pattern_pairs()
     slugs = sorted(l3map.topics.keys())
     scored: list[tuple[L3Summary, L3Summary, float]] = []
     for i, a_slug in enumerate(slugs):
@@ -896,6 +948,8 @@ def _get_candidate_pairs(l3map: L3Map, max_candidates: int = 12) -> list[tuple[L
         for b_slug in slugs[i + 1:]:
             pair = tuple(sorted([a_slug, b_slug]))
             if pair in already_linked:
+                continue
+            if existing.get(pair, 0) >= max_per_pair:
                 continue
             b = l3map.topics[b_slug]
             score = _score_candidate_pair(a, b)
@@ -1114,7 +1168,9 @@ def _patterns_dir_has_slug(slug: str) -> bool:
 
 
 def run_mode_a_connections(l3map: L3Map, registries: dict[str, set[str]],
-                            dry_run: bool, verbose: bool, limit: int | None = None) -> dict:
+                            dry_run: bool, verbose: bool,
+                            limit: int | None = None,
+                            max_per_pair: int = 1) -> dict:
     """Mode A — Connection Discovery.
 
     1. Score candidate topic pairs locally (vocabulary overlap + shared
@@ -1146,9 +1202,9 @@ def run_mode_a_connections(l3map: L3Map, registries: dict[str, set[str]],
         or "claude-sonnet-4-6"
     )
 
-    candidates = _get_candidate_pairs(l3map, max_candidates=12)
+    candidates = _get_candidate_pairs(l3map, max_candidates=12, max_per_pair=max_per_pair)
     if verbose:
-        print(f"Mode A: {len(candidates)} candidate pairs above score floor", file=sys.stderr)
+        print(f"Mode A: {len(candidates)} candidate pairs above score floor (max_per_pair={max_per_pair})", file=sys.stderr)
         for a, b, score in candidates[:10]:
             print(f"  score={score:5.1f}  {a.slug}  x  {b.slug}", file=sys.stderr)
 
@@ -1878,6 +1934,10 @@ def main() -> int:
         "--limit", type=int, default=None,
         help="For Mode A: cap the number of articles written (for first-run safety)",
     )
+    parser.add_argument(
+        "--max-per-pair", type=int, default=1,
+        help="For Mode A: maximum number of pattern articles per topic pair (default 1 — dedupe)",
+    )
     args = parser.parse_args()
 
     ensure_layer4_dirs()
@@ -1905,7 +1965,9 @@ def main() -> int:
     try:
         if args.mode == "connections":
             result = run_mode_a_connections(
-                l3map, registries, args.dry_run, args.verbose, limit=args.limit
+                l3map, registries, args.dry_run, args.verbose,
+                limit=args.limit,
+                max_per_pair=args.max_per_pair,
             )
         elif args.mode == "maturation":
             result = run_mode_b_maturation(l3map, args.dry_run, args.verbose)
