@@ -369,8 +369,14 @@ def get_stats() -> dict:
         stats["interests_capture_queue"] = sum(
             1 for _ in INTERESTS_CAPTURE_DIR.rglob("*.md")
         )
-    # Business capture queue = the top-level manual capture minus commits + interests
-    stats["business_capture_queue"] = stats.get("capture", 0)
+    # ClientBrain capture queue
+    clientbrain_dir = CAPTURE_DIR / "clientbrain"
+    if clientbrain_dir.exists():
+        stats["clientbrain_capture_queue"] = sum(1 for _ in clientbrain_dir.rglob("*.md"))
+    else:
+        stats["clientbrain_capture_queue"] = 0
+    # Business capture queue = top-level manual capture + clientbrain
+    stats["business_capture_queue"] = stats.get("capture", 0) + stats["clientbrain_capture_queue"]
     return stats
 
 

@@ -58,7 +58,7 @@ def push_topics(dry_run: bool) -> dict:
         return {"dry_run": True, "count": len(topics)}
 
     resp = requests.post(
-        f"{CLIENTBRAIN_URL}/api/meridian/topics/sync",
+        f"{CLIENTBRAIN_URL}/api/meridian/topics",
         headers={"Authorization": f"Bearer {MERIDIAN_API_KEY}"},
         json={"topics": topics},
         timeout=30,
@@ -85,7 +85,7 @@ def push_industries(dry_run: bool) -> dict:
         return {"dry_run": True, "count": len(industries)}
 
     resp = requests.post(
-        f"{CLIENTBRAIN_URL}/api/meridian/industries/sync",
+        f"{CLIENTBRAIN_URL}/api/meridian/industries",
         headers={"Authorization": f"Bearer {MERIDIAN_API_KEY}"},
         json={"industries": industries},
         timeout=30,
