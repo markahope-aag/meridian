@@ -41,7 +41,7 @@ def load_prompt() -> str:
 def get_unprocessed_files() -> list[Path]:
     """Find capture/ files that haven't been processed by distill yet."""
     files = []
-    for f in sorted(CAPTURE_DIR.glob("*.md")):
+    for f in sorted(CAPTURE_DIR.rglob("*.md")):
         content = f.read_text(encoding="utf-8", errors="replace")
         if "distill_status:" not in content:
             files.append(f)
@@ -216,7 +216,7 @@ def main():
         # Recovery path: bypass scoring and push everything in capture/ to raw/.
         # Use this when capture is wedged with legacy metadata or when scoring
         # has been unavailable (e.g. LLM outage).
-        for path in sorted(CAPTURE_DIR.glob("*.md")):
+        for path in sorted(CAPTURE_DIR.rglob("*.md")):
             try:
                 raw_path = promote_to_raw(path, {"frontmatter": None})
                 path.unlink()

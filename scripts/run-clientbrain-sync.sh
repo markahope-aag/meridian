@@ -42,9 +42,14 @@ find_container_by_fqdn() {
     fi
     echo "target container: $cid ($TARGET_FQDN)"
 
+    # Env vars — container may not have these, so pass explicitly
+    CB_KEY="${MERIDIAN_CLIENTBRAIN_API_KEY:-Yjw5Cq8c7FwqpFmg-JbmNVZm7ipyUNI278Rnsm_SVEY}"
+    CB_URL="${CLIENTBRAIN_URL:-https://client-brain.vercel.app}"
+
     # 1. Push registries (topics + industries) to ClientBrain
     echo "--- Registry sync (Meridian → ClientBrain) ---"
-    docker exec "$cid" python3 /meridian/scripts/sync-clientbrain-registry.py
+    docker exec -e "MERIDIAN_CLIENTBRAIN_API_KEY=$CB_KEY" -e "CLIENTBRAIN_URL=$CB_URL" \
+        "$cid" python3 /meridian/scripts/sync-clientbrain-registry.py
     reg_exit=$?
     if [ $reg_exit -ne 0 ]; then
         echo "WARNING: registry sync exited with code $reg_exit"
@@ -52,7 +57,8 @@ find_container_by_fqdn() {
 
     # 2. Pull documents from ClientBrain → Meridian capture
     echo "--- Document sync (ClientBrain → Meridian) ---"
-    docker exec "$cid" python3 /meridian/scripts/sync-clientbrain-documents.py
+    docker exec -e "MERIDIAN_CLIENTBRAIN_API_KEY=$CB_KEY" -e "CLIENTBRAIN_URL=$CB_URL" \
+        "$cid" python3 /meridian/scripts/sync-clientbrain-documents.py
     doc_exit=$?
     if [ $doc_exit -ne 0 ]; then
         echo "ERROR: document sync exited with code $doc_exit"
