@@ -631,10 +631,12 @@ def distill():
     Body JSON:
         mode: str (optional) — "auto" for automatic, "dry-run" for scoring only
         file: str (optional) — specific capture file to process
+        limit: int (optional) — max files per run (default 100); set 0 for unlimited
     """
     data = request.get_json(force=True)
     mode = data.get("mode", "auto")
     file_arg = data.get("file")
+    limit = data.get("limit", 100)
     sync = request.args.get("sync", "").lower() == "true"
 
     args = [sys.executable, str(AGENTS_DIR / "daily_distill.py")]
@@ -642,6 +644,12 @@ def distill():
         args.append("--dry-run")
     if file_arg:
         args.extend(["--file", file_arg])
+    try:
+        limit_int = int(limit)
+    except (TypeError, ValueError):
+        return jsonify({"error": "limit must be an integer"}), 400
+    if limit_int > 0:
+        args.extend(["--limit", str(limit_int)])
 
     if sync:
         try:

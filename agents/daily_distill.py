@@ -211,6 +211,8 @@ def main():
         help="Promote every file in capture/ to raw/ without scoring (recovery mode)",
     )
     parser.add_argument("--dry-run", action="store_true", help="Score without writing")
+    parser.add_argument("--limit", type=int, default=0,
+                        help="Max files to process per run (default 0 = unlimited).")
     args = parser.parse_args()
 
     config = load_config()
@@ -259,6 +261,10 @@ def main():
             print("No unprocessed files in capture/", file=sys.stderr)
             print(json.dumps({"status": "ok", "processed": 0, "results": []}))
             return
+
+        if args.limit > 0 and len(files) > args.limit:
+            print(f"Capping run to {args.limit} of {len(files)} files", file=sys.stderr)
+            files = files[:args.limit]
 
         for filepath in files:
             print(f"Reviewing {filepath.name}...", file=sys.stderr)
