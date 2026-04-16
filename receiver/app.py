@@ -205,20 +205,34 @@ def get_job(job_id: str) -> dict | None:
 
 def run_agent_async(job_id: str, args: list[str]):
     """Run an agent subprocess in a background thread."""
+    agent_name = Path(args[1]).name if len(args) > 1 else "agent"
+    log.info("job %s: starting %s args=%s", job_id, agent_name, args[2:])
     try:
         result = subprocess.run(
             args, capture_output=True, text=True, timeout=600,
             cwd=str(MERIDIAN_ROOT),
         )
         if result.returncode != 0:
+            log.error(
+                "job %s: %s failed rc=%s\nSTDERR:\n%s\nSTDOUT:\n%s",
+                job_id, agent_name, result.returncode,
+                result.stderr, result.stdout[-2000:],
+            )
             fail_job(job_id, result.stderr)
         else:
+            log.info(
+                "job %s: %s ok (stdout %d bytes)",
+                job_id, agent_name, len(result.stdout),
+            )
             complete_job(job_id, result.stdout)
     except subprocess.TimeoutExpired:
+        log.error("job %s: %s timed out after 600s", job_id, agent_name)
         fail_job(job_id, "Agent timed out (600s)")
     except FileNotFoundError as e:
+        log.error("job %s: %s not found: %s", job_id, agent_name, e)
         fail_job(job_id, f"Agent not found: {e}")
     except Exception as e:
+        log.exception("job %s: %s crashed", job_id, agent_name)
         fail_job(job_id, str(e))
 
 # Paths — set via env or default to /meridian
@@ -635,6 +649,10 @@ def distill():
     data = request.get_json(force=True)
     mode = data.get("mode", "auto")
     file_arg = data.get("file")
+    # Per-cron file cap. Default 100 keeps wall-clock under the 600s
+    # run_agent_async timeout (~5s per file × 100 ≈ 8 min). Pass limit=0
+    # in the body to disable the cap for one-off backfill runs.
+    limit = data.get("limit", 100)
     sync = request.args.get("sync", "").lower() == "true"
 
     args = [sys.executable, str(AGENTS_DIR / "daily_distill.py")]
@@ -642,6 +660,12 @@ def distill():
         args.append("--dry-run")
     if file_arg:
         args.extend(["--file", file_arg])
+    try:
+        limit_int = int(limit)
+    except (TypeError, ValueError):
+        return jsonify({"error": "limit must be an integer"}), 400
+    if limit_int > 0:
+        args.extend(["--limit", str(limit_int)])
 
     if sync:
         try:
@@ -843,13 +867,37 @@ def synthesize_queue():
         with open(queue_path) as f:
             items = json.load(f)
 
-        status = {"pending": 0, "running": 0, "complete": 0, "failed": 0, "total": len(items)}
-        for item in items:
+        # L3 topic items live here; L4 candidate proposals live in their own
+        # file (cache/layer4/queue.json), written by conceptual_agent Mode C.
+        # The defensive `is_topic_item` check stays as belt-and-braces in case
+        # historical L4-shaped records resurface from a backup or stale write.
+        def is_topic_item(i):
+            return isinstance(i, dict) and i.get("type") != "layer4_candidate" and "topic" in i
+
+        topic_items = [i for i in items if is_topic_item(i)]
+
+        layer4_pending = 0
+        layer4_path = MERIDIAN_ROOT / "cache" / "layer4" / "queue.json"
+        if layer4_path.exists():
+            try:
+                l4 = json.loads(layer4_path.read_text(encoding="utf-8"))
+                if isinstance(l4, list):
+                    layer4_pending = sum(
+                        1 for i in l4
+                        if isinstance(i, dict) and i.get("status") == "pending"
+                    )
+            except (json.JSONDecodeError, OSError):
+                pass
+
+        status = {"pending": 0, "running": 0, "complete": 0, "failed": 0,
+                  "total": len(topic_items),
+                  "layer4_candidates_pending": layer4_pending}
+        for item in topic_items:
             s = item.get("status", "pending")
             if s in status:
                 status[s] += 1
 
-        pending = [i for i in items if i.get("status") == "pending"]
+        pending = [i for i in topic_items if i.get("status") == "pending"]
         pending.sort(key=lambda x: x.get("priority", 0), reverse=True)
         status["next_5"] = [
             {"topic": i["topic"], "fragment_count": i.get("fragment_count", 0)}
