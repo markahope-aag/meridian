@@ -62,7 +62,11 @@ CACHE_DIR = ROOT / "cache" / "layer4"
 L3_MAP_CACHE = CACHE_DIR / "l3_map.json"
 EMERGENCE_CANDIDATES = CACHE_DIR / "emergence_candidates.json"
 VERSIONS_ROOT = ROOT / "state" / "synthesis_versions"
-SYNTHESIS_QUEUE = ROOT / "synthesis_queue.json"
+# L4 candidates have their own queue file. They were previously appended to
+# synthesis_queue.json, but that file is owned by synthesis_scheduler.py
+# (which can't consume L4-shaped records) and gets overwritten on --populate,
+# so cohabitation was unsafe. Mode A is the intended consumer.
+LAYER4_QUEUE = CACHE_DIR / "queue.json"
 
 PROMPTS_DIR = ROOT / "prompts"
 OUTPUTS_DIR = ROOT / "outputs"
@@ -813,13 +817,14 @@ def run_mode_c_emergence(l3map: L3Map, dry_run: bool, verbose: bool) -> dict:
     if not dry_run:
         _save_emergence_state(state)
 
-    # Push promoted candidates into synthesis_queue.json
+    # Push promoted candidates into the L4 queue (cache/layer4/queue.json).
     queue_added = 0
     if promoted and not dry_run:
+        LAYER4_QUEUE.parent.mkdir(parents=True, exist_ok=True)
         queue: list[dict] = []
-        if SYNTHESIS_QUEUE.exists():
+        if LAYER4_QUEUE.exists():
             try:
-                queue = json.loads(SYNTHESIS_QUEUE.read_text(encoding="utf-8"))
+                queue = json.loads(LAYER4_QUEUE.read_text(encoding="utf-8"))
             except json.JSONDecodeError:
                 queue = []
         if not isinstance(queue, list):
@@ -841,7 +846,7 @@ def run_mode_c_emergence(l3map: L3Map, dry_run: bool, verbose: bool) -> dict:
                 "queued_by": "conceptual_agent_mode_c",
             })
             queue_added += 1
-        SYNTHESIS_QUEUE.write_text(json.dumps(queue, indent=2), encoding="utf-8")
+        LAYER4_QUEUE.write_text(json.dumps(queue, indent=2), encoding="utf-8")
 
     return {
         "mode": "emergence",

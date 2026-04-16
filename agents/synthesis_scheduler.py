@@ -27,6 +27,18 @@ QUEUE_PATH = ROOT / "synthesis_queue.json"
 
 _queue_lock = threading.Lock()
 
+# `synthesis_queue.json` currently holds two unrelated record shapes:
+#   1. L3 topic items (this scheduler's own work) — keyed by `topic`.
+#   2. L4 candidate proposals from `conceptual_agent.py` Mode C — keyed by
+#      `signal`, with `type == "layer4_candidate"`. These have no `topic`
+#      field and are NOT meant to be consumed here. Mode A is the
+#      intended consumer but does not currently read them back.
+# The helpers below filter L4 records out so this scheduler only sees its
+# own work. Moving L4 candidates into their own file would be the cleaner
+# fix; this is a defensive shim until that refactor happens.
+def _is_topic_item(item: dict) -> bool:
+    return isinstance(item, dict) and item.get("type") != "layer4_candidate" and "topic" in item
+
 
 def load_queue() -> list[dict]:
     """Load the synthesis queue from JSON file."""
@@ -34,6 +46,11 @@ def load_queue() -> list[dict]:
         return []
     with open(QUEUE_PATH) as f:
         return json.load(f)
+
+
+def load_topic_items() -> list[dict]:
+    """Load only L3 topic items from the queue, skipping foreign records."""
+    return [i for i in load_queue() if _is_topic_item(i)]
 
 
 def save_queue(queue: list[dict]):
@@ -97,17 +114,29 @@ def populate_queue():
 
 
 def get_queue_status() -> dict:
-    """Get current queue status."""
-    queue = load_queue()
-    status = {"pending": 0, "running": 0, "complete": 0, "failed": 0,
-              "total": len(queue), "next_5": []}
+    """Get current queue status.
 
-    for item in queue:
+    Counts only L3 topic items (the records this scheduler actually
+    processes). L4 candidate proposals are counted separately under
+    `layer4_candidates_pending` so the dashboard can still see them
+    without conflating them with topic work.
+    """
+    raw = load_queue()
+    topic_items = [i for i in raw if _is_topic_item(i)]
+    layer4 = [i for i in raw if isinstance(i, dict) and i.get("type") == "layer4_candidate"]
+
+    status = {"pending": 0, "running": 0, "complete": 0, "failed": 0,
+              "total": len(topic_items), "next_5": [],
+              "layer4_candidates_pending": sum(
+                  1 for i in layer4 if i.get("status") == "pending"
+              )}
+
+    for item in topic_items:
         s = item.get("status", "pending")
         if s in status:
             status[s] += 1
 
-    pending = [i for i in queue if i.get("status") == "pending"]
+    pending = [i for i in topic_items if i.get("status") == "pending"]
     pending.sort(key=lambda x: x.get("priority", 0), reverse=True)
     status["next_5"] = [
         {"topic": i["topic"], "fragment_count": i.get("fragment_count", 0)}
@@ -125,7 +154,9 @@ def process_pending(limit: int = 5, force: bool = False):
     synthesize_topic = synth_mod.synthesize_topic
 
     queue = load_queue()
-    pending = [i for i in queue if i.get("status") == "pending"]
+    # Filter to topic items only — L4 candidates share the file but are
+    # not consumable here; including them would crash on `item["topic"]`.
+    pending = [i for i in queue if i.get("status") == "pending" and _is_topic_item(i)]
     pending.sort(key=lambda x: x.get("priority", 0), reverse=True)
     to_process = pending[:limit]
 
