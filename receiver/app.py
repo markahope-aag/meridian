@@ -677,11 +677,11 @@ def compile():
 
     Body JSON:
         file: str (optional) — specific raw file to compile; if omitted, compiles all uncompiled
-        cap: int (optional) — max files per run (default 100); set 0 for unlimited
+        cap: int (optional) — max files per run (default 0 = unlimited)
     """
     data = request.get_json(force=True)
     file_arg = data.get("file")
-    cap = data.get("cap", 100)
+    cap = data.get("cap", 0)
     sync = request.args.get("sync", "").lower() == "true"
 
     args = [sys.executable, str(AGENTS_DIR / "compiler.py")]
@@ -705,9 +705,9 @@ def compile():
 
     job_id = create_job("compile")
     # Compile makes multiple LLM calls per file (plan + write); give it
-    # enough headroom for the default cap of 100 files (~10-15 min).
+    # enough headroom — no cap by default, so allow up to 1 hour.
     thread = threading.Thread(
-        target=run_agent_async, args=(job_id, args), kwargs={"timeout": 1800},
+        target=run_agent_async, args=(job_id, args), kwargs={"timeout": 3600},
         daemon=True,
     )
     thread.start()
