@@ -33,6 +33,14 @@ ROOT = Path(__file__).parent.parent
 WIKI_DIR = ROOT / "wiki"
 RAW_DIR = ROOT / "raw"
 CAPTURE_DIR = ROOT / "capture"
+STATE_DIR = ROOT / "state"
+# When capture/ holds more than this many unprocessed files, the watchdog
+# raises an alert (writes to log, drops a marker for the dashboard, exits
+# non-zero so external monitoring picks it up).
+CAPTURE_DEPTH_ALERT_THRESHOLD = 500
+# Subdirs inside capture/ that aren't real work and should be excluded from
+# both the depth count and the stuck-file scan.
+CAPTURE_EXCLUDED_SUBDIRS = (".processing", ".failed")
 
 
 def parse_fm(content: str) -> dict:
@@ -143,6 +151,74 @@ def check_raw_stuck(dry_run: bool = False) -> dict:
     return actions
 
 
+def _capture_depth() -> int:
+    """Count unprocessed files in capture/, excluding staging and quarantine."""
+    if not CAPTURE_DIR.exists():
+        return 0
+    count = 0
+    for f in CAPTURE_DIR.rglob("*.md"):
+        try:
+            rel = f.relative_to(CAPTURE_DIR)
+        except ValueError:
+            continue
+        if rel.parts and rel.parts[0] in CAPTURE_EXCLUDED_SUBDIRS:
+            continue
+        count += 1
+    return count
+
+
+def check_capture_queue_depth(dry_run: bool = False) -> dict:
+    """Alert when capture/ depth exceeds the threshold.
+
+    A high depth means the distill agent has stopped draining capture/ —
+    either crashed, throttled by the LLM, or wedged on a poison file.
+    Whichever it is, a human (or downstream monitoring) needs to know.
+    """
+    count = _capture_depth()
+    alert = count > CAPTURE_DEPTH_ALERT_THRESHOLD
+    actions = {
+        "count": count,
+        "threshold": CAPTURE_DEPTH_ALERT_THRESHOLD,
+        "alert": alert,
+        "details": [],
+    }
+    if not alert:
+        return actions
+
+    msg = f"capture/ depth {count} > threshold {CAPTURE_DEPTH_ALERT_THRESHOLD} — distill likely wedged"
+    actions["details"].append(msg)
+    print(f"ALERT: {msg}", file=sys.stderr)
+
+    if not dry_run:
+        # Drop a state marker so the dashboard / external monitoring can
+        # surface this without re-walking the filesystem.
+        try:
+            STATE_DIR.mkdir(parents=True, exist_ok=True)
+            (STATE_DIR / "queue_alert.json").write_text(
+                json.dumps({
+                    "alert": True,
+                    "depth": count,
+                    "threshold": CAPTURE_DEPTH_ALERT_THRESHOLD,
+                    "raised_at": now().isoformat(),
+                    "message": msg,
+                }, indent=2),
+                encoding="utf-8",
+            )
+        except OSError as e:
+            print(f"queue_alert: failed to write state marker: {e}", file=sys.stderr)
+    return actions
+
+
+def clear_queue_alert() -> None:
+    """Remove the queue-depth alert marker once depth is back under threshold."""
+    try:
+        marker = STATE_DIR / "queue_alert.json"
+        if marker.exists():
+            marker.unlink()
+    except OSError:
+        pass
+
+
 def check_synthesis_queue(dry_run: bool = False) -> dict:
     """Reset stuck synthesis queue items."""
     actions = {"reset_count": 0, "details": []}
@@ -199,6 +275,7 @@ def main():
     capture_actions = check_capture_stuck(dry_run=args.dry_run)
     raw_actions = check_raw_stuck(dry_run=args.dry_run)
     queue_actions = check_synthesis_queue(dry_run=args.dry_run)
+    depth_actions = check_capture_queue_depth(dry_run=args.dry_run)
 
     total_actions = (capture_actions["promoted"] + capture_actions["deleted_skip"] +
                      queue_actions["reset_count"])
@@ -216,7 +293,14 @@ def main():
     if queue_actions["reset_count"] > 0:
         summary_parts.append(f"{queue_actions['reset_count']} queue stuck reset")
 
-    if not args.dry_run and total_actions > 0:
+    if depth_actions["alert"]:
+        summary_parts.append(f"ALERT capture depth={depth_actions['count']}")
+    elif not args.dry_run:
+        # Depth is healthy — clear any stale alert marker so the dashboard
+        # stops showing red.
+        clear_queue_alert()
+
+    if not args.dry_run and (total_actions > 0 or depth_actions["alert"]):
         append_log(", ".join(summary_parts) if summary_parts else "no stuck items")
 
     output = {
@@ -225,9 +309,15 @@ def main():
         "capture": capture_actions,
         "raw": raw_actions,
         "synthesis_queue": queue_actions,
+        "capture_depth": depth_actions,
         "total_actions_taken": total_actions,
     }
     print(json.dumps(output, indent=2))
+
+    # Exit non-zero on alert so any external probe (Uptime Kuma, cron MTA,
+    # CI, etc.) sees the failure signal without having to parse JSON.
+    if depth_actions["alert"]:
+        sys.exit(2)
 
 
 if __name__ == "__main__":
