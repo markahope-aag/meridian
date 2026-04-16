@@ -47,8 +47,7 @@
       "name": "Run Daily Distill",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [480, 300],
-      "onError": "continueRegularOutput"
+      "position": [480, 300]
     }
   ],
   "connections": {
