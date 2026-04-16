@@ -685,11 +685,11 @@ def compile():
 
     Body JSON:
         file: str (optional) — specific raw file to compile; if omitted, compiles all uncompiled
-        cap: int (optional) — max files per run (default 0 = unlimited)
+        cap: int (optional) — max files per run (default 50); set 0 for unlimited
     """
     data = request.get_json(force=True)
     file_arg = data.get("file")
-    cap = data.get("cap", 0)
+    cap = data.get("cap", 50)
     sync = request.args.get("sync", "").lower() == "true"
 
     args = [sys.executable, str(AGENTS_DIR / "compiler.py")]

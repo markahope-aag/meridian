@@ -550,8 +550,9 @@ def compile_one(client: anthropic.Anthropic, filepath: Path,
 def main():
     parser = argparse.ArgumentParser(description="Meridian Compiler")
     parser.add_argument("--file", help="Specific raw file to compile")
-    parser.add_argument("--cap", type=int, default=0,
-                        help="Max files to compile per run (default 0 = unlimited).")
+    parser.add_argument("--cap", type=int, default=50,
+                        help="Max files to compile per run (default 50)."
+                             " Set 0 for unlimited.")
     args = parser.parse_args()
 
     config = load_config()
