@@ -550,6 +550,9 @@ def compile_one(client: anthropic.Anthropic, filepath: Path,
 def main():
     parser = argparse.ArgumentParser(description="Meridian Compiler")
     parser.add_argument("--file", help="Specific raw file to compile")
+    parser.add_argument("--cap", type=int, default=10,
+                        help="Max files to compile per run (default 10). "
+                             "Set 0 for unlimited.")
     args = parser.parse_args()
 
     config = load_config()
@@ -585,6 +588,13 @@ def main():
         print("No uncompiled files in raw/", file=sys.stderr)
         print(json.dumps({"status": "ok", "compiled": 0, "results": []}))
         return
+
+    # Apply per-run cap to avoid timeout on large backlogs.
+    # Each file requires ~2 LLM calls (plan + write), so 10 files with
+    # 3 concurrent workers finishes well within the 600s job timeout.
+    if args.cap > 0 and len(files) > args.cap:
+        print(f"Capping run to {args.cap} of {len(files)} uncompiled files", file=sys.stderr)
+        files = files[:args.cap]
 
     t_start = time.time()
     results = []

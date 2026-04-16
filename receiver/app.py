@@ -203,11 +203,11 @@ def get_job(job_id: str) -> dict | None:
     return dict(row) if row else None
 
 
-def run_agent_async(job_id: str, args: list[str]):
+def run_agent_async(job_id: str, args: list[str], timeout: int = 600):
     """Run an agent subprocess in a background thread."""
     try:
         result = subprocess.run(
-            args, capture_output=True, text=True, timeout=600,
+            args, capture_output=True, text=True, timeout=timeout,
             cwd=str(MERIDIAN_ROOT),
         )
         if result.returncode != 0:
@@ -215,7 +215,7 @@ def run_agent_async(job_id: str, args: list[str]):
         else:
             complete_job(job_id, result.stdout)
     except subprocess.TimeoutExpired:
-        fail_job(job_id, "Agent timed out (600s)")
+        fail_job(job_id, f"Agent timed out ({timeout}s)")
     except FileNotFoundError as e:
         fail_job(job_id, f"Agent not found: {e}")
     except Exception as e:
@@ -677,14 +677,17 @@ def compile():
 
     Body JSON:
         file: str (optional) — specific raw file to compile; if omitted, compiles all uncompiled
+        cap: int (optional) — max files per run (default 10); set 0 for unlimited
     """
     data = request.get_json(force=True)
     file_arg = data.get("file")
+    cap = data.get("cap", 10)
     sync = request.args.get("sync", "").lower() == "true"
 
     args = [sys.executable, str(AGENTS_DIR / "compiler.py")]
     if file_arg:
         args.extend(["--file", file_arg])
+    args.extend(["--cap", str(int(cap))])
 
     if sync:
         try:
@@ -701,7 +704,12 @@ def compile():
             return jsonify({"error": "compiler.py not found"}), 501
 
     job_id = create_job("compile")
-    thread = threading.Thread(target=run_agent_async, args=(job_id, args), daemon=True)
+    # Compile makes multiple LLM calls per file (plan + write); give it
+    # more headroom than the default 600s, especially for batches of 10.
+    thread = threading.Thread(
+        target=run_agent_async, args=(job_id, args), kwargs={"timeout": 900},
+        daemon=True,
+    )
     thread.start()
     return jsonify({"status": "accepted", "job_id": job_id}), 202
 
