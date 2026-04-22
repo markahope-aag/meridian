@@ -706,7 +706,7 @@ def compile():
     """
     data = request.get_json(force=True)
     file_arg = data.get("file")
-    limit = data.get("limit", 50)
+    limit = data.get("limit", 30)
     sync = request.args.get("sync", "").lower() == "true"
 
     args = [sys.executable, str(AGENTS_DIR / "compiler.py")]

@@ -19,11 +19,10 @@ llm:
   temperature: 0.3
 
 # Daily Distill settings
+# Threshold is enforced by the LLM via prompts/daily_distill.md, not by code.
+# These values are documentation only — change the prompt to change behavior.
 distill:
-  min_relevance: 6
-  min_quality: 6
-  auto_promote_threshold: 8          # steady state: auto-promote when both scores >= this
-  bootstrap_promote_threshold: 6     # bootstrap (<20 wiki articles): auto-promote when both scores >= this
+  promote_threshold: 8               # both relevance and quality must be >= this to promote
   approval_email: mark.hope@asymmetric.pro
 
 # Compilation settings
