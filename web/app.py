@@ -47,10 +47,45 @@ from web.registry import (
 
 
 app = Flask(__name__)
-app.secret_key = os.environ.get(
-    "MERIDIAN_SECRET_KEY",
-    secrets.token_hex(32),  # fallback: random per-restart (sessions won't survive restarts)
-)
+
+
+def _load_or_create_session_secret() -> str:
+    """Return a stable Flask session secret.
+
+    Sourced from /meridian/.secrets/dashboard-secret-key (bind-mounted from
+    the host, so it survives every container recreation, redeploy, and Coolify
+    env-var hiccup). If the file does not exist, generate one atomically and
+    write it. Self-heals on first boot; never regenerates after that.
+
+    Why not env vars: Coolify env-var changes don't reliably propagate to the
+    running container — the container has to be recreated, and our auto-deploy
+    flow uses docker cp + SIGHUP rather than container recreation. A bind-mount
+    file is the only path that survives all of those.
+    """
+    secret_path = MERIDIAN_ROOT / ".secrets" / "dashboard-secret-key"
+    try:
+        existing = secret_path.read_text(encoding="utf-8").strip()
+        if len(existing) >= 32:
+            return existing
+    except FileNotFoundError:
+        pass
+
+    new_key = secrets.token_hex(32)
+    secret_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        # O_EXCL prevents a race if multiple workers boot simultaneously and
+        # both find no file. The loser falls through to read what won.
+        fd = os.open(str(secret_path), os.O_CREAT | os.O_WRONLY | os.O_EXCL, 0o600)
+        try:
+            os.write(fd, new_key.encode("utf-8"))
+        finally:
+            os.close(fd)
+        return new_key
+    except FileExistsError:
+        return secret_path.read_text(encoding="utf-8").strip()
+
+
+app.secret_key = _load_or_create_session_secret()
 
 # ---------------------------------------------------------------------------
 # Authentication — session-based login

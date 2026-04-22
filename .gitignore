@@ -22,6 +22,7 @@ Thumbs.db
 .env
 *.env
 credentials.json
+/.secrets/
 
 # Meridian runtime data — lives on the VM, not in git.
 #
