@@ -178,7 +178,7 @@ def plan_document(client: anthropic.Anthropic, raw_content: str,
 
     response = client.messages.create(
         model=planning_model,
-        max_tokens=4096,
+        max_tokens=16384,
         temperature=0.2,
         system=system_prompt,
         messages=[{
@@ -193,6 +193,12 @@ def plan_document(client: anthropic.Anthropic, raw_content: str,
             ),
         }],
     )
+
+    if response.stop_reason == "max_tokens":
+        raise ValueError(
+            f"planner hit max_tokens={16384} (output truncated mid-JSON) — "
+            f"raw doc may be too dense; consider raising the cap"
+        )
 
     text = response.content[0].text
     json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
