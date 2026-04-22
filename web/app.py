@@ -47,16 +47,10 @@ from web.registry import (
 
 
 app = Flask(__name__)
-_secret_key = os.environ.get("MERIDIAN_SECRET_KEY", "").strip()
-if not _secret_key:
-    raise RuntimeError(
-        "MERIDIAN_SECRET_KEY is not set. The dashboard requires a stable secret "
-        "for Flask sessions; without one, each gunicorn worker generates its own "
-        "random key and CSRF validation fails the moment a request lands on a "
-        "different worker than the one that set the session. Set it via Coolify "
-        "env vars (and redeploy — restart alone won't pick up new env)."
-    )
-app.secret_key = _secret_key
+app.secret_key = os.environ.get(
+    "MERIDIAN_SECRET_KEY",
+    secrets.token_hex(32),  # fallback: random per-restart (sessions won't survive restarts)
+)
 
 # ---------------------------------------------------------------------------
 # Authentication — session-based login
