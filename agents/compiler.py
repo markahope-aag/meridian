@@ -550,6 +550,10 @@ def compile_one(client: anthropic.Anthropic, filepath: Path,
 def main():
     parser = argparse.ArgumentParser(description="Meridian Compiler")
     parser.add_argument("--file", help="Specific raw file to compile")
+    parser.add_argument(
+        "--limit", type=int, default=0,
+        help="Max number of oldest uncompiled files to process. 0 = no cap.",
+    )
     args = parser.parse_args()
 
     config = load_config()
@@ -580,6 +584,12 @@ def main():
         files = [Path(args.file)]
     else:
         files = get_uncompiled_files()
+        if args.limit > 0 and len(files) > args.limit:
+            print(
+                f"Capping batch at {args.limit} of {len(files)} uncompiled files",
+                file=sys.stderr,
+            )
+            files = files[:args.limit]
 
     if not files:
         print("No uncompiled files in raw/", file=sys.stderr)

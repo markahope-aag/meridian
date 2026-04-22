@@ -700,15 +700,24 @@ def compile():
     Add ?sync=true for synchronous execution (blocks until complete).
 
     Body JSON:
-        file: str (optional) — specific raw file to compile; if omitted, compiles all uncompiled
+        file: str (optional) — specific raw file to compile; if omitted, compiles oldest uncompiled
+        limit: int (optional) — max files per run. Default 50 keeps wall-clock
+            under the 600s run_agent_async timeout. Pass 0 to disable.
     """
     data = request.get_json(force=True)
     file_arg = data.get("file")
+    limit = data.get("limit", 50)
     sync = request.args.get("sync", "").lower() == "true"
 
     args = [sys.executable, str(AGENTS_DIR / "compiler.py")]
     if file_arg:
         args.extend(["--file", file_arg])
+    try:
+        limit_int = int(limit)
+    except (TypeError, ValueError):
+        return jsonify({"error": "limit must be an integer"}), 400
+    if limit_int > 0:
+        args.extend(["--limit", str(limit_int)])
 
     if sync:
         try:
