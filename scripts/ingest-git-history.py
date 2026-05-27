@@ -265,12 +265,29 @@ def format_fragment(project_slug: str, project_name: str, project_description: s
     return "\n".join(body_lines)
 
 
+def resolve_repo_path(project: dict) -> Path:
+    """Pick the right checkout for this run.
+
+    Honors MERIDIAN_REPO_ROOT so the VM can keep its own clone tree
+    (e.g. /var/repos/<slug>) without per-machine yaml edits. Falls back
+    to the laptop-side `repo_path` from projects.yaml if the env-rooted
+    candidate doesn't exist.
+    """
+    slug = project.get("slug", "")
+    root_env = os.environ.get("MERIDIAN_REPO_ROOT")
+    if root_env and slug:
+        candidate = Path(root_env) / slug
+        if candidate.exists():
+            return candidate
+    return Path(project.get("repo_path", ""))
+
+
 def process_project(project: dict, since: str | None, dry_run: bool,
                     capture_stats: bool) -> ProjectStats:
     slug = project.get("slug", "")
     name = project.get("name", slug)
     description = project.get("description", "")
-    repo_path = Path(project.get("repo_path", ""))
+    repo_path = resolve_repo_path(project)
 
     stats = ProjectStats(slug=slug)
 

@@ -103,3 +103,136 @@ projects:
     status: active
     stack: [python, typescript, mcp, claude-code]
     repo_path: C:/Users/markh/projects/workspace
+
+  - name: "Cadence"
+    slug: cadence
+    description: "TODO: fill in"
+    status: active
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/cadence
+
+  - name: "MTG Vault"
+    slug: mtg-vault
+    description: "TODO: fill in"
+    status: active
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/mtg-vault
+
+  - name: "Clarent Environmental Website"
+    slug: clarent-environmental-website
+    description: "TODO: fill in"
+    status: active
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/clarent-environmental-website
+
+  - name: "ReadyState"
+    slug: readystate
+    description: "TODO: fill in"
+    status: active
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/readystate
+
+  - name: "Clarent Environmental"
+    slug: clarent-environmental
+    description: "TODO: fill in"
+    status: active
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/clarent-environmental
+
+  - name: "Bluepoint ATM ROI Calculator"
+    slug: bluepointatm-roi-calculator
+    description: "TODO: fill in"
+    status: dormant
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/bluepointatm-roi-calculator
+
+  - name: "Aviary ROI Calculators"
+    slug: aviary-roi-calculators
+    description: "TODO: fill in"
+    status: dormant
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/aviary-roi-calculators
+
+  - name: "YieldPath"
+    slug: yieldpath
+    description: "TODO: fill in"
+    status: dormant
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/yieldpath
+
+  - name: "WP Audit MCP"
+    slug: wp-audit-mcp
+    description: "TODO: fill in"
+    status: dormant
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/wp-audit-mcp
+
+  - name: "Kestralis Website"
+    slug: kestralis-website
+    description: "TODO: fill in"
+    status: active
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/kestralis-website
+
+  - name: "Asymmetric Web Scraper"
+    slug: asymmetric-web-scraper
+    description: "TODO: fill in"
+    status: active
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/asymmetric-web-scraper
+
+  - name: "Three Gaits Website"
+    slug: three-gaits-website
+    description: "TODO: fill in"
+    status: active
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/three-gaits-website
+
+  - name: "Papertube EPR Calculator"
+    slug: papertube-epr-calculator
+    description: "TODO: fill in"
+    status: active
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/papertube-epr-calculator
+
+  - name: "Cordwainer Calculator"
+    slug: cordwainer-calculator
+    description: "TODO: fill in"
+    status: active
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/cordwainer-calculator
+
+  - name: "AviaryAI ABM"
+    slug: aviaryai-abm
+    description: "TODO: fill in"
+    status: active
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/aviaryai-abm
+
+  - name: "WMF Lodge Portal"
+    slug: wmf-lodge-portal
+    description: "TODO: fill in"
+    status: active
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/wmf-lodge-portal
+
+  - name: "Skaalen Community Finder"
+    slug: skaalen-community-finder
+    description: "TODO: fill in"
+    status: active
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/skaalen-community-finder
+
+  - name: "Verge Compliance"
+    slug: verge-compliance
+    description: "TODO: fill in"
+    status: active
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/verge-compliance
+
+  - name: "LinkedIn Publisher"
+    slug: linkedin-publisher
+    description: "TODO: fill in"
+    status: active
+    stack: [unknown]
+    repo_path: C:/Users/markh/projects/linkedin-publisher
