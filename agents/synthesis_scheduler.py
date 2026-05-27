@@ -145,8 +145,64 @@ def get_queue_status() -> dict:
     return status
 
 
-def process_pending(limit: int = 5, force: bool = False):
-    """Process the next N pending topics."""
+# evolution_detector writes its `dimension` field using wiki-namespace
+# names ("knowledge", "industries", "engineering"); synthesizer.py uses
+# its own short labels ("topic", "industry", "engineering"). Map between
+# them so an evolution-queued item flows straight through.
+_DIMENSION_MAP = {
+    "knowledge": "topic",
+    "industries": "industry",
+    "engineering": "engineering",
+    "interests": "interests",
+    "clients": "clients",
+}
+
+
+def _priority_key(item: dict) -> float:
+    """Tolerant priority sort. Existing populate items use int priorities
+    (0-100); evolution-queued items use string "high"/"medium"/"low".
+    Comparing mixed types would crash — coerce everything to float."""
+    p = item.get("priority", 0)
+    if isinstance(p, (int, float)):
+        return float(p)
+    if isinstance(p, str):
+        return {"high": 1000.0, "medium": 500.0, "low": 100.0}.get(p.lower(), 0.0)
+    return 0.0
+
+
+def _matches_item(q: dict, topic: str, dimension: str) -> bool:
+    """Match a queue entry by (topic, dimension). Legacy populate items
+    have no dimension field — treat them as topic-dimension."""
+    if q.get("topic") != topic:
+        return False
+    q_dim = q.get("dimension")
+    if q_dim is None:
+        return dimension == "topic"
+    return _DIMENSION_MAP.get(q_dim, q_dim) == dimension
+
+
+def _drift_files_for(article_dim: str, slug: str) -> list:
+    """Layer 4 drift reports written by evolution_detector for this
+    article. Filename pattern: <dimension>-<slug>-<date>.md where
+    dimension is the wiki namespace ('knowledge', 'industries', etc.)"""
+    drift_dir = ROOT / "wiki" / "layer4" / "drift"
+    if not drift_dir.exists():
+        return []
+    return sorted(drift_dir.glob(f"{article_dim}-{slug}-*.md"))
+
+
+def process_pending(limit: int = 5, force: bool = False, queued_by: str | None = None):
+    """Process the next N pending topics.
+
+    When `queued_by` is set, only consider items where queued_by matches
+    AND pass force=True to synthesize_topic (these items already have
+    Layer 3 articles — re-synthesis is the whole point).
+
+    When `queued_by` is None (the default daily run), exclude items
+    that have a queued_by marker. Those are owned by a separate cron
+    and processing them here without force would just mark them
+    "complete" without re-synthesizing.
+    """
     import importlib.util
     spec = importlib.util.spec_from_file_location("synthesizer", ROOT / "agents" / "synthesizer.py")
     synth_mod = importlib.util.module_from_spec(spec)
@@ -154,10 +210,14 @@ def process_pending(limit: int = 5, force: bool = False):
     synthesize_topic = synth_mod.synthesize_topic
 
     queue = load_queue()
-    # Filter to topic items only — L4 candidates share the file but are
-    # not consumable here; including them would crash on `item["topic"]`.
     pending = [i for i in queue if i.get("status") == "pending" and _is_topic_item(i)]
-    pending.sort(key=lambda x: x.get("priority", 0), reverse=True)
+    if queued_by:
+        pending = [i for i in pending if i.get("queued_by") == queued_by]
+        effective_force = True  # evolution-queued items always need force
+    else:
+        pending = [i for i in pending if not i.get("queued_by")]
+        effective_force = force
+    pending.sort(key=_priority_key, reverse=True)
     to_process = pending[:limit]
 
     if not to_process:
@@ -167,21 +227,25 @@ def process_pending(limit: int = 5, force: bool = False):
     results = []
     for item in to_process:
         topic = item["topic"]
+        # Synthesizer dimension. Evolution items store the wiki namespace
+        # ("knowledge"/"industries"/"engineering"); legacy populate items
+        # omit dimension and default to "topic".
+        raw_dim = item.get("dimension")
+        synth_dim = _DIMENSION_MAP.get(raw_dim, raw_dim) if raw_dim else "topic"
         now = datetime.now(timezone.utc).isoformat()
 
-        # Mark as running
         for q in queue:
-            if q["topic"] == topic:
+            if _matches_item(q, topic, synth_dim):
                 q["status"] = "running"
                 q["started_at"] = now
         save_queue(queue)
 
-        print(f"\nSynthesizing: {topic}", file=sys.stderr)
+        print(f"\nSynthesizing: {synth_dim}/{topic}", file=sys.stderr)
         try:
-            result = synthesize_topic(topic, force=force)
+            result = synthesize_topic(topic, force=effective_force, dimension=synth_dim)
 
             for q in queue:
-                if q["topic"] == topic:
+                if _matches_item(q, topic, synth_dim):
                     if "error" in result:
                         q["status"] = "failed"
                         q["error"] = result["error"]
@@ -195,12 +259,23 @@ def process_pending(limit: int = 5, force: bool = False):
                                            else "low")
                     q["completed_at"] = datetime.now(timezone.utc).isoformat()
             save_queue(queue)
+
+            # When re-synthesis from an evolution-queued item succeeds,
+            # the drift reports that triggered the queue are now stale —
+            # the evidence behind them has been incorporated.
+            if queued_by == "evolution_detector" and "error" not in result and raw_dim:
+                for drift in _drift_files_for(raw_dim, topic):
+                    try:
+                        drift.unlink()
+                    except OSError:
+                        pass
+
             results.append(result)
 
         except Exception as e:
             print(f"  Error: {e}", file=sys.stderr)
             for q in queue:
-                if q["topic"] == topic:
+                if _matches_item(q, topic, synth_dim):
                     q["status"] = "failed"
                     q["error"] = str(e)
                     q["completed_at"] = datetime.now(timezone.utc).isoformat()
@@ -216,6 +291,10 @@ def main():
     parser.add_argument("--status", action="store_true", help="Show queue status")
     parser.add_argument("--limit", type=int, default=5, help="Max topics to process")
     parser.add_argument("--force", action="store_true", help="Overwrite existing Layer 3 articles")
+    parser.add_argument("--queued-by", default=None,
+                        help="Process only items queued by this source (e.g. 'evolution_detector'). "
+                             "When set, force is implied and queue_by-tagged items are the only ones "
+                             "considered. Default daily runs exclude such items.")
     args = parser.parse_args()
 
     if args.populate:
@@ -229,7 +308,7 @@ def main():
         return
 
     # Process pending
-    results = process_pending(args.limit, force=args.force)
+    results = process_pending(args.limit, force=args.force, queued_by=args.queued_by)
     output = {
         "status": "ok",
         "processed": len(results),

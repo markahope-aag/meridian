@@ -431,6 +431,7 @@ def check_contradiction_accumulation(
         article=article,
         signal=signal,
         severity="medium" if ratio < 0.5 else "high",
+        queue_resynthesis=True,
         details={
             "contradicting_count": len(contradicting),
             "total_new": len(new_fragments),
@@ -488,6 +489,7 @@ def check_source_date_divergence(article: L3Article) -> Detection | None:
         article=article,
         signal=signal,
         severity="high" if delta_days > 365 else "medium",
+        queue_resynthesis=True,
         details={
             "supporting_avg": sup_avg.strftime("%Y-%m-%d"),
             "contradicting_avg": con_avg.strftime("%Y-%m-%d"),
@@ -529,6 +531,7 @@ def check_platform_regulatory_trigger(
         signal=signal,
         severity="high",
         drift_report=True,
+        queue_resynthesis=True,
         details={
             "triggering_count": len(triggering),
             "first_trigger_keyword": triggering[0][1],
