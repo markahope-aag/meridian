@@ -487,21 +487,33 @@ def capture_fathom():
 def capture_claude_session():
     """Convert a Claude Code JSONL transcript to .md and write to capture/.
 
-    Body JSON:
-        transcript_path: str (required) — absolute path to the JSONL file on this machine
+    Body JSON (either field works; transcript_jsonl wins if both present):
+        transcript_jsonl: str — full JSONL content from the calling machine.
+            Use this when the caller is a different host than the receiver
+            (the laptop running Claude Code).
+        transcript_path: str — absolute path to the JSONL file. Only
+            useful when the file is on the receiver's own filesystem;
+            kept for backward compatibility and local debug calls.
     """
     data = request.get_json(force=True)
     transcript_path = data.get("transcript_path")
+    transcript_content = data.get("transcript_jsonl")
 
-    if not transcript_path:
-        return jsonify({"error": "transcript_path is required"}), 400
-
-    path = Path(transcript_path)
-    if not path.exists():
-        return jsonify({"error": f"file not found: {transcript_path}"}), 404
+    if transcript_content:
+        text = transcript_content
+    elif transcript_path:
+        path = Path(transcript_path)
+        if not path.exists():
+            return jsonify({
+                "error": f"file not found on receiver: {transcript_path} "
+                         f"(post `transcript_jsonl` instead when calling from another machine)"
+            }), 404
+        text = path.read_text(encoding="utf-8", errors="replace")
+    else:
+        return jsonify({"error": "transcript_jsonl or transcript_path is required"}), 400
 
     # Parse the JSONL transcript
-    lines = path.read_text(encoding="utf-8", errors="replace").strip().split("\n")
+    lines = text.strip().split("\n")
     messages = []
     session_id = None
     project_path = None
