@@ -203,13 +203,13 @@ def get_job(job_id: str) -> dict | None:
     return dict(row) if row else None
 
 
-def run_agent_async(job_id: str, args: list[str]):
+def run_agent_async(job_id: str, args: list[str], timeout: int = 600):
     """Run an agent subprocess in a background thread."""
     agent_name = Path(args[1]).name if len(args) > 1 else "agent"
-    log.info("job %s: starting %s args=%s", job_id, agent_name, args[2:])
+    log.info("job %s: starting %s args=%s timeout=%ds", job_id, agent_name, args[2:], timeout)
     try:
         result = subprocess.run(
-            args, capture_output=True, text=True, timeout=600,
+            args, capture_output=True, text=True, timeout=timeout,
             cwd=str(MERIDIAN_ROOT),
         )
         if result.returncode != 0:
@@ -226,8 +226,8 @@ def run_agent_async(job_id: str, args: list[str]):
             )
             complete_job(job_id, result.stdout)
     except subprocess.TimeoutExpired:
-        log.error("job %s: %s timed out after 600s", job_id, agent_name)
-        fail_job(job_id, "Agent timed out (600s)")
+        log.error("job %s: %s timed out after %ds", job_id, agent_name, timeout)
+        fail_job(job_id, f"Agent timed out ({timeout}s)")
     except FileNotFoundError as e:
         log.error("job %s: %s not found: %s", job_id, agent_name, e)
         fail_job(job_id, f"Agent not found: {e}")
@@ -243,6 +243,10 @@ WIKI_DIR = MERIDIAN_ROOT / "wiki"
 OUTPUTS_DIR = MERIDIAN_ROOT / "outputs"
 AGENTS_DIR = MERIDIAN_ROOT / "agents"
 PROMPTS_DIR = MERIDIAN_ROOT / "prompts"
+
+# Per-endpoint subprocess timeouts (seconds). Compile is the slowest agent and
+# needs the full hour for large backlogs; everything else uses the 600s default.
+COMPILE_TIMEOUT = 3600
 
 
 def get_token():
@@ -701,8 +705,8 @@ def compile():
 
     Body JSON:
         file: str (optional) — specific raw file to compile; if omitted, compiles oldest uncompiled
-        limit: int (optional) — max files per run. Default 50 keeps wall-clock
-            under the 600s run_agent_async timeout. Pass 0 to disable.
+        limit: int (optional) — max files per run. Default 30 keeps wall-clock
+            under the COMPILE_TIMEOUT below. Pass 0 to disable.
     """
     data = request.get_json(force=True)
     file_arg = data.get("file")
@@ -719,10 +723,12 @@ def compile():
     if limit_int > 0:
         args.extend(["--limit", str(limit_int)])
 
+    # Compile is the slowest agent (Sonnet planner + writer per file). The
+    # default 600s in run_agent_async cuts off mid-batch on large backlogs.
     if sync:
         try:
             result = subprocess.run(
-                args, capture_output=True, text=True, timeout=600,
+                args, capture_output=True, text=True, timeout=COMPILE_TIMEOUT,
                 cwd=str(MERIDIAN_ROOT),
             )
             if result.returncode != 0:
@@ -734,7 +740,10 @@ def compile():
             return jsonify({"error": "compiler.py not found"}), 501
 
     job_id = create_job("compile")
-    thread = threading.Thread(target=run_agent_async, args=(job_id, args), daemon=True)
+    thread = threading.Thread(
+        target=run_agent_async, args=(job_id, args), kwargs={"timeout": COMPILE_TIMEOUT},
+        daemon=True,
+    )
     thread.start()
     return jsonify({"status": "accepted", "job_id": job_id}), 202
 
