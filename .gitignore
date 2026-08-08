@@ -67,3 +67,4 @@ Meridian/
 # Scratch output from the synthesis regression harness (fixtures +
 # baselines ARE committed; only the latest run scratch is not).
 tests/synthesis_corpus/latest/
+.claude/scheduled_tasks.lock
