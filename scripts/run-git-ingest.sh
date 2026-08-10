@@ -26,6 +26,7 @@ INGEST_SCRIPT="${INGEST_SCRIPT:-/meridian/scripts/ingest-git-history.py}"
 TARGET_FQDN="${MERIDIAN_RECEIVER_FQDN:-meridian.markahope.com}"
 COMMITS_DIR="${MERIDIAN_COMMITS_DIR:-/meridian/capture/external/commits}"
 ENGINEERING_DIR="${MERIDIAN_ENGINEERING_DIR:-/meridian/wiki/engineering}"
+JOBS_DB="${MERIDIAN_JOBS_DB:-/meridian/state/jobs.db}"
 
 mkdir -p "$LOG_DIR"
 
@@ -52,18 +53,36 @@ find_container_by_fqdn() {
 # Re-chowning the whole tree (not just this run's new files) means the
 # next scheduled ingest repairs the entire existing backlog on its own.
 handoff_ownership() {
-    local cid uid gid
-    cid=$(find_container_by_fqdn "$TARGET_FQDN")
-    if [ -z "$cid" ]; then
-        echo "WARNING: no receiver container found; skipping ownership handoff"
-        return
+    local cid uid gid owner
+    # Prefer the ownership of a file the receiver process wrote itself.
+    # `docker exec id -u` reports the image's USER, which is not
+    # necessarily the uid gunicorn workers end up running as, and the
+    # classifier subprocess inherits the worker's uid. The job store is
+    # created by the receiver at runtime, so its owner is authoritative.
+    if [ -f "$JOBS_DB" ]; then
+        owner=$(stat -c '%u:%g' "$JOBS_DB" 2>/dev/null)
     fi
-    uid=$(docker exec "$cid" id -u 2>/dev/null)
-    gid=$(docker exec "$cid" id -g 2>/dev/null)
-    if [ -z "$uid" ] || [ -z "$gid" ]; then
-        echo "WARNING: could not read container uid/gid; skipping ownership handoff"
-        return
+
+    if [ -z "${owner:-}" ]; then
+        cid=$(find_container_by_fqdn "$TARGET_FQDN")
+        if [ -z "$cid" ]; then
+            echo "WARNING: no receiver container found; skipping ownership handoff"
+            return
+        fi
+        uid=$(docker exec "$cid" id -u 2>/dev/null)
+        gid=$(docker exec "$cid" id -g 2>/dev/null)
+        if [ -z "$uid" ] || [ -z "$gid" ]; then
+            echo "WARNING: could not read container uid/gid; skipping ownership handoff"
+            return
+        fi
+        owner="${uid}:${gid}"
+        echo "using container uid/gid $owner (job store not found at $JOBS_DB)"
+    else
+        echo "using job store owner $owner"
     fi
+
+    uid="${owner%%:*}"
+    gid="${owner##*:}"
     for d in "$COMMITS_DIR" "$ENGINEERING_DIR"; do
         [ -d "$d" ] || continue
         if chown -R "$uid:$gid" "$d" 2>/dev/null; then
