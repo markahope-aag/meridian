@@ -281,9 +281,24 @@ def move_to_wiki(frag: Fragment, topic: str, dry_run: bool) -> Path:
 
 
 def log_error(msg: str) -> None:
-    ERROR_LOG.parent.mkdir(parents=True, exist_ok=True)
-    with open(ERROR_LOG, "a", encoding="utf-8") as f:
-        f.write(f"{time.strftime('%Y-%m-%dT%H:%M:%S')}  {msg}\n")
+    """Record an error to the log file and to stderr.
+
+    stderr matters as much as the file here. A run can report "Classified
+    9, Errors 10" while every single write silently failed, and if the
+    reason only ever reaches outputs/engineering-classification-errors.log
+    then whoever is watching the run output has no idea what went wrong.
+    Everything else this script reports goes to stderr, so errors should
+    travel with it.
+    """
+    line = f"{time.strftime('%Y-%m-%dT%H:%M:%S')}  {msg}"
+    print(f"  ERROR: {msg}", file=sys.stderr)
+    try:
+        ERROR_LOG.parent.mkdir(parents=True, exist_ok=True)
+        with open(ERROR_LOG, "a", encoding="utf-8") as f:
+            f.write(f"{line}\n")
+    except OSError as e:
+        # Never let a failure to write the error log mask the error itself.
+        print(f"  (could not write {ERROR_LOG}: {e})", file=sys.stderr)
 
 
 def main() -> None:
