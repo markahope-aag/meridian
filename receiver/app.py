@@ -873,7 +873,15 @@ def classify():
             )
             if result.returncode != 0:
                 return jsonify({"error": "classifier failed", "stderr": result.stderr}), 500
-            return jsonify({"status": "ok", "result": result.stdout})
+            # The classifier writes its entire report (counts, per-topic
+            # distribution, errors) to stderr and nothing to stdout, so
+            # returning stdout alone makes a run that silently did nothing
+            # look identical to a successful one.
+            return jsonify({
+                "status": "ok",
+                "result": result.stdout,
+                "log": result.stderr[-4000:],
+            })
         except subprocess.TimeoutExpired:
             return jsonify({"error": "classifier timed out"}), 504
         except FileNotFoundError:
