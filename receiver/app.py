@@ -951,12 +951,34 @@ def synthesize():
 @app.route("/synthesize/schedule", methods=["POST"])
 @require_auth
 def synthesize_schedule():
-    """Process next pending topics from the synthesis queue."""
+    """Process next pending topics from the synthesis queue.
+
+    Body JSON:
+        limit: int (optional). Topics to process this run. Default 5.
+        queued_by: str (optional). Process only items carrying this
+            marker, and force re-synthesis of them.
+
+    The queued_by passthrough matters. synthesis_scheduler.py excludes
+    marked items from its default run, on the assumption that a separate
+    scheduled job claims them. No such job existed, so the 11 topics the
+    evolution detector queued on 2026-08-09 could never be picked up by
+    anything. Passing queued_by="evolution_detector" is what drains them.
+    """
     data = request.get_json(force=True) if request.data else {}
     limit = data.get("limit", 5)
+    queued_by = data.get("queued_by")
 
     args = [sys.executable, str(AGENTS_DIR / "synthesis_scheduler.py"),
             "--limit", str(limit)]
+
+    if queued_by is not None:
+        # Restrict to a plain identifier. The value reaches argv directly
+        # rather than a shell, so this is defense in depth, not the only
+        # thing standing between us and injection.
+        queued_by = str(queued_by)
+        if not re.fullmatch(r"[A-Za-z0-9_.-]{1,64}", queued_by):
+            return jsonify({"error": "queued_by must be a short identifier"}), 400
+        args.extend(["--queued-by", queued_by])
 
     job_id = create_job("synthesize_schedule")
     thread = threading.Thread(target=run_agent_async, args=(job_id, args), daemon=True)
