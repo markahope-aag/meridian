@@ -828,7 +828,13 @@ def classify():
     weekly linter reported them every Sunday. This endpoint is the drain.
 
     Returns 202 with a job ID. Poll GET /jobs/<id> for results.
-    Add ?sync=true for synchronous execution.
+
+    Add ?sync=true only for small batches. Sync holds the HTTP connection
+    open for the whole run, and gunicorn's worker timeout fires long
+    before CLASSIFY_TIMEOUT does, so a large sync batch returns 500 while
+    the subprocess keeps working in the background. That combination is
+    genuinely confusing to debug. Roughly 10 to 50 fragments is fine for
+    a spot check; use the async path for anything larger.
 
     Body JSON:
         limit: int (optional). Max fragments per run. Default 250 keeps a
