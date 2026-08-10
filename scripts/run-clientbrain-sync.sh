@@ -15,10 +15,35 @@
 
 set -uo pipefail
 
+# Credentials live outside the repo. Root-owned, chmod 600, one
+# KEY=value per line. Create it with:
+#
+#   printf 'MERIDIAN_CLIENTBRAIN_API_KEY=%s\n' "<key>" \
+#     > /etc/meridian-clientbrain.env
+#   chmod 600 /etc/meridian-clientbrain.env
+CB_ENV_FILE="${MERIDIAN_CLIENTBRAIN_ENV_FILE:-/etc/meridian-clientbrain.env}"
+if [ -r "$CB_ENV_FILE" ]; then
+    # shellcheck disable=SC1090
+    set -a; source "$CB_ENV_FILE"; set +a
+fi
+
 LOG_DIR="${LOG_DIR:-/var/log/meridian-deploy}"
 TODAY=$(date -u +%Y-%m-%d)
 LOG_FILE="${LOG_DIR}/clientbrain-sync-${TODAY}.log"
 TARGET_FQDN="${MERIDIAN_RECEIVER_FQDN:-meridian.markahope.com}"
+
+# The key has no default on purpose. It used to carry the live credential
+# inline, which put it in the history of a public repo. Checked here,
+# before stdout is redirected to the log, so a missing key reaches cron's
+# mail instead of dying silently in a file nobody reads.
+CB_KEY="${MERIDIAN_CLIENTBRAIN_API_KEY:-}"
+CB_URL="${CLIENTBRAIN_URL:-https://client-brain.vercel.app}"
+
+if [ -z "$CB_KEY" ]; then
+    echo "ERROR: MERIDIAN_CLIENTBRAIN_API_KEY is not set." >&2
+    echo "  Put it in $CB_ENV_FILE (chmod 600) or export it first." >&2
+    exit 1
+fi
 
 mkdir -p "$LOG_DIR"
 
@@ -41,10 +66,6 @@ find_container_by_fqdn() {
         exit 1
     fi
     echo "target container: $cid ($TARGET_FQDN)"
-
-    # Env vars — container may not have these, so pass explicitly
-    CB_KEY="${MERIDIAN_CLIENTBRAIN_API_KEY:-Yjw5Cq8c7FwqpFmg-JbmNVZm7ipyUNI278Rnsm_SVEY}"
-    CB_URL="${CLIENTBRAIN_URL:-https://client-brain.vercel.app}"
 
     # 1. Push registries (topics + industries) to ClientBrain
     echo "--- Registry sync (Meridian → ClientBrain) ---"

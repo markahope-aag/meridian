@@ -107,10 +107,22 @@ try:
 except Exception:
     pass
 
-# Last restic backup
-last_backup_line = run("ls -t /var/log/meridian-deploy/backup-*.log 2>/dev/null | head -1")
+# Last restic backup.
+#
+# backup-restic.sh writes to /var/log/meridian-backup/, but this collector
+# looked in /var/log/meridian-deploy/. The paths never matched, so the
+# admin panel reported "unknown" indefinitely and a failing backup would
+# have looked identical to a healthy one. Check the real directory first
+# and keep the old path as a fallback for any host still logging there.
+last_backup_line = run(
+    "ls -t /var/log/meridian-backup/backup-*.log "
+    "/var/log/meridian-deploy/backup-*.log 2>/dev/null | head -1"
+)
+BACKUP_STALE_AFTER_HOURS = 36  # nightly job, so 36h allows one missed run
+
 backup_status = "unknown"
 backup_date = ""
+backup_age_hours = None
 if last_backup_line:
     backup_date = run(f"stat -c '%y' '{last_backup_line}'")[:19]
     tail = run(f"tail -5 '{last_backup_line}'")
@@ -120,6 +132,22 @@ if last_backup_line:
         backup_status = "error"
     else:
         backup_status = "completed"
+
+    # A backup that quietly stopped running still leaves its last
+    # successful log behind, so "success" alone says nothing about
+    # whether it ran recently. Age is what actually distinguishes a
+    # healthy nightly job from one that died weeks ago.
+    try:
+        mtime = float(run(f"stat -c '%Y' '{last_backup_line}'"))
+        backup_age_hours = round((datetime.utcnow().timestamp() - mtime) / 3600, 1)
+        if backup_age_hours > BACKUP_STALE_AFTER_HOURS and backup_status != "error":
+            backup_status = "stale"
+    except (ValueError, TypeError):
+        pass
+else:
+    # No log file anywhere means the job has never run on this host, or
+    # it is writing somewhere this collector does not know about.
+    backup_status = "missing"
 
 # Recent deploy
 last_deploy_log = run("ls -t /var/log/meridian-deploy/deploy-*.log 2>/dev/null | head -1")
@@ -152,6 +180,8 @@ stats = {
     "backup": {
         "status": backup_status,
         "last_date": backup_date,
+        "age_hours": backup_age_hours,
+        "stale_after_hours": BACKUP_STALE_AFTER_HOURS,
     },
     "deploy": {
         "last_deploy": last_deploy_time,

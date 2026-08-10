@@ -243,10 +243,19 @@ WIKI_DIR = MERIDIAN_ROOT / "wiki"
 OUTPUTS_DIR = MERIDIAN_ROOT / "outputs"
 AGENTS_DIR = MERIDIAN_ROOT / "agents"
 PROMPTS_DIR = MERIDIAN_ROOT / "prompts"
+SCRIPTS_DIR = MERIDIAN_ROOT / "scripts"
 
 # Per-endpoint subprocess timeouts (seconds). Compile is the slowest agent and
 # needs the full hour for large backlogs; everything else uses the 600s default.
 COMPILE_TIMEOUT = 3600
+
+# Classification batches 10 commits per Haiku call, so a large backfill is
+# many sequential calls. Give it the same hour compile gets.
+CLASSIFY_TIMEOUT = 3600
+
+# Default fragments per classify run. Bounded so a scheduled run finishes
+# well inside CLASSIFY_TIMEOUT; pass limit=0 for an unbounded backfill.
+CLASSIFY_DEFAULT_LIMIT = 250
 
 
 def get_token():
@@ -801,6 +810,80 @@ def lint():
 
     job_id = create_job("lint")
     thread = threading.Thread(target=run_agent_async, args=(job_id, args), daemon=True)
+    thread.start()
+    return jsonify({"status": "accepted", "job_id": job_id}), 202
+
+
+# ---------------------------------------------------------------------------
+# POST /classify: assign engineering topics to ingested commit fragments
+# ---------------------------------------------------------------------------
+
+@app.route("/classify", methods=["POST"])
+@require_auth
+def classify():
+    """Run the engineering classifier over capture/external/commits/.
+
+    Git ingestion runs hourly and fills that directory, but nothing drained
+    it, so roughly 2,900 fragments sat unclassified for months while the
+    weekly linter reported them every Sunday. This endpoint is the drain.
+
+    Returns 202 with a job ID. Poll GET /jobs/<id> for results.
+    Add ?sync=true for synchronous execution.
+
+    Body JSON:
+        limit: int (optional). Max fragments per run. Default 250 keeps a
+            scheduled run comfortably inside the timeout. Pass 0 to process
+            the entire backlog in one go.
+        project: str (optional). Limit to a single project slug.
+        batch_size: int (optional). Commits per Haiku call.
+        mode: str (optional). "dry-run" classifies without moving files.
+    """
+    data = request.get_json(force=True) if request.data else {}
+    mode = data.get("mode", "auto")
+    project = data.get("project")
+    limit = data.get("limit", CLASSIFY_DEFAULT_LIMIT)
+    batch_size = data.get("batch_size")
+    sync = request.args.get("sync", "").lower() == "true"
+
+    script = SCRIPTS_DIR / "classify-engineering-fragments.py"
+    args = [sys.executable, str(script)]
+    if mode == "dry-run":
+        args.append("--dry-run")
+    if project:
+        args.extend(["--project", str(project)])
+
+    try:
+        limit_int = int(limit)
+    except (TypeError, ValueError):
+        return jsonify({"error": "limit must be an integer"}), 400
+    if limit_int > 0:
+        args.extend(["--limit", str(limit_int)])
+
+    if batch_size is not None:
+        try:
+            args.extend(["--batch-size", str(int(batch_size))])
+        except (TypeError, ValueError):
+            return jsonify({"error": "batch_size must be an integer"}), 400
+
+    if sync:
+        try:
+            result = subprocess.run(
+                args, capture_output=True, text=True, timeout=CLASSIFY_TIMEOUT,
+                cwd=str(MERIDIAN_ROOT),
+            )
+            if result.returncode != 0:
+                return jsonify({"error": "classifier failed", "stderr": result.stderr}), 500
+            return jsonify({"status": "ok", "result": result.stdout})
+        except subprocess.TimeoutExpired:
+            return jsonify({"error": "classifier timed out"}), 504
+        except FileNotFoundError:
+            return jsonify({"error": "classify-engineering-fragments.py not found"}), 501
+
+    job_id = create_job("classify")
+    thread = threading.Thread(
+        target=run_agent_async, args=(job_id, args),
+        kwargs={"timeout": CLASSIFY_TIMEOUT}, daemon=True,
+    )
     thread.start()
     return jsonify({"status": "accepted", "job_id": job_id}), 202
 

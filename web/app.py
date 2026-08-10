@@ -90,21 +90,63 @@ app.secret_key = _load_or_create_session_secret()
 # ---------------------------------------------------------------------------
 # Authentication — session-based login
 # ---------------------------------------------------------------------------
-# Set MERIDIAN_DASHBOARD_PASSWORD as a Coolify env var. If unset, auth is
-# disabled (dev mode). Username is always "admin".
+# Set MERIDIAN_DASHBOARD_PASSWORD as a Coolify env var. Username is always
+# "admin".
+#
+# This gate FAILS CLOSED. A missing password used to mean "auth disabled",
+# which is how the whole wiki (40 client records included) ended up served
+# anonymously on the public internet after an env var went missing. A
+# config mistake must never be the thing that opens the door, so an unset
+# password now denies every request instead of allowing them.
+#
+# Local development sets MERIDIAN_DASHBOARD_ALLOW_ANONYMOUS=1 to opt out
+# deliberately. That is an explicit choice someone has to make, not a
+# default anyone can fall into.
 
 DASHBOARD_PASSWORD = os.environ.get("MERIDIAN_DASHBOARD_PASSWORD", "")
+ALLOW_ANONYMOUS = os.environ.get("MERIDIAN_DASHBOARD_ALLOW_ANONYMOUS", "") == "1"
+
+# Paths reachable without a session. Everything else requires login.
+AUTH_EXEMPT_PATHS = frozenset({"/login", "/logout", "/favicon.ico", "/robots.txt"})
+
+_MISCONFIGURED_MESSAGE = (
+    "Dashboard authentication is not configured. Set "
+    "MERIDIAN_DASHBOARD_PASSWORD on this container, or set "
+    "MERIDIAN_DASHBOARD_ALLOW_ANONYMOUS=1 for local development."
+)
+
+
+def _is_auth_exempt(path: str) -> bool:
+    """True for paths that must stay reachable without a session."""
+    return path in AUTH_EXEMPT_PATHS or path.startswith("/static")
+
+
+def _auth_failure_response(path: str):
+    """Return the right rejection for an unauthenticated request, or None.
+
+    Returns None when the request may proceed.
+    """
+    if _is_auth_exempt(path):
+        return None
+    if ALLOW_ANONYMOUS:
+        return None
+    if not DASHBOARD_PASSWORD:
+        # Fail closed: no password configured means nobody gets in.
+        return jsonify({"error": _MISCONFIGURED_MESSAGE}), 503
+    if session.get("authenticated"):
+        return None
+    if request.is_json:
+        return jsonify({"error": "Authentication required"}), 401
+    return redirect(url_for("login_page", next=path))
 
 
 def require_login(f):
     """Decorator that redirects unauthenticated users to /login."""
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not DASHBOARD_PASSWORD:
-            # Auth disabled (no password configured) — open access
-            return f(*args, **kwargs)
-        if not session.get("authenticated"):
-            return redirect(url_for("login_page", next=request.path))
+        failure = _auth_failure_response(request.path)
+        if failure is not None:
+            return failure
         return f(*args, **kwargs)
     return decorated
 
@@ -115,6 +157,11 @@ def login_page():
     error = ""
     if request.method == "POST":
         password = request.form.get("password", "")
+        # Guard the empty-password case explicitly. compare_digest("", "")
+        # is True, so without this an unconfigured container would accept a
+        # blank form submission as a valid login.
+        if not DASHBOARD_PASSWORD:
+            return jsonify({"error": _MISCONFIGURED_MESSAGE}), 503
         if hmac.compare_digest(password, DASHBOARD_PASSWORD):
             session["authenticated"] = True
             session.permanent = True
@@ -155,14 +202,10 @@ def _inject_csrf_and_auth():
     all routes except login/logout and static files."""
     g.csrf_token = _generate_csrf_token()
 
-    # Auth enforcement — skip for login/logout, static, and health checks
-    if DASHBOARD_PASSWORD:
-        exempt = {"/login", "/logout", "/static", "/favicon.ico"}
-        if request.path not in exempt and not request.path.startswith("/static"):
-            if not session.get("authenticated"):
-                if request.is_json:
-                    abort(401, description="Authentication required")
-                return redirect(url_for("login_page", next=request.path))
+    # Auth enforcement. Fails closed when no password is configured, so a
+    # missing env var takes the dashboard offline rather than making it
+    # public. See the AUTH block above for the reasoning.
+    return _auth_failure_response(request.path)
 
 
 @app.context_processor
@@ -171,8 +214,38 @@ def _inject_template_globals():
     return {
         "csrf_token": _generate_csrf_token(),
         "is_authenticated": session.get("authenticated", False),
-        "auth_enabled": bool(DASHBOARD_PASSWORD),
+        "auth_enabled": not ALLOW_ANONYMOUS,
     }
+
+
+@app.route("/robots.txt")
+def robots_txt():
+    """Refuse all crawlers.
+
+    Nothing in this wiki is public. Cloudflare serves a managed robots.txt
+    with `Allow: /` in front of this app, so this route only takes effect
+    if that managed rule is turned off, but the app should state its own
+    intent rather than depend on an edge setting.
+    """
+    return Response(
+        "User-agent: *\nDisallow: /\n",
+        mimetype="text/plain",
+    )
+
+
+@app.after_request
+def _add_security_headers(response):
+    """Belt-and-braces headers on every response.
+
+    X-Robots-Tag is the one that matters here: unlike robots.txt it
+    travels with the response, so it still applies when a page is reached
+    by a direct link rather than a crawl of the root.
+    """
+    response.headers.setdefault("X-Robots-Tag", "noindex, nofollow, noarchive")
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    return response
 
 
 MERIDIAN_ROOT = Path(os.environ.get("MERIDIAN_ROOT", "/meridian"))
@@ -2096,8 +2169,12 @@ def admin_page():
 
     # Schedule — hardcoded since we know the full schedule
     schedule = [
+        {"time": "00:00", "job": "ClientBrain Sync", "type": "cron", "freq": "daily",
+         "endpoint": None, "method": None},
         {"time": "01:00", "job": "Daily Distill", "type": "n8n", "freq": "daily",
          "endpoint": "/distill", "method": "POST"},
+        {"time": "01:30", "job": "Classify Engineering Commits", "type": "cron", "freq": "daily",
+         "endpoint": "/classify", "method": "POST", "body": '{"limit":250}'},
         {"time": "02:00", "job": "Daily Compile", "type": "n8n", "freq": "daily",
          "endpoint": "/compile", "method": "POST"},
         {"time": "03:00", "job": "Backup (restic)", "type": "cron", "freq": "daily",
@@ -2114,6 +2191,8 @@ def admin_page():
          "endpoint": "/conceptualize", "method": "POST", "body": '{"mode":"connections"}'},
         {"time": "10:00", "job": "Mode D (contradictions)", "type": "n8n", "freq": "1st Sunday",
          "endpoint": "/conceptualize", "method": "POST", "body": '{"mode":"contradictions"}'},
+        {"time": ":05", "job": "Git Ingest (commits)", "type": "cron", "freq": "hourly",
+         "endpoint": None, "method": None},
         {"time": ":15", "job": "Hourly Watchdog", "type": "n8n", "freq": "hourly",
          "endpoint": "/watchdog", "method": "POST"},
     ]

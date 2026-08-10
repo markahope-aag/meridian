@@ -77,16 +77,29 @@ evolution:
   schedule: "0 8 * * 0"         # Sundays at 08:00 UTC (after the Saturday lint)
   stale_threshold_days: 180     # Check 4 (confidence decay): article is "old" if last_updated > this many days ago
   platform_trigger_keywords:    # Check 3: explicit platform/regulatory change language
+    # Keep every entry specific enough that it can only appear in text
+    # about a platform or regulatory change.
+    #
+    # A bare "effective " used to live here and matched ordinary prose
+    # ("an effective approach", "cost-effective "). On 2026-08-09 it
+    # produced all 11 of that run's high-severity detections on its own,
+    # and since drift detections auto-queue a forced re-synthesis, each
+    # false positive cost a full Sonnet write. The specific phrases below
+    # keep the real signal without the noise.
+    #
+    # "as of [date]" was also removed: the bracketed placeholder is
+    # literal text that no real fragment ever contains, so it never
+    # matched anything. "required as of" covers that case properly.
     - "announced"
     - "policy change"
     - "algorithm update"
     - "new requirement"
-    - "effective "
+    - "effective immediately"
+    - "effective as of"
     - "banned"
     - "required as of"
     - "google announced"
     - "meta changed"
-    - "as of [date]"
   contradiction_keywords:       # Check 1: language signaling disagreement with established patterns.
                                 # Keep tight — generic words like "changed" and "as of" appear
                                 # constantly in commit messages and produce false positives. These
