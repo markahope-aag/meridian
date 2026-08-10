@@ -43,6 +43,7 @@ MERIDIAN_ROOT = Path(os.environ.get("MERIDIAN_ROOT", SCRIPT_ROOT))
 # output goes to the vault via MERIDIAN_ROOT. Read from SCRIPT_ROOT.
 PROJECTS_YAML = SCRIPT_ROOT / "projects.yaml"
 CAPTURE_DIR = MERIDIAN_ROOT / "capture" / "external" / "commits"
+WIKI_ENG_DIR = MERIDIAN_ROOT / "wiki" / "engineering"
 
 # Minimum commit message length (subject + body) to be considered signal
 MIN_MESSAGE_LENGTH = 80
@@ -92,6 +93,7 @@ class ProjectStats:
     slug: str
     total_commits: int = 0
     kept: int = 0
+    already_filed: int = 0
     filtered_short: int = 0
     filtered_noise: int = 0
     filter_reasons: dict = field(default_factory=dict)
@@ -123,6 +125,25 @@ def run_git(repo_path: Path, args: list[str]) -> str:
             f"git {' '.join(args)} failed in {repo_path}: {result.stderr.strip()}"
         )
     return result.stdout
+
+
+_classified_names: set[str] | None = None
+
+
+def classified_fragment_names() -> set[str]:
+    """Basenames of commit fragments already filed under wiki/engineering/.
+
+    Built once per run and cached. classify-engineering-fragments.py
+    renames each fragment to <project>-<original stem>.md when it moves
+    it, so that is the shape looked up here.
+    """
+    global _classified_names
+    if _classified_names is None:
+        if WIKI_ENG_DIR.exists():
+            _classified_names = {p.name for p in WIKI_ENG_DIR.rglob("*.md")}
+        else:
+            _classified_names = set()
+    return _classified_names
 
 
 def repo_is_git(repo_path: Path) -> bool:
@@ -338,6 +359,16 @@ def process_project(project: dict, since: str | None, dry_run: bool,
         if out_path.exists():
             # Incremental: skip existing
             continue
+        # Also skip commits already classified into wiki/engineering/.
+        # Checking only capture/ was not enough: the classifier MOVES a
+        # fragment out of capture/, so its capture path disappears and the
+        # commit looked new again on the next run inside the --since
+        # window. Those duplicates went back through classification and
+        # overwrote their own wiki entries, spending Haiku calls to
+        # rediscover commits already on file.
+        if f"{slug}-{filename}" in classified_fragment_names():
+            stats.already_filed += 1
+            continue
         fragment = format_fragment(slug, name, description, commit)
         out_path.write_text(fragment, encoding="utf-8")
 
@@ -351,18 +382,23 @@ def print_report(all_stats: list[ProjectStats], dry_run: bool) -> None:
     print(f"  {mode}")
     print("=" * 70)
     print()
-    print(f"{'Project':<22} {'Total':>7} {'Kept':>7} {'Short':>7} {'Noise':>7}  Error")
-    print("-" * 70)
-    total_total = total_kept = total_short = total_noise = 0
+    print(f"{'Project':<22} {'Total':>7} {'Kept':>7} {'Filed':>7} {'Short':>7} {'Noise':>7}  Error")
+    print("-" * 78)
+    total_total = total_kept = total_short = total_noise = total_filed = 0
     for s in all_stats:
         err = s.error or ""
-        print(f"{s.slug:<22} {s.total_commits:>7} {s.kept:>7} {s.filtered_short:>7} {s.filtered_noise:>7}  {err}")
+        print(f"{s.slug:<22} {s.total_commits:>7} {s.kept:>7} {s.already_filed:>7} "
+              f"{s.filtered_short:>7} {s.filtered_noise:>7}  {err}")
         total_total += s.total_commits
         total_kept += s.kept
+        total_filed += s.already_filed
         total_short += s.filtered_short
         total_noise += s.filtered_noise
-    print("-" * 70)
-    print(f"{'TOTAL':<22} {total_total:>7} {total_kept:>7} {total_short:>7} {total_noise:>7}")
+    print("-" * 78)
+    print(f"{'TOTAL':<22} {total_total:>7} {total_kept:>7} {total_filed:>7} "
+          f"{total_short:>7} {total_noise:>7}")
+    if total_filed:
+        print(f"\n  ({total_filed} commits skipped: already classified into wiki/engineering/)")
     print()
     print("Sample kept commits per project:")
     for s in all_stats:
