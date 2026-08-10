@@ -23,8 +23,56 @@ LOG_DIR="${LOG_DIR:-/var/log/meridian-deploy}"
 TODAY=$(date -u +%Y-%m-%d)
 LOG_FILE="${LOG_DIR}/git-ingest-${TODAY}.log"
 INGEST_SCRIPT="${INGEST_SCRIPT:-/meridian/scripts/ingest-git-history.py}"
+TARGET_FQDN="${MERIDIAN_RECEIVER_FQDN:-meridian.markahope.com}"
+COMMITS_DIR="${MERIDIAN_COMMITS_DIR:-/meridian/capture/external/commits}"
+ENGINEERING_DIR="${MERIDIAN_ENGINEERING_DIR:-/meridian/wiki/engineering}"
 
 mkdir -p "$LOG_DIR"
+
+find_container_by_fqdn() {
+    local want="$1"
+    for cid in $(docker ps --format '{{.ID}}'); do
+        if docker inspect "$cid" --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null \
+            | grep -q "^COOLIFY_FQDN=${want}\$"; then
+            echo "$cid"
+            return
+        fi
+    done
+}
+
+# Hand the ingested fragments to the container user.
+#
+# This cron runs on the host as root, so every fragment it writes is
+# root-owned. The classifier runs inside the receiver container as a
+# different user and has to rewrite each fragment's frontmatter and then
+# move it into wiki/engineering/. It could not: every write failed with
+# EACCES while still counting as "classified", so runs reported
+# "Classified 9, Errors 10" and moved nothing.
+#
+# Re-chowning the whole tree (not just this run's new files) means the
+# next scheduled ingest repairs the entire existing backlog on its own.
+handoff_ownership() {
+    local cid uid gid
+    cid=$(find_container_by_fqdn "$TARGET_FQDN")
+    if [ -z "$cid" ]; then
+        echo "WARNING: no receiver container found; skipping ownership handoff"
+        return
+    fi
+    uid=$(docker exec "$cid" id -u 2>/dev/null)
+    gid=$(docker exec "$cid" id -g 2>/dev/null)
+    if [ -z "$uid" ] || [ -z "$gid" ]; then
+        echo "WARNING: could not read container uid/gid; skipping ownership handoff"
+        return
+    fi
+    for d in "$COMMITS_DIR" "$ENGINEERING_DIR"; do
+        [ -d "$d" ] || continue
+        if chown -R "$uid:$gid" "$d" 2>/dev/null; then
+            echo "chown -R $uid:$gid $d"
+        else
+            echo "WARNING: chown failed on $d"
+        fi
+    done
+}
 
 {
     echo "=== $(date -u +%FT%TZ) git ingest run ==="
@@ -56,6 +104,9 @@ mkdir -p "$LOG_DIR"
     if [ $ingest_exit -ne 0 ]; then
         echo "WARNING: ingest exited $ingest_exit"
     fi
+
+    echo "--- ownership handoff to the receiver container ---"
+    handoff_ownership
 
     echo "=== $(date -u +%FT%TZ) done (fetch_failures=$fetch_failures) ==="
 } >> "$LOG_FILE" 2>&1
