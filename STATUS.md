@@ -10,14 +10,14 @@
 | Business knowledge topics | 67 (all 67 synthesized) |
 | Business fragments | 2,836 |
 | Engineering topics | 21 (20 synthesized) |
-| Engineering fragments | 1,762 |
+| Engineering fragments | 3,948 |
 | Interests topics | 6 (no content yet) |
 | Layer 4 articles | 265 |
 | Concepts | 48 |
 | Industries | 12 (all with content) |
 | Client folders | 40 current, 6 former |
 | Projects | 31 registered, 26 active |
-| Commits ingested | 4,666 |
+| Commits ingested | 3,948 (classification queue empty) |
 | Raw source docs | 7,102 |
 | Git commits | 156 |
 
