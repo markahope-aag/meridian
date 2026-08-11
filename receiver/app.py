@@ -260,6 +260,11 @@ CLASSIFY_TIMEOUT = 3600
 # needs room for the whole batch.
 SYNTHESIS_TIMEOUT = 3600
 
+# watchdog.py exits 2 when it raises an alert, so external probes get a
+# failure signal without parsing JSON. It means "ran successfully and
+# found something", not "crashed".
+WATCHDOG_ALERT_EXIT_CODE = 2
+
 # Default fragments per classify run. Bounded so a scheduled run finishes
 # well inside CLASSIFY_TIMEOUT; pass limit=0 for an unbounded backfill.
 CLASSIFY_DEFAULT_LIMIT = 250
@@ -933,6 +938,17 @@ def watchdog():
             args, capture_output=True, text=True, timeout=120,
             cwd=str(MERIDIAN_ROOT),
         )
+        # Exit 2 is the watchdog's documented "ran fine, raised an alert"
+        # code, meant for external probes. Treating it as a crash returned
+        # 500 and discarded the JSON report, so the hourly run looked
+        # broken and the actual findings were thrown away. An alert is a
+        # result, not a failure.
+        if result.returncode == WATCHDOG_ALERT_EXIT_CODE:
+            return jsonify({
+                "status": "alert",
+                "result": result.stdout,
+                "alert": result.stderr.strip().splitlines()[-1] if result.stderr else "",
+            })
         if result.returncode != 0:
             return jsonify({"error": "watchdog failed", "stderr": result.stderr}), 500
         return jsonify({"status": "ok", "result": result.stdout})

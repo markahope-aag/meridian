@@ -38,6 +38,17 @@ STATE_DIR = ROOT / "state"
 # raises an alert (writes to log, drops a marker for the dashboard, exits
 # non-zero so external monitoring picks it up).
 CAPTURE_DEPTH_ALERT_THRESHOLD = 500
+# Depth alone does not mean the pipeline is stuck. Distill promotes at most
+# 100 files per run and runs once a day, so a large ingest (the ClientBrain
+# sync landed ~2,000 documents) sits above the threshold for weeks while
+# draining exactly as designed. Alerting on depth alone made the watchdog
+# fail every hour and call a healthy pipeline "wedged", which is the kind
+# of permanently-red signal people stop reading.
+#
+# What actually indicates a stall is depth that is not going down. Distill
+# is daily, so the window has to span more than one cycle.
+CAPTURE_STALL_HOURS = 26
+CAPTURE_DEPTH_STATE_FILE = "capture_depth.json"
 # Subdirs inside capture/ that aren't real work and should be excluded from
 # both the depth count and the stuck-file scan.
 CAPTURE_EXCLUDED_SUBDIRS = (".processing", ".failed")
@@ -167,25 +178,91 @@ def _capture_depth() -> int:
     return count
 
 
-def check_capture_queue_depth(dry_run: bool = False) -> dict:
-    """Alert when capture/ depth exceeds the threshold.
+def _read_depth_state() -> dict:
+    try:
+        return json.loads(
+            (STATE_DIR / CAPTURE_DEPTH_STATE_FILE).read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError):
+        return {}
 
-    A high depth means the distill agent has stopped draining capture/ —
-    either crashed, throttled by the LLM, or wedged on a poison file.
-    Whichever it is, a human (or downstream monitoring) needs to know.
+
+def _write_depth_state(state: dict) -> None:
+    try:
+        STATE_DIR.mkdir(parents=True, exist_ok=True)
+        (STATE_DIR / CAPTURE_DEPTH_STATE_FILE).write_text(
+            json.dumps(state, indent=2), encoding="utf-8"
+        )
+    except OSError as e:
+        print(f"capture_depth: failed to write state: {e}", file=sys.stderr)
+
+
+def check_capture_queue_depth(dry_run: bool = False) -> dict:
+    """Alert when capture/ is deep AND has stopped draining.
+
+    Depth on its own is not a fault. Distill promotes at most 100 files
+    per run and runs daily, so a bulk ingest sits above the threshold for
+    weeks while working perfectly. Alerting on depth alone reported a
+    healthy pipeline as wedged on every hourly run.
+
+    A real stall looks different: the count stops going down. This tracks
+    the last time depth decreased and alerts only when the queue is both
+    over the threshold and flat for longer than a full distill cycle.
     """
     count = _capture_depth()
-    alert = count > CAPTURE_DEPTH_ALERT_THRESHOLD
+    prev = _read_depth_state()
+    prev_depth = prev.get("depth")
+    ts = now()
+
+    draining = isinstance(prev_depth, int) and count < prev_depth
+    if not isinstance(prev_depth, int) or draining:
+        last_decrease_at = ts.isoformat()
+    else:
+        last_decrease_at = prev.get("last_decrease_at") or ts.isoformat()
+
+    try:
+        flat_hours = round(
+            (ts - datetime.fromisoformat(last_decrease_at)).total_seconds() / 3600, 1
+        )
+    except (TypeError, ValueError):
+        flat_hours = 0.0
+
+    over_threshold = count > CAPTURE_DEPTH_ALERT_THRESHOLD
+    alert = over_threshold and flat_hours > CAPTURE_STALL_HOURS
+
     actions = {
         "count": count,
         "threshold": CAPTURE_DEPTH_ALERT_THRESHOLD,
         "alert": alert,
+        "over_threshold": over_threshold,
+        "draining": draining,
+        "hours_since_decrease": flat_hours,
         "details": [],
     }
+
+    if not dry_run:
+        _write_depth_state({
+            "depth": count,
+            "checked_at": ts.isoformat(),
+            "last_decrease_at": last_decrease_at,
+        })
+
+    if over_threshold and not alert:
+        note = (
+            f"capture/ depth {count} is over the {CAPTURE_DEPTH_ALERT_THRESHOLD} "
+            f"threshold but still draining (last decrease {flat_hours}h ago). "
+            "Not an alert."
+        )
+        actions["details"].append(note)
+        print(note, file=sys.stderr)
+
     if not alert:
         return actions
 
-    msg = f"capture/ depth {count} > threshold {CAPTURE_DEPTH_ALERT_THRESHOLD} — distill likely wedged"
+    msg = (
+        f"capture/ depth {count} has not decreased in {flat_hours}h "
+        f"(threshold {CAPTURE_DEPTH_ALERT_THRESHOLD}): distill appears stalled"
+    )
     actions["details"].append(msg)
     print(f"ALERT: {msg}", file=sys.stderr)
 
