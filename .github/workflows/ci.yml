@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -q pyyaml markdown flask requests pytest
+          pip install -q pyyaml markdown flask requests pytest anthropic
 
       - name: Python syntax check (all .py files)
         run: |
