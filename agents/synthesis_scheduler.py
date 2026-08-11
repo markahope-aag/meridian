@@ -169,6 +169,10 @@ def _priority_key(item: dict) -> float:
     (0-100); evolution-queued items use string "high"/"medium"/"low".
     Comparing mixed types would crash — coerce everything to float."""
     p = item.get("priority", 0)
+    if isinstance(p, bool):
+        # bool is a subclass of int, so True would otherwise sort as 1.0.
+        # A boolean priority is meaningless; treat it as unset.
+        return 0.0
     if isinstance(p, (int, float)):
         return float(p)
     if isinstance(p, str):

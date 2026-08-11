@@ -123,3 +123,73 @@ class TestQueueStatusWithMixedPriorities:
         status = scheduler.get_queue_status()
         assert status["pending"] == 1
         assert status["layer4_candidates_pending"] == 1
+
+
+# =========================================================================
+# Parity between the two implementations
+# =========================================================================
+
+_RECEIVER = Path(__file__).resolve().parent.parent / "receiver"
+
+
+def _load_receiver():
+    """Import receiver/app.py against a temp MERIDIAN_ROOT."""
+    os.environ["MERIDIAN_ROOT"] = _TMPDIR
+    sys.path.insert(0, str(_RECEIVER))
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "receiver_app", _RECEIVER / "app.py"
+        )
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["receiver_app"] = module
+        spec.loader.exec_module(module)
+        return module
+    finally:
+        sys.path.remove(str(_RECEIVER))
+
+
+try:
+    receiver_app = _load_receiver()
+except Exception:  # pragma: no cover - receiver deps missing
+    receiver_app = None
+
+
+PRIORITY_MATRIX = [
+    {"priority": 0}, {"priority": 1}, {"priority": 100}, {"priority": -5},
+    {"priority": 3.5}, {"priority": "high"}, {"priority": "medium"},
+    {"priority": "low"}, {"priority": "HIGH"}, {"priority": "nonsense"},
+    {"priority": None}, {"priority": True}, {"priority": False},
+    {"priority": []}, {},
+]
+
+
+@pytest.mark.skipif(receiver_app is None, reason="receiver app not importable")
+class TestReceiverSchedulerParity:
+    """The receiver reimplements queue status instead of calling the
+    scheduler. That duplication is why the bug survived being fixed once:
+    the scheduler grew a tolerant key while the receiver kept a raw
+    lambda. These tests fail if the two ever disagree again.
+    """
+
+    def test_priority_keys_agree_across_the_matrix(self):
+        for item in PRIORITY_MATRIX:
+            assert receiver_app._priority_key(item) == \
+                scheduler._priority_key(item), f"disagreement on {item!r}"
+
+    def test_both_sort_mixed_lists_without_raising(self):
+        sorted(PRIORITY_MATRIX, key=receiver_app._priority_key, reverse=True)
+        sorted(PRIORITY_MATRIX, key=scheduler._priority_key, reverse=True)
+
+    def test_endpoint_returns_200_on_mixed_priorities(self):
+        """The exact request that returned 500 in production."""
+        queue = Path(_TMPDIR) / "synthesis_queue.json"
+        queue.write_text(json.dumps([
+            {"topic": "seo", "status": "pending", "priority": 0},
+            {"topic": "analytics", "status": "pending", "priority": "high",
+             "queued_by": "evolution_detector"},
+        ]), encoding="utf-8")
+        receiver_app.app.config["TESTING"] = True
+        with receiver_app.app.test_client() as client:
+            response = client.get("/synthesize/queue")
+        assert response.status_code == 200
+        assert response.get_json()["pending"] == 2

@@ -1017,6 +1017,30 @@ def synthesize_schedule():
 # GET /synthesize/queue — synthesis queue status
 # ---------------------------------------------------------------------------
 
+def _priority_key(item: dict) -> float:
+    """Tolerant priority sort, mirroring synthesis_scheduler._priority_key.
+
+    populate items use int priorities (0-100); evolution-queued items use
+    "high"/"medium"/"low". Sorting the mixed list directly raises
+    TypeError, which this endpoint returned as a 500 for exactly as long
+    as the queue held both kinds at once.
+
+    This logic is duplicated because the receiver reimplements queue
+    status rather than calling the scheduler, and the two copies drifted:
+    the scheduler grew this normalizer and the receiver kept a raw
+    lambda. tests/test_synthesis_queue.py asserts the two stay in
+    agreement, so the duplication cannot silently diverge again.
+    """
+    p = item.get("priority", 0)
+    if isinstance(p, bool):
+        return 0.0
+    if isinstance(p, (int, float)):
+        return float(p)
+    if isinstance(p, str):
+        return {"high": 1000.0, "medium": 500.0, "low": 100.0}.get(p.lower(), 0.0)
+    return 0.0
+
+
 @app.route("/synthesize/queue", methods=["GET"])
 def synthesize_queue():
     """Get synthesis queue status. No auth required."""
@@ -1060,7 +1084,7 @@ def synthesize_queue():
                 status[s] += 1
 
         pending = [i for i in topic_items if i.get("status") == "pending"]
-        pending.sort(key=lambda x: x.get("priority", 0), reverse=True)
+        pending.sort(key=_priority_key, reverse=True)
         status["next_5"] = [
             {"topic": i["topic"], "fragment_count": i.get("fragment_count", 0)}
             for i in pending[:5]
