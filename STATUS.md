@@ -194,6 +194,12 @@ Host-side runners live in `scripts/run-*.sh`. Each logs to
   were previously unscheduled and the work piled up silently for months:
   ~2,900 commit fragments and every drift detection ever queued. One cron
   entry that does both halves cannot drift out of sync with itself.
+- **Credentials come from 1Password, not disk.** Operator secrets live in
+  the `meridian.env` document in the `DevBox .env Files` vault, matching
+  the convention every other project here already uses.
+  `scripts/load-secrets.sh` pipes them straight into the environment, so
+  no plaintext copy is written. The 1Password service account token is
+  the one credential that has to exist locally.
 - **All execution on the VM.** The CLI and hooks are HTTP clients.
 - **Prompts as files** in `prompts/`, never hardcoded.
 - **Git-based deploy**: `/meridian/` is a checkout of `main`, auto-pulled
