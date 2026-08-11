@@ -172,8 +172,22 @@ jobs = {
         36, ("snapshot", "saved"),
     ),
     "clientbrain_sync": job_health([f"{DEPLOY_LOGS}/clientbrain-sync-*.log"], 36),
+    # Classification runs at the end of run-git-ingest.sh, so its output
+    # lands in the git-ingest log. It only writes classify-engineering-*.log
+    # when the standalone runner is used, which nothing schedules.
+    #
+    # This entry used to point only at that standalone log and therefore
+    # reported "missing" forever, while classification was in fact running
+    # fine every hour. A monitor that can never go green is the same
+    # permanently-red noise the depth alert was producing. Checking both
+    # patterns means whichever path runs, health is reported, and a failing
+    # classifier still shows up because job_health scans the log tail for
+    # errors.
     "git_ingest": job_health([f"{DEPLOY_LOGS}/git-ingest-*.log"], 3),
-    "classify": job_health([f"{DEPLOY_LOGS}/classify-engineering-*.log"], 3),
+    "classify": job_health(
+        [f"{DEPLOY_LOGS}/classify-engineering-*.log", f"{DEPLOY_LOGS}/git-ingest-*.log"],
+        3,
+    ),
     "lint": job_health([f"{DEPLOY_LOGS}/lint-*.log"], 192),
     "evolution": job_health([f"{DEPLOY_LOGS}/evolution-*.log"], 192),
 }
