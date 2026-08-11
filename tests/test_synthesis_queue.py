@@ -150,8 +150,13 @@ def _load_receiver():
 
 try:
     receiver_app = _load_receiver()
-except Exception:  # pragma: no cover - receiver deps missing
+    _receiver_error = ""
+except Exception as exc:  # pragma: no cover - receiver deps missing
     receiver_app = None
+    # Carry the reason into the skip message. Swallowing it meant CI
+    # reported three quiet skips with no way to tell whether the
+    # safeguard was genuinely unavailable or simply broken.
+    _receiver_error = f"{type(exc).__name__}: {exc}"
 
 
 PRIORITY_MATRIX = [
@@ -163,7 +168,10 @@ PRIORITY_MATRIX = [
 ]
 
 
-@pytest.mark.skipif(receiver_app is None, reason="receiver app not importable")
+@pytest.mark.skipif(
+    receiver_app is None,
+    reason=f"receiver app not importable: {_receiver_error}",
+)
 class TestReceiverSchedulerParity:
     """The receiver reimplements queue status instead of calling the
     scheduler. That duplication is why the bug survived being fixed once:
