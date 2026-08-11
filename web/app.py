@@ -2261,6 +2261,7 @@ def admin_stats_json():
         "system": admin_stats.get("system", {}),
         "git": admin_stats.get("git", {}),
         "backup": admin_stats.get("backup", {}),
+        "jobs": admin_stats.get("jobs", {}),
         "deploy": admin_stats.get("deploy", {}),
         "generated_at": admin_stats.get("generated_at", ""),
         "synth_queue": synth_queue,

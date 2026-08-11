@@ -14,7 +14,7 @@ OUTPUT="$MERIDIAN_DIR/state/admin-stats.json"
 mkdir -p "$MERIDIAN_DIR/state"
 
 python3 - "$MERIDIAN_DIR" "$OUTPUT" << 'PYEOF'
-import json, subprocess, os, shutil, sys
+import json, re, subprocess, os, shutil, sys
 from datetime import datetime
 from pathlib import Path
 
@@ -107,47 +107,83 @@ try:
 except Exception:
     pass
 
-# Last restic backup.
+# Health of every scheduled job, derived from its log file.
 #
-# backup-restic.sh writes to /var/log/meridian-backup/, but this collector
-# looked in /var/log/meridian-deploy/. The paths never matched, so the
-# admin panel reported "unknown" indefinitely and a failing backup would
-# have looked identical to a healthy one. Check the real directory first
-# and keep the old path as a fallback for any host still logging there.
-last_backup_line = run(
-    "ls -t /var/log/meridian-backup/backup-*.log "
-    "/var/log/meridian-deploy/backup-*.log 2>/dev/null | head -1"
-)
-BACKUP_STALE_AFTER_HOURS = 36  # nightly job, so 36h allows one missed run
+# Each runner writes /var/log/<dir>/<name>-<date>.log. Three things can
+# go wrong and all three used to be invisible: the job errors, the job
+# stops running entirely, or the collector looks in the wrong place. The
+# backup check did the last one for months (it read meridian-deploy/
+# while restic writes to meridian-backup/), so a dead backup and a
+# healthy one produced identical output.
+#
+# Age is the part that matters most. A job that quietly stopped still
+# leaves its last successful log behind, so "success" alone says nothing
+# about whether it ran recently.
 
-backup_status = "unknown"
-backup_date = ""
-backup_age_hours = None
-if last_backup_line:
-    backup_date = run(f"stat -c '%y' '{last_backup_line}'")[:19]
-    tail = run(f"tail -5 '{last_backup_line}'")
-    if "snapshot" in tail.lower() or "saved" in tail.lower():
-        backup_status = "success"
-    elif "error" in tail.lower() or "fatal" in tail.lower():
-        backup_status = "error"
+def job_health(patterns, stale_after_hours, success_markers=()):
+    """Return {status, last_date, age_hours} for a scheduled job.
+
+    status is one of: success, completed, error, stale, missing.
+    """
+    result = {
+        "status": "missing",
+        "last_date": "",
+        "age_hours": None,
+        "stale_after_hours": stale_after_hours,
+    }
+    newest = run(f"ls -t {' '.join(patterns)} 2>/dev/null | head -1")
+    if not newest:
+        return result
+
+    result["last_date"] = run(f"stat -c '%y' '{newest}'")[:19]
+    tail = run(f"tail -20 '{newest}'").lower()
+    # Match real failures without tripping on a clean summary line. The
+    # classifier ends every successful run with "Errors 0", so a bare
+    # substring test for "error" would mark healthy runs as broken.
+    has_error = bool(
+        re.search(r"\b(fatal|traceback)\b", tail)
+        or re.search(r"error:", tail)
+        or re.search(r"\berrors?\s+[1-9]", tail)
+    )
+    if has_error:
+        result["status"] = "error"
+    elif not success_markers or any(m in tail for m in success_markers):
+        result["status"] = "success"
     else:
-        backup_status = "completed"
+        result["status"] = "completed"
 
-    # A backup that quietly stopped running still leaves its last
-    # successful log behind, so "success" alone says nothing about
-    # whether it ran recently. Age is what actually distinguishes a
-    # healthy nightly job from one that died weeks ago.
     try:
-        mtime = float(run(f"stat -c '%Y' '{last_backup_line}'"))
-        backup_age_hours = round((datetime.utcnow().timestamp() - mtime) / 3600, 1)
-        if backup_age_hours > BACKUP_STALE_AFTER_HOURS and backup_status != "error":
-            backup_status = "stale"
+        mtime = float(run(f"stat -c '%Y' '{newest}'"))
+        age = round((datetime.utcnow().timestamp() - mtime) / 3600, 1)
+        result["age_hours"] = age
+        if age > stale_after_hours and result["status"] != "error":
+            result["status"] = "stale"
     except (ValueError, TypeError):
         pass
-else:
-    # No log file anywhere means the job has never run on this host, or
-    # it is writing somewhere this collector does not know about.
-    backup_status = "missing"
+    return result
+
+
+DEPLOY_LOGS = "/var/log/meridian-deploy"
+
+# stale_after allows one missed run of each job's own cadence.
+jobs = {
+    "backup": job_health(
+        [f"/var/log/meridian-backup/backup-*.log", f"{DEPLOY_LOGS}/backup-*.log"],
+        36, ("snapshot", "saved"),
+    ),
+    "clientbrain_sync": job_health([f"{DEPLOY_LOGS}/clientbrain-sync-*.log"], 36),
+    "git_ingest": job_health([f"{DEPLOY_LOGS}/git-ingest-*.log"], 3),
+    "classify": job_health([f"{DEPLOY_LOGS}/classify-engineering-*.log"], 3),
+    "lint": job_health([f"{DEPLOY_LOGS}/lint-*.log"], 192),
+    "evolution": job_health([f"{DEPLOY_LOGS}/evolution-*.log"], 192),
+}
+
+# Kept as a top-level key because the dashboard reads stats["backup"].
+backup = jobs["backup"]
+backup_status = backup["status"]
+backup_date = backup["last_date"]
+backup_age_hours = backup["age_hours"]
+BACKUP_STALE_AFTER_HOURS = backup["stale_after_hours"]
 
 # Recent deploy
 last_deploy_log = run("ls -t /var/log/meridian-deploy/deploy-*.log 2>/dev/null | head -1")
@@ -183,6 +219,7 @@ stats = {
         "age_hours": backup_age_hours,
         "stale_after_hours": BACKUP_STALE_AFTER_HOURS,
     },
+    "jobs": jobs,
     "deploy": {
         "last_deploy": last_deploy_time,
     },
