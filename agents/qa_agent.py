@@ -11,15 +11,12 @@ Output: the answer as markdown to stdout.
 """
 
 import argparse
-import json
-import os
 import re
 import sys
 from pathlib import Path
 
 import anthropic
 import yaml
-
 
 ROOT = Path(__file__).parent.parent
 WIKI_DIR = ROOT / "wiki"

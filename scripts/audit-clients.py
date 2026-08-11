@@ -8,8 +8,8 @@ Usage:
 Output: outputs/client-audit-v2.md
 """
 
+import contextlib
 import json
-import os
 import re
 import sys
 from pathlib import Path
@@ -235,14 +235,10 @@ def detect_industry_content(title: str, filename: str, body_preview: str) -> boo
         r"industry trend|market dynamic|competitive landscape|buyer behavior|regulatory environment|seasonal pattern|industry benchmark",
     ]
 
-    for pattern in industry_signals:
-        if re.search(pattern, combined):
-            return True
-
-    return False
+    return any(re.search(pattern, combined) for pattern in industry_signals)
 
 
-def audit_all_clients(target_client: str = None):
+def audit_all_clients(target_client: str | None = None):
     """Audit all client folders with improved classification."""
     results = []
 
@@ -272,10 +268,8 @@ def audit_all_clients(target_client: str = None):
                     if content.startswith("---"):
                         parts = content.split("---", 2)
                         if len(parts) >= 3:
-                            try:
+                            with contextlib.suppress(yaml.YAMLError):
                                 fm = yaml.safe_load(parts[1]) or {}
-                            except yaml.YAMLError:
-                                pass
                             body = parts[2]
 
                     title = fm.get("title", f.stem)

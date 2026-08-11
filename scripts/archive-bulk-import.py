@@ -11,7 +11,6 @@ Usage:
 import argparse
 import re
 import shutil
-import sys
 from pathlib import Path
 
 RAW = Path("/meridian/raw")
@@ -44,7 +43,7 @@ def main():
     moved = 0
     kept = 0
     compiled_skipped = 0
-    type_moved = {t: 0 for t in ARCHIVE_TYPES}
+    type_moved = dict.fromkeys(ARCHIVE_TYPES, 0)
 
     for f in RAW.glob("*.md"):
         if f.name.startswith("_"):

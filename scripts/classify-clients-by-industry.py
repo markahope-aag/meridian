@@ -37,7 +37,6 @@ from pathlib import Path
 import anthropic
 import yaml
 
-
 ROOT = Path(__file__).resolve().parent.parent
 CLIENTS_YAML = ROOT / "clients.yaml"
 INDUSTRIES_YAML = ROOT / "industries.yaml"
@@ -229,10 +228,8 @@ def write_industry_into_yaml(
             # Scan until the next `- name:` or EOF
             j = i + 1
             existing_industry_line: int | None = None
-            next_entry_line: int | None = None
             while j < len(lines):
                 if re.match(r"^\s*-\s+name:", lines[j]):
-                    next_entry_line = j
                     break
                 if re.match(rf"^{re.escape(indent)}industry:\s*", lines[j]):
                     existing_industry_line = j

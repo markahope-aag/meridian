@@ -392,7 +392,6 @@ def main() -> None:
 
     client = anthropic.Anthropic()
     total_in_tokens = 0
-    total_out_tokens = 0
     classified_count = 0
     unclassified_count = 0
     error_count = 0

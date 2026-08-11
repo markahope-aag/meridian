@@ -25,15 +25,14 @@ import re
 import sqlite3
 import subprocess
 import sys
-import tempfile
 import threading
 import uuid
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
 
-from flask import Flask, Response, jsonify, request
 import yaml
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 log = logging.getLogger("meridian")
@@ -149,10 +148,9 @@ def _jobs_conn() -> sqlite3.Connection:
 
 def _init_jobs_db() -> None:
     """Create the jobs table if it doesn't exist. Idempotent."""
-    with _jobs_db_lock:
-        with _jobs_conn() as conn:
-            conn.execute(
-                """
+    with _jobs_db_lock, _jobs_conn() as conn:
+        conn.execute(
+            """
                 CREATE TABLE IF NOT EXISTS jobs (
                     id           TEXT PRIMARY KEY,
                     type         TEXT NOT NULL,
@@ -163,8 +161,8 @@ def _init_jobs_db() -> None:
                     error        TEXT
                 )
                 """
-            )
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);")
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);")
 
 
 _init_jobs_db()
@@ -473,7 +471,7 @@ def capture_fathom():
             if assignee_name:
                 line += f" (@{assignee_name})"
             items.append(line)
-        sections.append(f"## Action Items\n\n" + "\n".join(items) + "\n")
+        sections.append("## Action Items\n\n" + "\n".join(items) + "\n")
 
     # Full Transcript
     if transcript:
@@ -484,7 +482,7 @@ def capture_fathom():
             text = entry.get("text", "")
             timestamp = entry.get("timestamp", "")
             lines.append(f"**{name}** [{timestamp}]: {text}")
-        sections.append(f"## Full Transcript\n\n" + "\n\n".join(lines) + "\n")
+        sections.append("## Full Transcript\n\n" + "\n\n".join(lines) + "\n")
 
     md = "\n".join(sections)
 
@@ -573,7 +571,7 @@ def capture_claude_session():
                         text_parts.append(block.get("text", ""))
                     elif block.get("type") == "tool_use":
                         tool_name = block.get("name", "unknown")
-                        tool_input = block.get("input", {})
+                        block.get("input", {})
                         text_parts.append(f"[Tool: {tool_name}]")
                     elif block.get("type") == "tool_result":
                         text_parts.append("[Tool result]")
@@ -594,7 +592,7 @@ def capture_claude_session():
         # Try to decode from the path hash pattern (C--Users-markh-projects-foo)
         parts = Path(transcript_path).parts
         for part in parts:
-            if part.startswith("C--") or part.startswith("c--"):
+            if part.startswith(("C--", "c--")):
                 decoded = part.replace("C--", "C:/").replace("c--", "c:/").replace("-", "/")
                 project_name = decoded.split("/")[-1] if "/" in decoded else part
                 break
@@ -1487,7 +1485,7 @@ def capture_gdrive():
     date_prefix = now_str()
     safe_name = slugify(title)
     out_filename = f"{date_prefix}-{safe_name}.md"
-    filepath = write_capture_file(out_filename, md)
+    write_capture_file(out_filename, md)
 
     # Append to wiki/log.md
     append_log(f"ingest | gdrive: {filename}")
@@ -1578,5 +1576,5 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 check_directories()
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
+    port = int(os.environ.get("PORT", "8000"))
     app.run(host="0.0.0.0", port=port, debug=True)

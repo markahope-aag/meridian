@@ -50,7 +50,6 @@ from pathlib import Path
 
 import anthropic
 
-
 ROOT = Path(__file__).parent.parent
 DEFAULT_RUBRIC = ROOT / "tests" / "synthesis_corpus" / "rubric.md"
 JUDGE_MODEL = "claude-sonnet-4-6"

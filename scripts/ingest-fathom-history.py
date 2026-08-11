@@ -19,7 +19,6 @@ import time
 
 import requests
 
-
 FATHOM_API = "https://api.fathom.ai/external/v1"
 
 
@@ -38,6 +37,7 @@ def get_receiver_config():
         # Try ~/.meridian/config.yaml
         try:
             from pathlib import Path
+
             import yaml
             config_path = Path.home() / ".meridian" / "config.yaml"
             with open(config_path) as f:
@@ -169,7 +169,7 @@ def main():
             # List endpoint already includes transcript/summary/action_items
             result = send_to_receiver(meeting, receiver_url, receiver_token)
             if result.get("status") == "skipped":
-                print(f"⊘ duplicate (already exists)", file=sys.stderr)
+                print("⊘ duplicate (already exists)", file=sys.stderr)
                 skipped += 1
             else:
                 print(f"✓ {result.get('filename', 'ok')}", file=sys.stderr)

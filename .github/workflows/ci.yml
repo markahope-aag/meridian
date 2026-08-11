@@ -19,7 +19,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -q pyyaml markdown flask requests pytest anthropic
+          pip install -q pyyaml markdown flask requests pytest anthropic ruff
+
+      - name: Ruff lint
+        run: |
+          ruff check .
 
       - name: Python syntax check (all .py files)
         run: |

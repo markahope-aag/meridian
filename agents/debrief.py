@@ -15,7 +15,6 @@ Output: JSON with status and path to the debrief file.
 import argparse
 import hashlib
 import json
-import os
 import re
 import sys
 from datetime import datetime, timezone
@@ -23,7 +22,6 @@ from pathlib import Path
 
 import anthropic
 import yaml
-
 
 ROOT = Path(__file__).parent.parent
 CAPTURE_DIR = ROOT / "capture"

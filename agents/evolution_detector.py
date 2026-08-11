@@ -65,15 +65,14 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import shutil
 import statistics
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from datetime import datetime, date, timedelta
+from datetime import date, datetime
 from pathlib import Path
-from typing import Iterable
 
 import yaml
 
@@ -814,11 +813,11 @@ def queue_for_resynthesis(detection: Detection, dry_run: bool) -> bool:
     }
     # Skip if already queued with same dimension+topic
     for existing in queue:
-        if isinstance(existing, dict):
-            if (existing.get("dimension") == entry["dimension"]
-                    and existing.get("topic") == entry["topic"]
-                    and existing.get("status") != "complete"):
-                return False
+        if (isinstance(existing, dict)
+                and existing.get("dimension") == entry["dimension"]
+                and existing.get("topic") == entry["topic"]
+                and existing.get("status") != "complete"):
+            return False
     queue.append(entry)
     SYNTHESIS_QUEUE.write_text(json.dumps(queue, indent=2), encoding="utf-8")
     return True
@@ -871,7 +870,7 @@ def generate_report(
             lines.append(f"- **Signal:** {d.signal}")
             if d.drift_report:
                 lines.append(f"- **Drift report:** `wiki/layer4/drift/{d.article.dimension}-{d.article.slug}-{today}.md`")
-            lines.append(f"- **Recommended action:** re-synthesize with `--force`")
+            lines.append("- **Recommended action:** re-synthesize with `--force`")
             lines.append("")
 
     # Stale / decaying section (check 4)

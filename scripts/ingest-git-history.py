@@ -25,9 +25,9 @@ import os
 import re
 import subprocess
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable
 
 import yaml
 
@@ -181,7 +181,10 @@ def iter_commits(repo_path: Path, since: str | None = None) -> Iterable[Commit]:
     try:
         output = run_git(repo_path, args)
     except RuntimeError as e:
-        raise RuntimeError(str(e))
+        # `from e` keeps the original traceback. Re-raising bare made a
+        # git failure look like it originated here, which is the same
+        # class of lost detail as swallowing the error outright.
+        raise RuntimeError(str(e)) from e
 
     # Records are separated by \x00
     records = output.split("\x00")
@@ -290,7 +293,7 @@ def format_fragment(project_slug: str, project_name: str, project_description: s
         commit.full_message,
         "```",
         "",
-        f"## Project context",
+        "## Project context",
         "",
         project_description,
         "",

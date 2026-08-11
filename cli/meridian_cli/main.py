@@ -333,7 +333,7 @@ def cmd_synthesize(args):
         print(f"Total:    {result.get('total', '?')}")
         next_5 = result.get("next_5", [])
         if next_5:
-            print(f"\nNext up:")
+            print("\nNext up:")
             for t in next_5:
                 print(f"  {t['topic']} ({t.get('fragment_count', '?')} fragments)")
         return
@@ -384,12 +384,12 @@ def cmd_status(args):
     print(f"Receiver: {config['receiver_url']}")
     result = api_call("GET", "/health")
     if result.get("status") == "ok":
-        print(f"Status:   healthy")
+        print("Status:   healthy")
         print(f"Root:     {result.get('meridian_root', '?')}")
         print(f"Capture:  {'ok' if result.get('capture_exists') else 'missing'}")
         print(f"Wiki:     {'ok' if result.get('wiki_exists') else 'missing'}")
     else:
-        print(f"Status:   unhealthy")
+        print("Status:   unhealthy")
         print(f"Error:    {result.get('error', 'unknown')}")
         sys.exit(1)
 

@@ -144,7 +144,7 @@ def fetch_via_supabase(source_type: str, since: str | None,
         base += f"&ingested_at=gte.{since}"
 
     # First request to get total count
-    resp = requests.get(base + f"&limit=1", headers=headers, timeout=30)
+    resp = requests.get(base + "&limit=1", headers=headers, timeout=30)
     resp.raise_for_status()
     content_range = resp.headers.get("Content-Range", "*/0")
     total = int(content_range.split("/")[-1])

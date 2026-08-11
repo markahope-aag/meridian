@@ -5,6 +5,7 @@ Replaces Obsidian as the primary way to browse and interact with Meridian.
 Reads directly from /meridian/ filesystem. Calls receiver API for agent actions.
 """
 
+import contextlib
 import hmac
 import json
 import os
@@ -15,36 +16,63 @@ from datetime import datetime
 from functools import wraps
 from pathlib import Path
 
-from flask import (
-    Flask, Response, abort, g, jsonify, redirect,
-    render_template, request, send_file, session, url_for,
-)
 import requests
 import yaml
+from flask import (
+    Flask,
+    Response,
+    abort,
+    g,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    session,
+    url_for,
+)
 
 # Critical helpers imported from web.helpers, web.registry, web.config.
 # These modules are the canonical, tested versions. The vm-auto-deploy
 # script copies web/*.py into /app/web/ inside the container so imports
 # resolve at runtime.
 from web.config import (
-    MERIDIAN_ROOT, WIKI_DIR, RAW_DIR, CAPTURE_DIR, REPORTS_DIR,
-    ENGINEERING_DIR, INTERESTS_DIR, LAYER4_DIR,
-    COMMITS_CAPTURE_DIR, INTERESTS_CAPTURE_DIR,
-    CLIENTS_YAML, TOPICS_YAML, ENGINEERING_TOPICS_YAML,
-    PROJECTS_YAML, INTERESTS_TOPICS_YAML,
-    RECEIVER_URL, RECEIVER_TOKEN,
+    CAPTURE_DIR,
+    CLIENTS_YAML,
+    COMMITS_CAPTURE_DIR,
+    ENGINEERING_DIR,
+    ENGINEERING_TOPICS_YAML,
+    INTERESTS_CAPTURE_DIR,
+    INTERESTS_DIR,
+    INTERESTS_TOPICS_YAML,
+    LAYER4_DIR,
+    MERIDIAN_ROOT,
+    RAW_DIR,
+    RECEIVER_TOKEN,
+    RECEIVER_URL,
+    REPORTS_DIR,
+    WIKI_DIR,
 )
 from web.helpers import (
-    parse_frontmatter, read_article, render_markdown,
-    sanitize_html, safe_resolve as _safe_resolve,
     coerce_date_str as _coerce_date_str,
 )
-from web.registry import (
-    CLIENT_NAMES, TOPIC_NAMES, ENGINEERING_TOPIC_NAMES,
-    INTERESTS_TOPIC_NAMES, PROJECTS,
-    client_display_name, _non_synthesizable_topic_slugs,
+from web.helpers import (
+    parse_frontmatter,
+    read_article,
+    render_markdown,
 )
-
+from web.helpers import (
+    safe_resolve as _safe_resolve,
+)
+from web.registry import (
+    CLIENT_NAMES,
+    ENGINEERING_TOPIC_NAMES,
+    INTERESTS_TOPIC_NAMES,
+    PROJECTS,
+    TOPIC_NAMES,
+    _non_synthesizable_topic_slugs,
+    client_display_name,
+)
 
 app = Flask(__name__)
 
@@ -248,23 +276,12 @@ def _add_security_headers(response):
     return response
 
 
-MERIDIAN_ROOT = Path(os.environ.get("MERIDIAN_ROOT", "/meridian"))
-WIKI_DIR = MERIDIAN_ROOT / "wiki"
-RAW_DIR = MERIDIAN_ROOT / "raw"
-CAPTURE_DIR = MERIDIAN_ROOT / "capture"
-CLIENTS_YAML = MERIDIAN_ROOT / "clients.yaml"
-TOPICS_YAML = MERIDIAN_ROOT / "topics.yaml"
-REPORTS_DIR = MERIDIAN_ROOT / "reports"
-ENGINEERING_TOPICS_YAML = MERIDIAN_ROOT / "engineering-topics.yaml"
-PROJECTS_YAML = MERIDIAN_ROOT / "projects.yaml"
-INTERESTS_TOPICS_YAML = MERIDIAN_ROOT / "interests-topics.yaml"
-ENGINEERING_DIR = WIKI_DIR / "engineering"
-INTERESTS_DIR = WIKI_DIR / "interests"
-LAYER4_DIR = WIKI_DIR / "layer4"
-COMMITS_CAPTURE_DIR = CAPTURE_DIR / "external" / "commits"
-INTERESTS_CAPTURE_DIR = CAPTURE_DIR / "external" / "interests"
-RECEIVER_URL = os.environ.get("MERIDIAN_RECEIVER_URL", "http://localhost:8000")
-RECEIVER_TOKEN = os.environ.get("MERIDIAN_RECEIVER_TOKEN", "")
+# Path constants are imported from web.config at the top of this file.
+# They used to be redefined here as well, byte-for-byte identical, which
+# meant two sources of truth for every path in the app: an edit to
+# web/config.py would appear to take effect and then be silently
+# overwritten by this block on import. Verified identical by AST before
+# removal.
 
 
 # ---------------------------------------------------------------------------
@@ -687,21 +704,17 @@ def dashboard():
     pipeline = {"capture": "", "distill": "", "compile": "", "synthesize": "", "lint": ""}
     if log_path.exists():
         log_content = log_path.read_text(encoding="utf-8", errors="replace")
-        for op in pipeline.keys():
+        for op in pipeline:
             matches = re.findall(rf"## \[(\d{{4}}-\d{{2}}-\d{{2}})\] {op}", log_content)
             if matches:
                 pipeline[op] = max(matches)
 
-    # Active jobs from receiver
-    active_jobs = 0
-    try:
-        if RECEIVER_TOKEN:
-            resp = requests.get(f"{RECEIVER_URL}/jobs", headers=receiver_headers(), timeout=3)
-            # Endpoint may not exist — fallback gracefully
-    except Exception:
-        pass
+    # An "active jobs from receiver" block used to sit here. It called
+    # GET /jobs, which the receiver does not serve (only /jobs/<id>),
+    # discarded the response, and assigned a counter nothing read. Every
+    # dashboard render paid for a doomed round trip. Removed.
 
-    # Synthesis running detection — check queue for running status
+    # Synthesis running detection: check queue for running status
     synth_running = synth_status.get("running", 0) > 0
 
     # Latest lint report — find the most recent wiki/articles/lint-*.md so the
@@ -1748,8 +1761,8 @@ def view_project(slug):
             unclassified.append(_enrich_engineering_fragment(read_article(f)))
 
     # Sort each topic bucket newest-first
-    for topic in commits_by_topic:
-        commits_by_topic[topic].sort(key=lambda a: a.get("sort_date", ""), reverse=True)
+    for bucket in commits_by_topic.values():
+        bucket.sort(key=lambda a: a.get("sort_date", ""), reverse=True)
     unclassified.sort(key=lambda a: a.get("sort_date", ""), reverse=True)
 
     # Topic counts sorted descending for display
@@ -2241,10 +2254,8 @@ def admin_stats_json():
     admin_stats: dict = {}
     admin_stats_path = MERIDIAN_ROOT / "state" / "admin-stats.json"
     if admin_stats_path.exists():
-        try:
+        with contextlib.suppress(json.JSONDecodeError, OSError):
             admin_stats = json.loads(admin_stats_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            pass
     synth_queue: dict = {"pending": 0, "complete": 0, "running": 0, "failed": 0}
     queue_path = MERIDIAN_ROOT / "synthesis_queue.json"
     if queue_path.exists():
@@ -3178,7 +3189,6 @@ def ask_page():
 
 def make_download_name(filepath: Path, article_path: str) -> str:
     """Build a human-readable download filename from the article path."""
-    parts = Path(article_path).parts  # e.g. wiki/knowledge/google-ads/index.md
     if filepath.name == "index.md":
         # Synthesis article: use topic/client name
         parent = filepath.parent.name  # e.g. "google-ads"
@@ -3237,8 +3247,8 @@ def download_pdf(article_path):
 </body></html>"""
 
     try:
+
         from weasyprint import HTML
-        import io
         pdf_bytes = HTML(string=html).write_pdf()
         pdf_name = make_download_name(filepath, article_path).replace(".md", ".pdf")
         return Response(
@@ -3247,7 +3257,10 @@ def download_pdf(article_path):
             headers={"Content-Disposition": f"attachment; filename={pdf_name}"},
         )
     except Exception as e:
-        # Fallback: return styled HTML
+        # Fall back to styled HTML, but say why in the log. Silently
+        # serving HTML from a PDF endpoint means a broken weasyprint
+        # install looks like a working download forever.
+        app.logger.warning("PDF render failed for %s, serving HTML: %s", article_path, e)
         html_name = make_download_name(filepath, article_path).replace(".md", ".html")
         return Response(html, mimetype="text/html",
                         headers={"Content-Disposition": f"attachment; filename={html_name}"})
@@ -3263,5 +3276,5 @@ def api_stats():
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    port = int(os.environ.get("WEB_PORT", 8080))
+    port = int(os.environ.get("WEB_PORT", "8080"))
     app.run(host="0.0.0.0", port=port, debug=True)

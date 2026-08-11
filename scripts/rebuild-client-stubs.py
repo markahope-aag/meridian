@@ -7,10 +7,7 @@ linking to the knowledge articles that cite this client.
 
 import json
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
-
-import yaml
 
 ROOT = Path(__file__).parent.parent
 WIKI_DIR = ROOT / "wiki"

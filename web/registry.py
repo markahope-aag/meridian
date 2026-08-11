@@ -9,9 +9,13 @@ cached in module-level globals.
 from __future__ import annotations
 
 import yaml
+
 from web.config import (
-    CLIENTS_YAML, TOPICS_YAML, ENGINEERING_TOPICS_YAML,
-    PROJECTS_YAML, INTERESTS_TOPICS_YAML,
+    CLIENTS_YAML,
+    ENGINEERING_TOPICS_YAML,
+    INTERESTS_TOPICS_YAML,
+    PROJECTS_YAML,
+    TOPICS_YAML,
 )
 
 

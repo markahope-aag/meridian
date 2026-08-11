@@ -6,7 +6,6 @@ not regress. Run with: python -m pytest tests/test_helpers.py -v
 
 import os
 import tempfile
-from pathlib import Path
 
 import pytest
 
@@ -21,7 +20,6 @@ from web.helpers import (
     safe_resolve,
     sanitize_html,
 )
-
 
 # =========================================================================
 # sanitize_html — XSS defense

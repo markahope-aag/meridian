@@ -1,0 +1,53 @@
+# Ruff configuration for Meridian.
+#
+# The selected rules are the ones this codebase actually passes clean, so
+# CI can enforce them as a gate rather than as advisory noise. Adding a
+# rule here means fixing every existing violation first.
+
+line-length = 100
+target-version = "py310"
+exclude = [".git", ".venv", "node_modules", "tests/synthesis_corpus"]
+
+[lint]
+select = [
+    "F",    # pyflakes: undefined names, unused imports and variables
+    "I",    # import sorting
+    "UP",   # pyupgrade: outdated syntax
+    "B",    # bugbear: likely bugs
+    "C4",   # comprehension clarity
+    "SIM",  # simplifiable constructs
+    "PIE",  # misc lint
+]
+
+# Deliberately not selected, with reasons. These are not oversights.
+#
+# BLE001 / S110 / S112 (blind except, try-except-pass, try-except-continue)
+#   The pipeline agents catch broadly on purpose. One malformed document
+#   should skip that document, not abort a run that is halfway through
+#   several thousand files. Where an exception genuinely needs surfacing,
+#   the fix is to log it, which is what the 2026-08-11 pass did to the
+#   classifier and the PDF fallback. A blanket rewrite would trade
+#   resilience for tidiness.
+#
+# PLW1510 (subprocess-run-without-check)
+#   run_agent_async and the agent runners inspect returncode themselves
+#   and record it in the job store. check=True would raise instead, which
+#   is precisely the behavior those call sites are avoiding.
+#
+# DTZ (naive datetime)
+#   Timestamps are compared against dates parsed out of wiki frontmatter
+#   written over two years. Making them timezone-aware piecemeal would
+#   produce comparisons between aware and naive values, which is worse
+#   than consistent naive handling. Worth doing properly as its own
+#   change, not as a lint sweep.
+#
+# PLR (refactor suggestions: magic values, too many branches)
+#   Opinionated and high-volume on agent code that is legitimately
+#   branchy. No signal-to-noise case for gating on it.
+
+[lint.per-file-ignores]
+# Tests import modules by path and assert on internals.
+"tests/*" = ["E402"]
+
+[lint.isort]
+known-first-party = ["web", "agents", "receiver"]

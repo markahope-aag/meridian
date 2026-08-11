@@ -35,8 +35,6 @@ import shutil
 import subprocess
 from pathlib import Path
 
-import yaml
-
 MERIDIAN = Path("/meridian")
 WIKI = MERIDIAN / "wiki"
 KNOWLEDGE = WIKI / "knowledge"

@@ -14,7 +14,6 @@ Output: JSON with actions taken, flags, and summary.
 
 import argparse
 import json
-import os
 import re
 import sys
 import threading
@@ -23,7 +22,6 @@ from pathlib import Path
 
 import anthropic
 import yaml
-
 
 ROOT = Path(__file__).parent.parent
 WIKI_DIR = ROOT / "wiki"
@@ -389,9 +387,9 @@ def rebuild_backlinks(articles: dict[str, str]) -> str:
 
     lines = [
         "---",
-        f'title: "Backlink Registry"',
+        'title: "Backlink Registry"',
         "type: index",
-        f'created: "2026-04-04"',
+        'created: "2026-04-04"',
         f'updated: "{now}"',
         "---",
         "",
@@ -433,7 +431,7 @@ def find_missing_index_entries(articles: dict[str, str], index_md: str) -> list[
         "wiki/home.md",
     }
     missing = []
-    for path in articles:
+    for path, content in articles.items():
         if path in skip_files:
             continue
         if Path(path).name == "PLACEHOLDER.md":
@@ -445,16 +443,17 @@ def find_missing_index_entries(articles: dict[str, str], index_md: str) -> list[
             # Client folders are self-indexed via wiki/clients/<status>/<slug>/_index.md
             continue
 
-        if len(parts) >= 2 and parts[1] in ("knowledge", "industries", "engineering", "interests"):
-            # Only the Layer 3 anchor (index.md) belongs in the global index;
-            # skip every Layer 2 fragment across all topic-bearing namespaces.
-            if Path(path).name != "index.md":
-                continue
+        # Only the Layer 3 anchor (index.md) belongs in the global index;
+        # skip every Layer 2 fragment across all topic-bearing namespaces.
+        if (len(parts) >= 2
+                and parts[1] in ("knowledge", "industries", "engineering", "interests")
+                and Path(path).name != "index.md"):
+            continue
 
         short = path.replace("wiki/", "").replace(".md", "")
         if short not in index_md and path not in index_md:
             title_match = re.search(r'^title:\s*["\']?(.+?)["\']?\s*$',
-                                    articles[path], re.MULTILINE)
+                                    content, re.MULTILINE)
             title = title_match.group(1) if title_match else Path(path).stem
             missing.append(f"- [[{short}]] — {title}")
     return missing
@@ -632,12 +631,12 @@ def generate_report(analysis: dict, actions: list[str], deferred: list[str],
     mode = "DRY RUN" if dry_run else "AUTO-FIX"
 
     lines = [
-        f"# Meridian Wiki Health Check",
-        f"",
+        "# Meridian Wiki Health Check",
+        "",
         f"**Generated:** {now}  ",
         f"**Mode:** {mode}  ",
         f"**Articles scanned:** {article_count}  ",
-        f"",
+        "",
     ]
 
     # Actions taken
@@ -1058,10 +1057,7 @@ def main():
 
         # Append to log
         log_path = WIKI_DIR / "log.md"
-        if log_path.exists():
-            log_content = log_path.read_text(encoding="utf-8")
-        else:
-            log_content = ""
+        log_content = log_path.read_text(encoding="utf-8") if log_path.exists() else ""
         summary = (
             f"{len(actions)} auto-fixes, "
             f"{len(analysis.get('contradictions', []))} contradictions, "

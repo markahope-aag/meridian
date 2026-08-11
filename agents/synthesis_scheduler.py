@@ -11,15 +11,14 @@ Usage:
 """
 
 import argparse
+import contextlib
 import json
-import os
 import sys
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
-
 
 ROOT = Path(__file__).parent.parent
 WIKI_DIR = ROOT / "wiki"
@@ -55,9 +54,8 @@ def load_topic_items() -> list[dict]:
 
 def save_queue(queue: list[dict]):
     """Save the synthesis queue to JSON file."""
-    with _queue_lock:
-        with open(QUEUE_PATH, "w") as f:
-            json.dump(queue, f, indent=2)
+    with _queue_lock, open(QUEUE_PATH, "w") as f:
+        json.dump(queue, f, indent=2)
 
 
 def populate_queue():
@@ -275,10 +273,8 @@ def process_pending(limit: int = 5, force: bool = False, queued_by: str | None =
             # the evidence behind them has been incorporated.
             if queued_by == "evolution_detector" and "error" not in result and raw_dim:
                 for drift in _drift_files_for(raw_dim, topic):
-                    try:
+                    with contextlib.suppress(OSError):
                         drift.unlink()
-                    except OSError:
-                        pass
 
             results.append(result)
 

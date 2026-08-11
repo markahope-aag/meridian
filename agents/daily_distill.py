@@ -12,7 +12,6 @@ Output: JSON summary of decisions to stdout.
 
 import argparse
 import json
-import os
 import re
 import shutil
 import sys
@@ -22,7 +21,6 @@ from pathlib import Path
 
 import anthropic
 import yaml
-
 
 ROOT = Path(__file__).parent.parent
 CAPTURE_DIR = ROOT / "capture"
@@ -449,10 +447,7 @@ def main():
 
     else:
         # Score and decide
-        if args.file:
-            files = [Path(args.file)]
-        else:
-            files = get_unprocessed_files()
+        files = [Path(args.file)] if args.file else get_unprocessed_files()
 
         if not files:
             print("No unprocessed files in capture/", file=sys.stderr)

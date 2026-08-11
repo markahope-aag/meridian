@@ -30,16 +30,14 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
-import os
 import re
 import sys
 from collections import Counter, defaultdict
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, date
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass
+from datetime import date, datetime
 from pathlib import Path
-from typing import Iterable
 
 import yaml
 
@@ -222,7 +220,7 @@ def _extract_key_claims(body: str, max_claims: int = 15) -> list[str]:
         section = m.group(1)
         for line in section.split("\n"):
             s = line.strip()
-            if s.startswith("- ") or s.startswith("* "):
+            if s.startswith(("- ", "* ")):
                 # Strip wikilinks for readability
                 cleaned = re.sub(r"\[\[[^\]]+\]\]", "", s[2:]).strip()
                 if cleaned and len(cleaned) > 20:
@@ -273,7 +271,7 @@ def _tokenize_vocabulary(body: str, max_tokens: int = 200) -> list[str]:
         "that", "this", "with", "from", "they", "them", "their", "have",
         "been", "were", "when", "what", "which", "than", "then", "into",
         "onto", "upon", "also", "some", "more", "most", "such", "each",
-        "every", "other", "some", "same", "both", "like", "between",
+        "every", "other", "same", "both", "like", "between",
         "through", "during", "after", "before", "about", "above", "below",
         "where", "while", "will", "would", "could", "should", "being",
         "your", "yours", "theirs", "theres", "here", "there", "over",
@@ -388,9 +386,9 @@ def _build_l3_map() -> L3Map:
     return L3Map(
         topics=topics,
         industries=industries,
-        topic_client_index={k: v for k, v in topic_client_index.items()},
-        industry_topic_index={k: v for k, v in industry_topic_index.items()},
-        topic_industry_index={k: v for k, v in topic_industry_index.items()},
+        topic_client_index=dict(topic_client_index.items()),
+        industry_topic_index=dict(industry_topic_index.items()),
+        topic_industry_index=dict(topic_industry_index.items()),
         generated_at=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
         schema_version=L3_MAP_SCHEMA_VERSION,
     )
@@ -404,9 +402,9 @@ def _serialize_l3_map(l3map: L3Map) -> dict:
         "generated_at": l3map.generated_at,
         "topics": {k: _ser_summary(v) for k, v in l3map.topics.items()},
         "industries": {k: _ser_summary(v) for k, v in l3map.industries.items()},
-        "topic_client_index": {k: sorted(list(v)) for k, v in l3map.topic_client_index.items()},
-        "industry_topic_index": {k: sorted(list(v)) for k, v in l3map.industry_topic_index.items()},
-        "topic_industry_index": {k: sorted(list(v)) for k, v in l3map.topic_industry_index.items()},
+        "topic_client_index": {k: sorted(v) for k, v in l3map.topic_client_index.items()},
+        "industry_topic_index": {k: sorted(v) for k, v in l3map.industry_topic_index.items()},
+        "topic_industry_index": {k: sorted(v) for k, v in l3map.topic_industry_index.items()},
     }
 
 
@@ -437,8 +435,7 @@ def _newest_index_mtime() -> float:
             idx = d / "index.md"
             if idx.exists():
                 m = idx.stat().st_mtime
-                if m > newest:
-                    newest = m
+                newest = max(newest, m)
     return newest
 
 
@@ -700,7 +697,7 @@ def run_mode_c_emergence(l3map: L3Map, dry_run: bool, verbose: bool) -> dict:
        synthesis queue as a layer4_candidate so Mode A picks it up.
     """
     state = _load_emergence_state()
-    last_run = state.get("last_run", "")
+    state.get("last_run", "")
 
     # ------------------------------------------------------------------
     # Job 1: new evidence for existing patterns
@@ -925,8 +922,8 @@ def _score_candidate_pair(a: L3Summary, b: L3Summary) -> float:
     tokens_a = set(a.topic_body_tokens)
     tokens_b = set(b.topic_body_tokens)
     vocab_overlap = len(tokens_a & tokens_b)
-    clients_a = set(c.lower() for c in a.client_mentions)
-    clients_b = set(c.lower() for c in b.client_mentions)
+    clients_a = {c.lower() for c in a.client_mentions}
+    clients_b = {c.lower() for c in b.client_mentions}
     shared_clients = len(clients_a & clients_b)
     return float(vocab_overlap) + 3.0 * float(shared_clients)
 
@@ -1541,7 +1538,7 @@ def _build_contradiction_user_message(
 ) -> str:
     """Assemble the user message for one contradiction-resolution call."""
     parts: list[str] = []
-    parts.append(f"## The Layer 3 article with the contradiction\n")
+    parts.append("## The Layer 3 article with the contradiction\n")
     parts.append(f"**Topic:** {article.title} (`{article.slug}`)  ")
     parts.append(f"**Path:** `{article.path}`  ")
     parts.append(f"**Domain type:** {article.domain_type}  ")

@@ -13,8 +13,8 @@ Output: JSON summary of what was created/updated.
 """
 
 import argparse
+import contextlib
 import json
-import os
 import re
 import sys
 import threading
@@ -25,7 +25,6 @@ from pathlib import Path
 
 import anthropic
 import yaml
-
 
 ROOT = Path(__file__).parent.parent
 RAW_DIR = ROOT / "raw"
@@ -385,10 +384,8 @@ def update_index_batch(all_index_entries: list[str], all_backlinks: list[dict]):
             content, re.DOTALL
         )
         if mi_match:
-            try:
+            with contextlib.suppress(json.JSONDecodeError):
                 existing_entries = json.loads(mi_match.group(1))
-            except json.JSONDecodeError:
-                pass
 
     # Add new entries
     for entry_line in all_index_entries:

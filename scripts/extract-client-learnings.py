@@ -10,8 +10,8 @@ Output: JSON summary of extractions.
 """
 
 import argparse
+import contextlib
 import json
-import os
 import re
 import sys
 import threading
@@ -120,10 +120,8 @@ def read_article(filepath: Path) -> dict:
     if content.startswith("---"):
         parts = content.split("---", 2)
         if len(parts) >= 3:
-            try:
+            with contextlib.suppress(yaml.YAMLError):
                 fm = yaml.safe_load(parts[1]) or {}
-            except yaml.YAMLError:
-                pass
             body = parts[2].strip()
     return {
         "path": str(filepath),

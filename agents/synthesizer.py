@@ -31,9 +31,9 @@ Output: JSON summary of what was synthesized.
 """
 
 import argparse
+import contextlib
 import hashlib
 import json
-import os
 import re
 import shutil
 import sys
@@ -44,7 +44,6 @@ from pathlib import Path
 
 import anthropic
 import yaml
-
 
 ROOT = Path(__file__).parent.parent
 WIKI_DIR = ROOT / "wiki"
@@ -219,10 +218,8 @@ def read_fragment(path: Path) -> dict:
     if content.startswith("---"):
         parts = content.split("---", 2)
         if len(parts) >= 3:
-            try:
+            with contextlib.suppress(yaml.YAMLError):
                 fm = yaml.safe_load(parts[1]) or {}
-            except yaml.YAMLError:
-                pass
             body = parts[2].strip()
 
     return {
@@ -771,10 +768,7 @@ def do_write(
     # Append to log
     log_path = WIKI_DIR / "log.md"
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    if log_path.exists():
-        log_content = log_path.read_text(encoding="utf-8")
-    else:
-        log_content = ""
+    log_content = log_path.read_text(encoding="utf-8") if log_path.exists() else ""
     cache_marker = "cached" if cache_hit else "fresh"
     log_content += (
         f"\n## [{now}] synthesize | Layer 3: {topic_name} "
