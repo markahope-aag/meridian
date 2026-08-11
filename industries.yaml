@@ -106,6 +106,16 @@ industries:
       - legal-tech
       - litigation-support
 
+  - name: "B2C Services"
+    slug: b2c-services
+    description: "Services sold directly to consumers where the sale happens offline. The site captures leads and books appointments rather than transacting, which is what separates these from eCommerce & Retail."
+    aliases:
+      - consumer-services
+      - direct-to-consumer
+      - b2c
+      - local-services
+      - lead-generation-services
+
   - name: "B2B Services"
     slug: b2b-services
     description: "Professional and business services sold to other businesses — agencies, consultancies, and niche service providers without a vertical-specific classification."

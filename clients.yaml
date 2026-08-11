@@ -99,7 +99,7 @@ clients:
   - name: "Reynolds Transfer and Storage"
     slug: reynolds
     industry: b2b-services  # classifier: high
-    status: current
+    status: former
     aliases: ["reynolds-transfer"]
     website: https://reynoldstransfer.com/
 
@@ -137,7 +137,7 @@ clients:
   - name: "American Extractions"
     slug: american-extractions
     industry: b2b-services  # classifier: high
-    status: current
+    status: former
     aliases: ["american-extraction", "american"]
 
   - name: "A New Dawn / Shine"
@@ -240,7 +240,7 @@ clients:
 
   - name: "The King Company"
     slug: king-company
-    industry: ecommerce-retail  # classifier: manual
+    industry: b2c-services  # classifier: manual — lead capture, not online sales
     status: former
     aliases: []
 
@@ -288,7 +288,7 @@ clients:
 
   - name: "Best Defense"
     slug: best-defense
-    industry: b2b-services  # classifier: manual
+    industry: b2c-services  # classifier: manual
     status: former
     aliases: []
 
