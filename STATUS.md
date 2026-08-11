@@ -88,7 +88,7 @@ Manual CLI ──────────────→ /capture ────�
 | Fathom webhook | Real-time | n8n |
 | ClientBrain sync | 00:00 daily | host cron |
 | Daily Distill | 01:00 daily | n8n |
-| Classify engineering commits | 01:30 daily | host cron / n8n |
+| Classify engineering commits | hourly, after ingest | `run-git-ingest.sh` |
 | Daily Compile | 02:00 daily | n8n |
 | Restic backup | 03:00 daily | host cron |
 | Daily Synthesize | 04:00 daily | n8n |
@@ -96,7 +96,7 @@ Manual CLI ──────────────→ /capture ────�
 | Weekly Lint | 06:00 Sunday | host cron |
 | Evolution Detector | 07:00 Sunday | host cron |
 | Conceptual Modes A + B | 08:00 Sunday | n8n |
-| Drift Re-synthesis | 09:00 Sunday | n8n |
+| Drift Re-synthesis | Sunday, after detector | `run-evolution-detector.sh` |
 | Conceptual Mode D | 10:00 1st Sunday | n8n |
 | Git ingest | hourly | host cron |
 | Watchdog | hourly at :15 | n8n |
@@ -188,6 +188,12 @@ Host-side runners live in `scripts/run-*.sh`. Each logs to
 - **Ownership handoff**: host cron chowns ingested fragments to the
   container user, because the classifier runs inside the container and has
   to rewrite and move them.
+- **Consumers ride with their producers.** Classification runs at the end
+  of the ingest cron, and drift re-synthesis at the end of the evolution
+  cron, rather than as separate scheduled jobs. Both of those consumers
+  were previously unscheduled and the work piled up silently for months:
+  ~2,900 commit fragments and every drift detection ever queued. One cron
+  entry that does both halves cannot drift out of sync with itself.
 - **All execution on the VM.** The CLI and hooks are HTTP clients.
 - **Prompts as files** in `prompts/`, never hardcoded.
 - **Git-based deploy**: `/meridian/` is a checkout of `main`, auto-pulled

@@ -27,6 +27,7 @@ TARGET_FQDN="${MERIDIAN_RECEIVER_FQDN:-meridian.markahope.com}"
 COMMITS_DIR="${MERIDIAN_COMMITS_DIR:-/meridian/capture/external/commits}"
 ENGINEERING_DIR="${MERIDIAN_ENGINEERING_DIR:-/meridian/wiki/engineering}"
 JOBS_DB="${MERIDIAN_JOBS_DB:-/meridian/state/jobs.db}"
+CLASSIFY_LOCK="${MERIDIAN_CLASSIFY_LOCK:-/tmp/meridian-classify.lock}"
 
 mkdir -p "$LOG_DIR"
 
@@ -93,6 +94,40 @@ handoff_ownership() {
     done
 }
 
+# Classify what was just ingested.
+#
+# The consumer runs here, in the producer's own cron, rather than as a
+# separate scheduled job. This system has been bitten twice by a producer
+# whose consumer was never scheduled: commit fragments piled up to ~2,900
+# over four months, and evolution-queued re-syntheses sat pending
+# forever. Keeping the pair in one place means there is no second crontab
+# entry to forget.
+#
+# Set MERIDIAN_INGEST_CLASSIFY=0 to run ingestion alone.
+classify_new_fragments() {
+    local cid rc
+    if [ "${MERIDIAN_INGEST_CLASSIFY:-1}" != "1" ]; then
+        echo "classification disabled (MERIDIAN_INGEST_CLASSIFY=0)"
+        return
+    fi
+    cid=$(find_container_by_fqdn "$TARGET_FQDN")
+    if [ -z "$cid" ]; then
+        echo "WARNING: no receiver container found; skipping classification"
+        return
+    fi
+    # Share a lock with run-classify-engineering.sh so a manual backfill
+    # and this run can never move the same fragment at once.
+    (
+        flock -n 8 || { echo "another classify run is in progress, skipping"; exit 0; }
+        docker exec "$cid" python3 /meridian/scripts/classify-engineering-fragments.py \
+            --limit "${MERIDIAN_CLASSIFY_LIMIT:-250}"
+    ) 8>"$CLASSIFY_LOCK"
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        echo "WARNING: classifier exited $rc"
+    fi
+}
+
 {
     echo "=== $(date -u +%FT%TZ) git ingest run ==="
     echo "repo_root=$REPO_ROOT  since='$SINCE'"
@@ -126,6 +161,9 @@ handoff_ownership() {
 
     echo "--- ownership handoff to the receiver container ---"
     handoff_ownership
+
+    echo "--- classifying newly ingested fragments ---"
+    classify_new_fragments
 
     echo "=== $(date -u +%FT%TZ) done (fetch_failures=$fetch_failures) ==="
 } >> "$LOG_FILE" 2>&1

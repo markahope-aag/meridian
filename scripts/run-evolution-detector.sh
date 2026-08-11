@@ -38,6 +38,29 @@ find_container_by_fqdn() {
     fi
     echo "target container: $cid ($TARGET_FQDN)"
     docker exec "$cid" python3 /meridian/agents/evolution_detector.py
+
+    # Drain the drift queue this run just filled.
+    #
+    # The detector queues re-syntheses tagged queued_by=evolution_detector,
+    # and synthesis_scheduler.py deliberately excludes tagged items from
+    # its default daily run because a separate job was meant to claim
+    # them. No such job existed, so every detection since the auto-queue
+    # landed sat pending forever. Draining here keeps the producer and
+    # consumer in one place.
+    #
+    # Set MERIDIAN_DRIFT_DRAIN=0 to detect without re-synthesizing.
+    if [ "${MERIDIAN_DRIFT_DRAIN:-1}" = "1" ]; then
+        echo "--- draining drift queue ---"
+        docker exec "$cid" python3 /meridian/agents/synthesis_scheduler.py \
+            --queued-by evolution_detector --limit "${MERIDIAN_DRIFT_LIMIT:-10}"
+        drain_exit=$?
+        if [ $drain_exit -ne 0 ]; then
+            echo "WARNING: drift drain exited $drain_exit"
+        fi
+    else
+        echo "drift drain disabled (MERIDIAN_DRIFT_DRAIN=0)"
+    fi
+
     echo "=== $(date -u +%FT%TZ) evolution detector finished ==="
 } >> "$LOG_FILE" 2>&1
 
