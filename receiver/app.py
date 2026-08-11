@@ -119,8 +119,15 @@ def _enforce_capture_size(text: str, source: str) -> tuple[dict, int] | None:
 # landed on a different worker than the one that created the job.
 # ---------------------------------------------------------------------------
 
+# Falls back to MERIDIAN_ROOT rather than a hardcoded /meridian. In
+# production both resolve to the same path, but the hardcoded default
+# meant importing this module anywhere else tried to create /meridian at
+# the filesystem root. On Linux that is a PermissionError, which is why
+# the receiver parity tests skipped in CI while passing on Windows, where
+# the same path happens to be writable.
 JOBS_DB_PATH = Path(
-    os.environ.get("MERIDIAN_JOBS_DB", "/meridian/state/jobs.db")
+    os.environ.get("MERIDIAN_JOBS_DB")
+    or Path(os.environ.get("MERIDIAN_ROOT", "/meridian")) / "state" / "jobs.db"
 )
 _jobs_db_lock = threading.Lock()  # guards schema init; SQLite handles concurrent writes
 

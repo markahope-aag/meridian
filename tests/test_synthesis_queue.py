@@ -135,6 +135,10 @@ _RECEIVER = Path(__file__).resolve().parent.parent / "receiver"
 def _load_receiver():
     """Import receiver/app.py against a temp MERIDIAN_ROOT."""
     os.environ["MERIDIAN_ROOT"] = _TMPDIR
+    # Pin the job store explicitly. The receiver reads its own env var for
+    # this, so setting MERIDIAN_ROOT alone is not enough to keep the import
+    # off the real filesystem root.
+    os.environ["MERIDIAN_JOBS_DB"] = str(Path(_TMPDIR) / "state" / "jobs.db")
     sys.path.insert(0, str(_RECEIVER))
     try:
         spec = importlib.util.spec_from_file_location(
