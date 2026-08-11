@@ -137,7 +137,13 @@ def get_queue_status() -> dict:
             status[s] += 1
 
     pending = [i for i in topic_items if i.get("status") == "pending"]
-    pending.sort(key=lambda x: x.get("priority", 0), reverse=True)
+    # Must use _priority_key, not a raw lambda. populate items carry int
+    # priorities and evolution-queued items carry "high"/"medium"/"low",
+    # so sorting the mixed list directly raises TypeError and 500s this
+    # endpoint. That stayed hidden while every pending item came from the
+    # evolution detector (all strings, so the comparison happened to
+    # work) and appeared the moment the queue held both kinds at once.
+    pending.sort(key=_priority_key, reverse=True)
     status["next_5"] = [
         {"topic": i["topic"], "fragment_count": i.get("fragment_count", 0)}
         for i in pending[:5]
