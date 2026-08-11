@@ -135,3 +135,57 @@ class TestParseFragmentFallback:
         path = Path(_TMPDIR) / "plain.md"
         path.write_text("no frontmatter here\n", encoding="utf-8")
         assert classify.parse_fragment(path) is None
+
+
+class TestMalformedFragmentHealsOnRewrite:
+    """The rewrite path is where this actually failed the first time.
+
+    parse_fragment was fixed, the fragment got further, and then
+    update_fragment_file hit its own strict yaml.safe_load and failed
+    again. Both call sites now share load_frontmatter.
+    """
+
+    def _malformed(self) -> Path:
+        path = Path(_TMPDIR) / "malformed.md"
+        path.write_text(
+            "---\n"
+            f'title: "{WINDOWS_PATH_SUBJECT}"\n'
+            "layer: 2\n"
+            "source_project: workspace\n"
+            'source_author: "Mark Hope"\n'
+            "commit_sha: ebb4fec1234\n"
+            "commit_short_sha: ebb4fec\n"
+            "topic_slug: unclassified\n"
+            "---\n"
+            "## Commit message\n\n```\nsubject\n```\n",
+            encoding="utf-8",
+        )
+        return path
+
+    def test_rewrite_does_not_raise_on_malformed_frontmatter(self):
+        path = self._malformed()
+        frag = classify.parse_fragment(path)
+        assert frag is not None
+        new_text = classify.update_fragment_file(
+            frag, "testing", [], "high", "because"
+        )
+        assert new_text.startswith("---\n")
+
+    def test_rewritten_fragment_is_valid_yaml(self):
+        path = self._malformed()
+        frag = classify.parse_fragment(path)
+        new_text = classify.update_fragment_file(
+            frag, "testing", ["ci"], "high", "because"
+        )
+        fm_text = new_text[4 : new_text.index("\n---\n", 4)]
+        fm = yaml.safe_load(fm_text)
+        assert fm["topic_slug"] == "testing"
+        assert fm["classification_confidence"] == "high"
+        assert fm["title"] == WINDOWS_PATH_SUBJECT
+        assert fm["source_project"] == "workspace"
+
+    def test_body_is_preserved(self):
+        path = self._malformed()
+        frag = classify.parse_fragment(path)
+        new_text = classify.update_fragment_file(frag, "testing", [], "low", "r")
+        assert "## Commit message" in new_text

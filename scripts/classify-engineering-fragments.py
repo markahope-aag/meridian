@@ -102,6 +102,20 @@ def loose_frontmatter(fm_text: str) -> dict:
     return out
 
 
+def load_frontmatter(fm_text: str) -> dict:
+    """Parse frontmatter, falling back to a loose read when YAML rejects it.
+
+    Every read of a fragment's frontmatter goes through here. Having two
+    call sites parse it independently is what let a malformed fragment
+    get past parse_fragment and then fail again inside
+    update_fragment_file, which looked like the fix had not worked.
+    """
+    try:
+        return yaml.safe_load(fm_text) or {}
+    except yaml.YAMLError:
+        return loose_frontmatter(fm_text)
+
+
 def parse_fragment(path: Path) -> Fragment | None:
     text = path.read_text(encoding="utf-8", errors="replace")
     if not text.startswith("---\n"):
@@ -112,20 +126,14 @@ def parse_fragment(path: Path) -> Fragment | None:
         return None
     fm_text = text[4:end]
     body_text = text[end + 5 :]
-    try:
-        fm = yaml.safe_load(fm_text) or {}
-    except yaml.YAMLError:
-        # Fall back to a line-by-line read rather than giving up.
-        #
-        # Returning None here meant one malformed fragment sat in
-        # capture/ permanently, counted in the queue and re-reported as
-        # an error on every run, with no way to clear it short of
-        # editing the file on the VM. The fields this classifier needs
-        # are all flat scalars, so a strict YAML parse is more than the
-        # job requires.
-        fm = loose_frontmatter(fm_text)
-        if not fm:
-            return None
+    # A strict YAML parse used to return None here, which left one
+    # malformed fragment sitting in capture/ permanently: counted in the
+    # queue, re-reported as an error every run, and unclearable without
+    # editing the file on the VM. The fields needed below are all flat
+    # scalars, so a strict parse is more than the job requires.
+    fm = load_frontmatter(fm_text)
+    if not fm:
+        return None
 
     # Extract commit message from the body — it's in a ``` fenced block
     # under "## Commit message"
@@ -288,7 +296,10 @@ def update_fragment_file(frag: Fragment, new_topic: str,
     fm_text = text[4:fm_end]
     body_text = text[fm_end + 5 :]
 
-    fm = yaml.safe_load(fm_text) or {}
+    # Tolerant load, same as parse_fragment. The rewrite below goes out
+    # through yaml.safe_dump, so a fragment that arrived here malformed
+    # is written back valid and heals itself.
+    fm = load_frontmatter(fm_text)
     fm["topic_slug"] = new_topic
     if secondary_topics:
         fm["secondary_topics"] = secondary_topics
