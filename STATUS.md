@@ -1,6 +1,6 @@
 # Meridian: Project Status
 
-*Last updated: 2026-08-10*
+*Last updated: 2026-08-11*
 
 ## The Numbers
 
@@ -10,16 +10,16 @@
 | Business knowledge topics | 67 (all 67 synthesized) |
 | Business fragments | 2,836 |
 | Engineering topics | 21 (20 synthesized) |
-| Engineering fragments | 3,948 |
+| Engineering fragments | 3,993 |
 | Interests topics | 6 (no content yet) |
 | Layer 4 articles | 265 |
 | Concepts | 48 |
 | Industries | 12 (all with content) |
 | Client folders | 40 current, 6 former |
 | Projects | 31 registered, 26 active |
-| Commits ingested | 3,948 (classification queue empty) |
-| Raw source docs | 7,102 |
-| Git commits | 156 |
+| Commits ingested | 3,993 (classification queue empty) |
+| Raw source docs | 7,202 |
+| Git commits | 176 |
 
 Live numbers are always at `/api/stats` and `/admin/`.
 
@@ -128,6 +128,51 @@ Note that Cloudflare serves a managed `robots.txt` at the edge which
 overrides the app's own `Disallow: /`. Auth is what actually protects the
 content; `X-Robots-Tag: noindex` is set on every response as a backstop.
 
+### Access
+
+**SSH to the VM goes over Tailscale, not the public IP.**
+
+```bash
+ssh -i ~/.meridian/coolify_rsa root@100.107.157.47   # hetzner-coolify
+```
+
+Port 22 on the public IP (178.156.209.202) is closed to everyone except
+Coolify's four egress IPs, enforced at both the Hetzner cloud firewall and
+in iptables on the host. The iptables DROP is scoped to `eth0`, so
+Tailscale traffic on `tailscale0` is unaffected. That is the intended
+admin path; a timeout on the public IP is the design working, not a fault.
+
+Two separate Hetzner projects exist and the wrong API key silently shows
+the wrong server:
+
+| | Meridian | DevBox |
+|---|---|---|
+| Server | `asymmetric-infra-8gb-ash-1` (120091769) | `devbox` (160135846) |
+| IP | 178.156.209.202 | 178.156.138.66 |
+| API key | 1Password **Tools** vault | **DevBox .env Files** vault |
+
+### Credentials
+
+Operator secrets live in the `meridian.env` document in the
+`DevBox .env Files` 1Password vault, matching the `<project>.env`
+convention every other project here uses. `scripts/load-secrets.sh` pipes
+them into the environment without writing to disk:
+
+```bash
+source scripts/load-secrets.sh
+scripts/load-secrets.sh -- <command>
+```
+
+The 1Password service account token in `~/.claude/.env.credentials` is the
+bootstrap credential and the one thing that must stay on disk. SSH private
+keys stay in `~/.meridian/` because `ssh -i` needs real files; both are
+backed up in the same vault.
+
+The ClientBrain API key is a shared secret in two places: the VM reads
+`/etc/meridian-clientbrain.env`, and ClientBrain validates against the
+`app_settings.meridian_api_key` row in its own Supabase (not a Vercel env
+var, which is an easy place to go looking and not find it).
+
 ## Receiver endpoints
 
 | Endpoint | Purpose |
@@ -205,6 +250,65 @@ Host-side runners live in `scripts/run-*.sh`. Each logs to
 - **Git-based deploy**: `/meridian/` is a checkout of `main`, auto-pulled
   every minute. Checkpoint-protected files survive `git reset --hard`.
 
+## 2026-08-11 hardening pass
+
+A health check turned into a day of repairs. Recording it because the
+pattern matters more than the individual fixes: **almost every problem was
+silent, and several actively reported success.**
+
+### Security
+
+- **The dashboard was serving the entire wiki anonymously.** The password
+  env var was missing and the gate treated that as "auth disabled", so 40
+  client records, search, and the admin panel were public. Password set,
+  and the gate now fails closed.
+- **A live ClientBrain API key was hardcoded in this public repo** as a
+  shell default. Removed, and the key rotated in ClientBrain's Supabase.
+- **Operator credentials moved to 1Password.** `~/.meridian/.env` and a
+  plaintext `dashboard_password.txt` were deleted.
+- **Public SSH closed.** Port 22 restricted to Coolify's egress at the
+  cloud firewall, matching what iptables already enforced.
+
+### Silent pipeline failures
+
+- **~2,900 commit fragments had never been classified.** The classifier
+  worked; every write failed with EACCES because host cron writes as root
+  and the classifier runs in the container as another user. It still
+  incremented the success counter, so runs reported "Classified 9,
+  Errors 10" and moved nothing. Backlog drained to 0.
+- **Ingestion was re-creating already-classified commits**, because the
+  idempotency check only looked in `capture/` while classified fragments
+  live in `wiki/engineering/`.
+- **Every drift re-synthesis ever queued was stranded.** The scheduler
+  excludes `queued_by` items assuming another job claims them; no such job
+  existed.
+- **A commit subject containing a Windows path corrupted a fragment
+  permanently.** Unescaped backslashes in a YAML scalar made it
+  unparseable, so it sat in the queue erroring on every run.
+
+### Monitoring that lied
+
+- **Backup health read the wrong directory** for months, so a dead backup
+  and a healthy one looked identical. Restic had been fine the whole time.
+- **The watchdog called a healthy pipeline "wedged" every hour**, alerting
+  on queue depth alone when a bulk ingest legitimately sits above the
+  threshold for weeks. It now alerts on depth that stops decreasing.
+- **`/synthesize/queue` 500'd** on a mixed int/string priority sort. The
+  same bug existed in two places and the first fix landed on the copy that
+  was not running.
+- **Three CI tests had never once executed**, skipping silently on a path
+  that only fails on Linux.
+
+### The through-line
+
+Consumers now run inside their producer's cron rather than as separate
+scheduled jobs, because twice a producer ran on a schedule while its
+consumer ran on none. Every scheduled job reports status, last run, and
+age. Skip reasons print in CI. Errors go to stderr, not only to a log file
+nobody reads.
+
+Test count went from 39 to 100.
+
 ## Known gaps
 
 - **Interests namespace is empty.** 6 topics registered, no ingestion path
@@ -212,15 +316,18 @@ Host-side runners live in `scripts/run-*.sh`. Each logs to
 - **Engineering Layer 3 is 20 of 21 topics.**
 - **Layer 4 reports 0 patterns** against 90 emerging signals and 30
   pending candidates.
-- **Compile backlog is unmeasured.** `raw/` holds 7,102 files, but
+- **Compile backlog is unmeasured.** `raw/` holds 7,202 files, but
   compiled ones stay there marked with `compiled_at`, so the uncompiled
   count is not exposed in stats. Distill promotes up to 100/day while
   compile consumes 30/day, so the gap is worth watching.
 - **ClientBrain capture queue sits at ~2,000.** Distill drains 100/day
-  from it.
+  from it while the sync adds new documents nightly, so it shrinks slowly.
+  This is depth, not a stall. The watchdog now distinguishes the two.
+- **The old ClientBrain API key is still in public git history.** It was
+  rotated on 2026-08-11 and is dead, but the string remains in the log.
 
 ## Repo
 
-`github.com/markahope-aag/meridian` (public), branch `main`, 156 commits.
+`github.com/markahope-aag/meridian` (public), branch `main`, 176 commits.
 The repo holds code only. All content and pipeline state live on the VM
 and are never committed.
