@@ -77,6 +77,31 @@ def load_projects() -> dict[str, dict]:
     return {p["slug"]: p for p in data.get("projects", [])}
 
 
+def loose_frontmatter(fm_text: str) -> dict:
+    """Parse flat `key: value` frontmatter without a YAML parser.
+
+    Only used when yaml.safe_load rejects the block. Handles the quoting
+    the generator emits (double-quoted scalars with escaped quotes and
+    backslashes) and ignores anything it cannot read as a simple pair.
+    """
+    out: dict = {}
+    for line in fm_text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or ":" not in line:
+            continue
+        key, _, value = line.partition(":")
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            continue
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+            if line.lstrip().startswith(f"{key}: \""):
+                value = value.replace('\\"', '"').replace("\\\\", "\\")
+        out[key] = value
+    return out
+
+
 def parse_fragment(path: Path) -> Fragment | None:
     text = path.read_text(encoding="utf-8", errors="replace")
     if not text.startswith("---\n"):
@@ -90,7 +115,17 @@ def parse_fragment(path: Path) -> Fragment | None:
     try:
         fm = yaml.safe_load(fm_text) or {}
     except yaml.YAMLError:
-        return None
+        # Fall back to a line-by-line read rather than giving up.
+        #
+        # Returning None here meant one malformed fragment sat in
+        # capture/ permanently, counted in the queue and re-reported as
+        # an error on every run, with no way to clear it short of
+        # editing the file on the VM. The fields this classifier needs
+        # are all flat scalars, so a strict YAML parse is more than the
+        # job requires.
+        fm = loose_frontmatter(fm_text)
+        if not fm:
+            return None
 
     # Extract commit message from the body — it's in a ``` fenced block
     # under "## Commit message"

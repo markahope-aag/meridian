@@ -127,6 +127,19 @@ def run_git(repo_path: Path, args: list[str]) -> str:
     return result.stdout
 
 
+def yaml_double_quoted(value: str) -> str:
+    """Escape a string for use inside a YAML double-quoted scalar.
+
+    Backslash must be escaped before the quote character, and escaping it
+    at all is the part that used to be missing. A commit subject
+    containing a Windows path emitted `title: "... C:\\Users"`, and YAML
+    reads `\\U` as the start of an 8-digit unicode escape, so the whole
+    fragment failed to parse. The classifier then skipped that fragment
+    on every run, leaving it stuck in capture/ forever.
+    """
+    return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
 _classified_names: set[str] | None = None
 
 
@@ -243,8 +256,7 @@ def format_fragment(project_slug: str, project_name: str, project_description: s
                     commit: Commit) -> str:
     """Render a commit as a Layer 2 fragment with full frontmatter."""
     title = commit.subject.strip()
-    # Escape quotes in title for YAML safety
-    title_yaml = title.replace('"', '\\"')
+    title_yaml = yaml_double_quoted(title)
     body_lines = [
         "---",
         f'title: "{title_yaml}"',
@@ -254,7 +266,7 @@ def format_fragment(project_slug: str, project_name: str, project_description: s
         "source_origin: git",
         f"source_project: {project_slug}",
         f"source_date: {commit.date_iso[:10]}",
-        f'source_author: "{commit.author}"',
+        f'source_author: "{yaml_double_quoted(commit.author)}"',
         f"source_author_email: {commit.author_email}",
         f"commit_sha: {commit.sha}",
         f"commit_short_sha: {commit.short_sha}",
