@@ -14,7 +14,9 @@ The script handles everything: CLI install, Syncthing install + pairing, SSH key
 
 1. **Collects credentials** — receiver URL, receiver token, Coolify API token
 2. **Creates `~/.meridian/config.yaml`** — receiver URL and token for the CLI
-3. **Creates `~/.meridian/.env`** — Coolify API token and infrastructure credentials
+3. **Credentials come from 1Password**, not a local file. They live in the
+   `meridian.env` document in the `DevBox .env Files` vault. Load them with
+   `source scripts/load-secrets.sh`.
 4. **Fetches Coolify SSH key** — downloads the server's private key from Coolify API for SSH access
 5. **Installs Syncthing** — via winget (Windows) or brew (macOS)
 6. **Pairs Syncthing with VM** — SSHes into the VM, adds this machine's device, restarts Syncthing
@@ -59,7 +61,7 @@ meridian status          # should show healthy
 | Coolify dashboard | https://app.coolify.io |
 | Receiver | https://meridian.markahope.com |
 | n8n | https://auto.asymmetric.pro |
-| Credentials | `~/.meridian/.env` |
+| Credentials | 1Password: `DevBox .env Files` / `meridian.env` |
 | Coolify SSH key | `~/.meridian/coolify_rsa` |
 | CLI config | `~/.meridian/config.yaml` |
 
@@ -68,7 +70,7 @@ meridian status          # should show healthy
 ### SSH fails to VM
 Re-fetch the Coolify key:
 ```bash
-source ~/.meridian/.env
+source scripts/load-secrets.sh
 curl -s -H "Authorization: Bearer $COOLIFY_API_TOKEN" -H "Accept: application/json" \
   "https://app.coolify.io/api/v1/security/keys/qo40kgg4wggkso44w44gkc8k" \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['private_key'])" > ~/.meridian/coolify_rsa
