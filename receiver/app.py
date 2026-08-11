@@ -253,6 +253,13 @@ COMPILE_TIMEOUT = 3600
 # many sequential calls. Give it the same hour compile gets.
 CLASSIFY_TIMEOUT = 3600
 
+# Layer 3 synthesis is a Sonnet write per topic, roughly 2 to 4 minutes
+# each. The 600s default killed a 9-topic drift drain after 3 of them,
+# and the queue items it had marked "running" then sat that way until the
+# hourly watchdog reset them. Anything that processes a batch of topics
+# needs room for the whole batch.
+SYNTHESIS_TIMEOUT = 3600
+
 # Default fragments per classify run. Bounded so a scheduled run finishes
 # well inside CLASSIFY_TIMEOUT; pass limit=0 for an unbounded backfill.
 CLASSIFY_DEFAULT_LIMIT = 250
@@ -953,7 +960,10 @@ def synthesize():
     args = [sys.executable, str(AGENTS_DIR / "synthesizer.py"), "--topic", topic]
 
     job_id = create_job("synthesize")
-    thread = threading.Thread(target=run_agent_async, args=(job_id, args), daemon=True)
+    thread = threading.Thread(
+        target=run_agent_async, args=(job_id, args),
+        kwargs={"timeout": SYNTHESIS_TIMEOUT}, daemon=True,
+    )
     thread.start()
     return jsonify({"status": "accepted", "job_id": job_id}), 202
 
@@ -995,7 +1005,10 @@ def synthesize_schedule():
         args.extend(["--queued-by", queued_by])
 
     job_id = create_job("synthesize_schedule")
-    thread = threading.Thread(target=run_agent_async, args=(job_id, args), daemon=True)
+    thread = threading.Thread(
+        target=run_agent_async, args=(job_id, args),
+        kwargs={"timeout": SYNTHESIS_TIMEOUT}, daemon=True,
+    )
     thread.start()
     return jsonify({"status": "accepted", "job_id": job_id}), 202
 
