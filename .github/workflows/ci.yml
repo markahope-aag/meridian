@@ -62,4 +62,4 @@ jobs:
           MERIDIAN_ROOT: /tmp/meridian-test
         run: |
           mkdir -p /tmp/meridian-test
-          python -m pytest tests/ -v
+          python -m pytest tests/ -v -rs
