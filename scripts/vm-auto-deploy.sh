@@ -132,6 +132,24 @@ fi
         ckpt="$CHECKPOINT_DIR/$rel"
         dst="$REPO_DIR/$rel"
         if [ -f "$ckpt" ]; then
+            # Warn when this deploy is discarding a committed change.
+            #
+            # Restoring the checkpoint is the point: it protects files the
+            # agents and dashboard write at runtime. The side effect is
+            # that a change committed to one of these files never reaches
+            # the VM, and the deploy still reports success. clients.yaml
+            # drifted for months that way, with manual taxonomy
+            # assignments in the repo that had never been applied here.
+            #
+            # This does not change what gets restored. It just stops the
+            # discard from being silent.
+            if printf '%s\n' "$CHANGED_FILES" | grep -Fxq "$rel"; then
+                if ! cmp -s "$ckpt" "$dst"; then
+                    echo "  WARNING: $rel changed in this commit but the live copy differs."
+                    echo "           Keeping the live copy. The committed change is NOT applied."
+                    echo "           Reconcile manually, then commit the live version back."
+                fi
+            fi
             mkdir -p "$(dirname "$dst")"
             cp -p "$ckpt" "$dst"
             # Preserve the ownership the agents expect
